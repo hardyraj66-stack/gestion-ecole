@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Élèves — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>👥 Module Élèves</h1>
+<p class="subtitle">Gestion des élèves inscrits dans l'établissement</p>
+<h2>Schéma MongoDB</h2>
+<pre><code>{
+  nom:            String   (requis)
+  prenom:         String   (requis)
+  date_naissance: String   (requis)   // "2013-05-14"
+  genre:          Enum     ['M','F']
+  classe_id:      String   (requis)   // référence Classe._id
+  email:          String   (optionnel)
+  telephone:      String   (optionnel)
+  adresse:        String   (optionnel)
+}</code></pre>
+<h2>Endpoints API</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/eleves</code></td><td>Tous les élèves</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/eleves/:id</code></td><td>Un élève</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/eleves</code></td><td>Inscrire un élève</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/eleves/:id</code></td><td>Modifier</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/eleves/:id</code></td><td>Supprimer</td></tr>
+</table>
+<h2>Événements Socket.IO</h2>
+<table>
+<tr><th>Événement</th><th>Payload</th></tr>
+<tr><td><span class="badge b-socket">eleve:created</span></td><td>Objet Eleve</td></tr>
+<tr><td><span class="badge b-socket">eleve:updated</span></td><td>Objet Eleve</td></tr>
+<tr><td><span class="badge b-socket">eleve:deleted</span></td><td><code>{ id }</code></td></tr>
+</table>
+<h2>Lien avec les classes</h2>
+<p>Le champ <code>classe_id</code> fait le lien avec la collection <code>classes</code>. Le frontend filtre les élèves par classe pour afficher la liste dans la page <code>/classes/:id/eleves</code>.</p>
+<h2>Helpers frontend</h2>
+<ul>
+<li><code>getInitials(eleve)</code> → premières lettres de prénom et nom en majuscules</li>
+<li><code>getAge(date_naissance)</code> → âge en années entières</li>
+<li><code>formatDate(dateStr)</code> → format dd/MM/yyyy</li>
+</ul>
+<div class="doc-footer">
+<a href="04-api-classes.html">← Module Classes</a>
+<a href="06-api-matieres.html">Module Matières →</a>
+</div>
+</div>
+</body></html>

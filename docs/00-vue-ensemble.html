@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Vue d'ensemble — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🗺️ Vue d'ensemble</h1>
+<p class="subtitle">Architecture globale, stack technique, flux de données</p>
+
+<h2>Stack technique</h2>
+<table>
+<tr><th>Couche</th><th>Technologie</th><th>Rôle</th></tr>
+<tr><td>Frontend</td><td>React 18 + TypeScript + Vite</td><td>SPA avec routing client-side</td></tr>
+<tr><td>Styling</td><td>CSS Modules / Variables CSS</td><td>Design system cohérent</td></tr>
+<tr><td>Backend</td><td>NestJS 10 + TypeScript</td><td>API REST + WebSocket Gateway</td></tr>
+<tr><td>Base de données</td><td>MongoDB + Mongoose 8</td><td>Stockage persistant</td></tr>
+<tr><td>Temps réel</td><td>Socket.IO 4</td><td>Synchronisation multi-clients</td></tr>
+</table>
+
+<h2>Architecture globale</h2>
+<div class="schema">
+┌─────────────────────────────────────────────────────────────┐
+│                     NAVIGATEUR (Client)                      │
+│                                                              │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │  React App  │  │  Contexts    │  │  Socket.IO Client │  │
+│  │  (Pages)    │◄─┤  (State)     │◄─┤  (temps réel)     │  │
+│  └──────┬──────┘  └──────┬───────┘  └─────────┬─────────┘  │
+│         │                │                     │             │
+└─────────┼────────────────┼─────────────────────┼─────────────┘
+          │ HTTP REST      │ fetch()             │ WebSocket
+          ▼                ▼                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    SERVEUR (localhost:3000)                   │
+│                                                              │
+│  ┌──────────────┐  ┌───────────────┐  ┌─────────────────┐  │
+│  │  Controllers │  │   Services    │  │  Events Gateway  │  │
+│  │  (Routes)    │─►│  (Logique)    │  │  (Socket.IO)     │  │
+│  └──────────────┘  └───────┬───────┘  └─────────────────┘  │
+│                            │                                 │
+│                    ┌───────▼───────┐                         │
+│                    │   Mongoose    │                         │
+│                    │   (ODM)       │                         │
+│                    └───────┬───────┘                         │
+│                            │                                 │
+└────────────────────────────┼─────────────────────────────────┘
+                             ▼
+                    ┌─────────────────┐
+                    │    MongoDB      │
+                    │  gestion-ecole  │
+                    └─────────────────┘
+</div>
+
+<h2>Structure des dossiers</h2>
+<h3>Frontend (<code>src/</code>)</h3>
+<pre><code>src/
+├── App.tsx                    Routeur principal
+├── main.tsx                   Point d'entrée
+├── index.css                  Design system complet
+├── config/api.ts              URLs API & Socket
+├── types/index.ts             Interfaces TypeScript
+├── data/mockData.ts           Données mock (fallback)
+├── hooks/useData.ts           Hook données live/archive
+├── services/socketService.ts  Singleton Socket.IO
+├── contexts/                  7 providers React
+│   ├── AnneeContext.tsx
+│   ├── ClasseContext.tsx
+│   ├── EleveContext.tsx
+│   ├── MatiereContext.tsx
+│   ├── NoteContext.tsx
+│   ├── PlanningContext.tsx
+│   ├── SalleContext.tsx
+│   ├── ViewingContext.tsx
+│   └── AppProviders.tsx
+├── components/
+│   ├── layout/                Sidebar, Layout, ArchiveBanner
+│   ├── ui/                    Badge, PageHeader, StatCard…
+│   └── shared/                17 composants réutilisables
+└── pages/                     12 pages avec sous-composants</code></pre>
+
+<h3>Backend (<code>server/src/</code>)</h3>
+<pre><code>server/src/
+├── main.ts                    Bootstrap NestJS
+├── app.module.ts              Module racine
+├── events/                    WebSocket Gateway (global)
+├── data/                      Seeder MongoDB
+├── annees/                    Module Années scolaires
+├── classes/                   Module Classes
+├── eleves/                    Module Élèves
+├── matieres/                  Module Matières
+├── notes/                     Module Notes + Bulletin
+├── planning/                  Module Planning
+└── salles/                    Module Salles + Disponibilité</code></pre>
+
+<h2>Flux de données</h2>
+<ol>
+<li><strong>Chargement initial</strong> : chaque contexte React fait un <code>fetch()</code> vers l'API au montage. Si l'API est indisponible, le fallback mock est utilisé.</li>
+<li><strong>Mutations</strong> : les formulaires appellent l'API via <code>POST/PATCH/DELETE</code>. Le contrôleur NestJS exécute l'opération puis émet un événement Socket.IO.</li>
+<li><strong>Temps réel</strong> : le <code>socketService</code> client écoute les événements et met à jour les contextes React automatiquement.</li>
+<li><strong>Mode archive</strong> : quand l'utilisateur consulte une année terminée, le <code>ViewingContext</code> charge un snapshot complet depuis <code>GET /annees/:id/snapshot</code> et toutes les pages affichent les données du snapshot en lecture seule.</li>
+</ol>
+
+<h2>Collections MongoDB</h2>
+<table>
+<tr><th>Collection</th><th>Documents (seed)</th><th>Description</th></tr>
+<tr><td><code>anneescolaires</code></td><td>1</td><td>Années scolaires avec statut et historique</td></tr>
+<tr><td><code>salles</code></td><td>12</td><td>Salles de l'établissement</td></tr>
+<tr><td><code>classes</code></td><td>15</td><td>Classes de 6ème à Terminale</td></tr>
+<tr><td><code>matieres</code></td><td>15</td><td>Matières avec coefficients</td></tr>
+<tr><td><code>eleves</code></td><td>~350</td><td>Élèves répartis dans les classes</td></tr>
+<tr><td><code>notes</code></td><td>~2000+</td><td>Notes par élève/matière/trimestre</td></tr>
+<tr><td><code>creneaux</code></td><td>~200+</td><td>Créneaux de planning</td></tr>
+</table>
+
+<div class="doc-footer">
+<a href="index.html">← Sommaire</a>
+<a href="01-design-system.html">Design System →</a>
+</div>
+</div>
+</body></html>

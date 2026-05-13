@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Classes — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🏫 Module Classes</h1>
+<p class="subtitle">Gestion des classes de l'établissement</p>
+
+<h2>Schéma MongoDB</h2>
+<pre><code>{
+  nom:            String   (requis)     // "6ème A"
+  niveau:         String   (requis)     // "6ème"
+  annee_scolaire: String   (requis)     // "2024-2025"
+  capacite:       Number   (défaut: 30) // places max
+  salle:          String   (requis)     // "Salle 101"
+  salle_type:     Enum     ['fixe','variable']  // mode de salle
+  createdAt, updatedAt                  // timestamps auto
+}</code></pre>
+
+<h2>Endpoints API</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th><th>Body</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/classes</code></td><td>Toutes les classes</td><td>—</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/classes/:id</code></td><td>Une classe</td><td>—</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/classes</code></td><td>Créer une classe</td><td><code>{ nom, niveau, annee_scolaire, capacite, salle, salle_type }</code></td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/classes/:id</code></td><td>Modifier</td><td>Champs partiels</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/classes/:id</code></td><td>Supprimer</td><td>—</td></tr>
+</table>
+
+<h2>Événements Socket.IO</h2>
+<table>
+<tr><th>Événement</th><th>Payload</th><th>Déclencheur</th></tr>
+<tr><td><span class="badge b-socket">classe:created</span></td><td>Objet Classe complet</td><td>POST /classes</td></tr>
+<tr><td><span class="badge b-socket">classe:updated</span></td><td>Objet Classe mis à jour</td><td>PATCH /classes/:id</td></tr>
+<tr><td><span class="badge b-socket">classe:deleted</span></td><td><code>{ id }</code></td><td>DELETE /classes/:id</td></tr>
+</table>
+
+<h2>Mode de salle</h2>
+<ul>
+<li><strong>fixe</strong> : la classe est toujours dans la même salle. Dans le planning, le champ salle est en lecture seule.</li>
+<li><strong>variable</strong> : la salle change selon l'emploi du temps. Le formulaire de créneau affiche un sélecteur avec vérification de disponibilité en temps réel.</li>
+</ul>
+
+<h2>Niveaux disponibles</h2>
+<p><code>6ème, 5ème, 4ème, 3ème, 2nde, 1ère, Terminale, CP, CE1, CE2, CM1, CM2</code></p>
+
+<div class="doc-footer">
+<a href="03-backend-general.html">← Backend général</a>
+<a href="05-api-eleves.html">Module Élèves →</a>
+</div>
+</div>
+</body></html>

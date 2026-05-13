@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Mode Archive — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>📂 Mode Archive</h1>
+<p class="subtitle">Consultation des données d'une année scolaire terminée</p>
+
+<h2>Déclenchement</h2>
+<p>L'utilisateur clique <strong>« 📂 Consulter »</strong> sur une année terminée dans la page Cycle scolaire. Le système :</p>
+<ol>
+<li>Charge un <strong>snapshot</strong> via <code>GET /annees/:id/snapshot</code></li>
+<li>Active le <strong>mode archive</strong> dans <code>ViewingContext</code></li>
+<li>Redirige vers <code>/dashboard</code></li>
+</ol>
+
+<h2>Visuels</h2>
+<div class="schema">
+┌─ Sidebar ──────┬─────────────────────────────────────────┐
+│                │ ┌─ Bannière orange (sticky) ──────────┐  │
+│   Navigation   │ │ 🕐 Consultation 2023-2024           │  │
+│                │ │    (archivée · lecture seule)        │  │
+│ ┌────────────┐ │ │              ✕ Revenir à l'année ─►│  │
+│ │ 🟠 Bordure│ │ └─────────────────────────────────────┘  │
+│ │   droite   │ │                                         │
+│ └────────────┘ │ ┌─ Contenu (contour orange 3 côtés) ─┐  │
+│                │ │                                      │  │
+│ ┌────────────┐ │ │   Données du snapshot                │  │
+│ │ Encart     │ │ │   (lecture seule, pas de CRUD)       │  │
+│ │ ambre      │ │ │                                      │  │
+│ │ cliquable  │ │ └──────────────────────────────────────┘  │
+│ └────────────┘ │                                         │
+└────────────────┴─────────────────────────────────────────┘
+</div>
+
+<h2>Architecture technique</h2>
+<h3>ViewingContext</h3>
+<pre><code>interface ViewingContextType {
+  viewing: AnneeScolaire | null;   // année consultée
+  snapshot: Snapshot | null;        // données chargées
+  loadingSnapshot: boolean;
+  viewAnnee(annee): Promise;        // active le mode
+  exitView(): void;                 // désactive
+  isViewingArchive: boolean;
+}</code></pre>
+
+<h3>Hook useData()</h3>
+<p>Remplace les appels directs aux contextes dans les pages :</p>
+<pre><code>const { classes, eleves, matieres, notes, creneaux, loading, readOnly } = useData();
+
+// Si isViewingArchive → retourne les données du snapshot + readOnly = true
+// Sinon → retourne les données live des contextes + readOnly = false</code></pre>
+
+<h2>Comportement des pages en mode archive</h2>
+<table>
+<tr><th>Page</th><th>Mode normal</th><th>Mode archive (lecture seule)</th></tr>
+<tr><td><strong>Dashboard</strong></td><td>Stats live, accès rapides</td><td>Stats snapshot, accès rapides masqués</td></tr>
+<tr><td><strong>Classes</strong></td><td>Grille + bouton créer + ✕ supprimer</td><td>Grille consultation, boutons masqués, carte « + » masquée</td></tr>
+<tr><td><strong>Classe → Élèves</strong></td><td>Tableau + bouton nouvel élève + ✕ supprimer</td><td>Tableau lecture seule, tous boutons de mutation masqués</td></tr>
+<tr><td><strong>Élèves</strong></td><td>Tableau filtré + bouton inscrire + ✕ supprimer</td><td>Tableau lecture seule, boutons masqués</td></tr>
+<tr><td><strong>Matières</strong></td><td>Grille + bouton créer + supprimer</td><td>Grille consultation, boutons masqués</td></tr>
+<tr><td><strong>Salles</strong></td><td>Grille + formulaire inline + modifier/supprimer</td><td>Grille lecture seule, formulaire bloqué, alerte archive</td></tr>
+<tr><td><strong>Notes</strong></td><td>Saisie en lot, enregistrement</td><td>Consultation uniquement, inputs désactivés, alerte archive</td></tr>
+<tr><td><strong>Planning</strong></td><td>Calendrier + formulaire créneau + ✕ supprimer</td><td>Calendrier lecture seule, formulaire bloqué, ✕ masqué</td></tr>
+<tr><td><strong>Bulletin</strong></td><td>Bulletin + lien « Saisir des notes »</td><td>Bulletin lecture seule, lien saisie masqué</td></tr>
+<tr><td><strong>Créer classe/élève/matière</strong></td><td>Formulaires fonctionnels</td><td>Redirection automatique vers la liste</td></tr>
+</table>
+
+<div class="callout callout-danger"><p><strong>Sécurité</strong> : les pages de création (<code>/classes/nouvelle</code>, <code>/eleves/nouveau</code>, <code>/matieres/nouvelle</code>) détectent le mode archive et redirigent immédiatement avec <code>&lt;Navigate /&gt;</code>. Aucun formulaire de mutation n'est accessible en mode archive.</p></div>
+
+<h2>Sortir du mode archive</h2>
+<p>3 façons de revenir à l'année en cours :</p>
+<ul>
+<li>Cliquer sur la <strong>bannière orange</strong> en haut du contenu</li>
+<li>Cliquer sur l'<strong>encart année</strong> dans le footer de la sidebar</li>
+<li>Toute navigation vers la page <code>/annee-scolaire</code> ne sort pas automatiquement du mode (l'utilisateur doit cliquer explicitement)</li>
+</ul>
+
+<div class="doc-footer">
+<a href="18-front-cycle.html">← Cycle Scolaire</a>
+<a href="20-temps-reel.html">Temps réel →</a>
+</div>
+</div>
+</body></html>

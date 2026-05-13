@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Notes — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>📝 Module Notes & Bulletin</h1>
+<p class="subtitle">Notes par élève/matière/trimestre, calcul du bulletin et des moyennes</p>
+<h2>Schéma Note</h2>
+<pre><code>{
+  eleve_id:    String  (requis) // référence Eleve._id
+  matiere_id:  String  (requis) // référence Matiere._id
+  valeur:      Number  (requis) // 0 à 20, step 0.5
+  trimestre:   Enum    [1, 2, 3]
+  date:        String  (requis) // "2024-10-15"
+  commentaire: String  (optionnel)
+}</code></pre>
+<h2>Endpoints API</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/notes</code></td><td>Toutes les notes</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/notes/:id</code></td><td>Une note</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/notes/bulletin/:eleveId?trimestre=1</code></td><td>Bulletin d'un élève</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/notes</code></td><td>Créer une note</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/notes/:id</code></td><td>Modifier</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/notes/:id</code></td><td>Supprimer</td></tr>
+</table>
+<h2>Endpoint Bulletin — Détail</h2>
+<p><code>GET /notes/bulletin/:eleveId?trimestre=1</code> retourne un tableau de <code>BulletinMatiere</code> :</p>
+<pre><code>[{
+  matiere_id:  "...",
+  matiere_nom: "Mathématiques",
+  code:        "MATH",
+  coefficient: 4,
+  notes:       [15, 12.5, 14],       // toutes les notes du trimestre
+  moyenne:     13.8                   // moyenne arithmétique arrondie 1 décimale
+}]</code></pre>
+<h3>Calcul de la moyenne générale (frontend)</h3>
+<pre><code>totalCoef = Σ coefficient (matières avec notes)
+somme     = Σ (moyenne_matière × coefficient)
+générale  = Math.round((somme / totalCoef) * 10) / 10</code></pre>
+<h2>Système de mentions</h2>
+<table>
+<tr><th>Moyenne</th><th>Mention</th><th>Badge</th></tr>
+<tr><td>≥ 16</td><td>Très bien</td><td><span class="badge b-get">success</span></td></tr>
+<tr><td>≥ 14</td><td>Bien</td><td><span class="badge b-get">success</span></td></tr>
+<tr><td>≥ 12</td><td>Assez bien</td><td><span class="badge b-socket">info</span></td></tr>
+<tr><td>≥ 10</td><td>Passable</td><td><span class="badge b-patch">warning</span></td></tr>
+<tr><td>&lt; 10</td><td>Insuffisant</td><td><span class="badge b-delete">danger</span></td></tr>
+</table>
+<h2>Couleurs des notes</h2>
+<table>
+<tr><th>Plage</th><th>Couleur</th></tr>
+<tr><td>≥ 16</td><td style="color:#16a34a">■ #16a34a (vert)</td></tr>
+<tr><td>≥ 14</td><td style="color:#65a30d">■ #65a30d (vert-jaune)</td></tr>
+<tr><td>≥ 10</td><td style="color:#d97706">■ #d97706 (orange)</td></tr>
+<tr><td>≥ 8</td><td style="color:#ea580c">■ #ea580c (vermillon)</td></tr>
+<tr><td>&lt; 8</td><td style="color:#dc2626">■ #dc2626 (rouge)</td></tr>
+</table>
+<div class="doc-footer">
+<a href="06-api-matieres.html">← Module Matières</a>
+<a href="08-api-planning.html">Module Planning →</a>
+</div>
+</div>
+</body></html>

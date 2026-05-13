@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Planning — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>📅 Module Planning</h1>
+<p class="subtitle">Emplois du temps : créneaux hebdomadaires par classe</p>
+<h2>Schéma Creneau</h2>
+<pre><code>{
+  classe_id:       String  (requis)  // référence Classe
+  matiere_id:      String  (requis)  // référence Matiere
+  matiere_nom:     String  (requis)  // dénormalisé pour l'affichage
+  matiere_couleur: String  (défaut "#2563eb")
+  jour:            Enum    ['Lundi'..'Samedi']
+  heure_debut:     String  (requis)  // "08:00"
+  heure_fin:       String  (requis)  // "09:00"
+  salle:           String  (requis)  // "Salle 101"
+  enseignant:      String  (défaut "")
+}</code></pre>
+<h2>Endpoints API</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/planning</code></td><td>Tous les créneaux</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/planning/:id</code></td><td>Un créneau</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/planning</code></td><td>Créer un créneau</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/planning/:id</code></td><td>Modifier</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/planning/:id</code></td><td>Supprimer</td></tr>
+</table>
+<h2>Grille horaire</h2>
+<p>Plage : <strong>07:00 → 18:00</strong> par pas de <strong>30 minutes</strong>.<br>Jours : Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi.</p>
+<h2>Dénormalisation</h2>
+<p><code>matiere_nom</code> et <code>matiere_couleur</code> sont stockés directement dans le créneau. Cela permet d'afficher le calendrier sans jointure.</p>
+<div class="doc-footer">
+<a href="07-api-notes.html">← Module Notes</a>
+<a href="09-api-salles.html">Module Salles →</a>
+</div>
+</div>
+</body></html>

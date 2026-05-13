@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GestionÉcole — Spécifications</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.6}
+.hero{padding:4rem 2rem;text-align:center;background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-bottom:1px solid #334155}
+.hero h1{font-size:2.5rem;font-weight:800;color:#fff;margin-bottom:.5rem}
+.hero .sub{font-size:1.1rem;color:#94a3b8;margin-bottom:2rem}
+.hero .badge{display:inline-block;padding:.3rem .8rem;border-radius:20px;font-size:.75rem;font-weight:600;margin:0 .3rem}
+.hero .b-react{background:#61dafb20;color:#61dafb}
+.hero .b-nest{background:#e0234e20;color:#e0234e}
+.hero .b-mongo{background:#47a24820;color:#47a248}
+.hero .b-socket{background:#25c2a020;color:#25c2a0}
+.toc{max-width:900px;margin:3rem auto;padding:0 2rem}
+.toc h2{font-size:1.3rem;color:#f8fafc;margin-bottom:1.5rem;padding-bottom:.5rem;border-bottom:1px solid #334155}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:1.25rem;transition:all .2s;text-decoration:none;color:inherit;display:block}
+.card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.card .icon{font-size:1.5rem;margin-bottom:.5rem}
+.card h3{font-size:1rem;font-weight:600;color:#f8fafc;margin-bottom:.35rem}
+.card p{font-size:.8rem;color:#94a3b8}
+.card .tag{display:inline-block;padding:.15rem .5rem;border-radius:4px;font-size:.65rem;font-weight:600;margin-top:.5rem}
+.tag-front{background:#3b82f620;color:#60a5fa}
+.tag-back{background:#e0234e20;color:#f87171}
+.tag-arch{background:#a855f720;color:#c084fc}
+.tag-infra{background:#f59e0b20;color:#fbbf24}
+.section-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#64748b;margin-bottom:.75rem;font-weight:600}
+footer{text-align:center;padding:3rem;color:#475569;font-size:.8rem;border-top:1px solid #1e293b;margin-top:3rem}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>📘 GestionÉcole</h1>
+  <p class="sub">Documentation technique complète — Livre de spécifications</p>
+  <span class="badge b-react">React 18 + TypeScript</span>
+  <span class="badge b-nest">NestJS 10</span>
+  <span class="badge b-mongo">MongoDB + Mongoose</span>
+  <span class="badge b-socket">Socket.IO</span>
+</div>
+
+<div class="toc">
+
+  <!-- ARCHITECTURE -->
+  <h2>🏗️ Architecture & Infrastructure</h2>
+  <div class="grid">
+    <a class="card" href="00-vue-ensemble.html">
+      <div class="icon">🗺️</div>
+      <h3>Vue d'ensemble</h3>
+      <p>Architecture globale, stack technique, structure des dossiers, flux de données</p>
+      <span class="tag tag-arch">Architecture</span>
+    </a>
+    <a class="card" href="01-design-system.html">
+      <div class="icon">🎨</div>
+      <h3>Design System</h3>
+      <p>CSS Variables, couleurs, typographie, composants UI réutilisables</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="02-composants-shared.html">
+      <div class="icon">🧩</div>
+      <h3>Composants partagés</h3>
+      <p>Button, Input, Select, Card, Table, Alert, Pagination, ConfirmDialog…</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+  </div>
+
+  <!-- BACKEND -->
+  <h2 style="margin-top:2.5rem">⚙️ Backend — API REST & WebSocket</h2>
+  <div class="grid">
+    <a class="card" href="03-backend-general.html">
+      <div class="icon">🔧</div>
+      <h3>Backend — Général</h3>
+      <p>NestJS, structure des modules, MongoDB, seeder, CORS, événements Socket.IO</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+    <a class="card" href="04-api-classes.html">
+      <div class="icon">🏫</div>
+      <h3>Module Classes</h3>
+      <p>Schéma, CRUD, endpoints REST, événements temps réel</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+    <a class="card" href="05-api-eleves.html">
+      <div class="icon">👥</div>
+      <h3>Module Élèves</h3>
+      <p>Schéma, CRUD, recherche par classe, gestion des inscriptions</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+    <a class="card" href="06-api-matieres.html">
+      <div class="icon">📚</div>
+      <h3>Module Matières</h3>
+      <p>Schéma, CRUD, coefficients, couleurs</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+    <a class="card" href="07-api-notes.html">
+      <div class="icon">📝</div>
+      <h3>Module Notes & Bulletin</h3>
+      <p>Schéma, CRUD, calcul du bulletin, moyennes pondérées</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+    <a class="card" href="08-api-planning.html">
+      <div class="icon">📅</div>
+      <h3>Module Planning</h3>
+      <p>Schéma créneaux, CRUD, calendrier hebdomadaire</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+    <a class="card" href="09-api-salles.html">
+      <div class="icon">🏠</div>
+      <h3>Module Salles</h3>
+      <p>Schéma, CRUD, vérification de disponibilité, types de salles</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+    <a class="card" href="10-api-annees.html">
+      <div class="icon">🔄</div>
+      <h3>Module Cycle Scolaire</h3>
+      <p>Machine à états, transitions, snapshot, historique d'audit</p>
+      <span class="tag tag-back">Backend</span>
+    </a>
+  </div>
+
+  <!-- FRONTEND -->
+  <h2 style="margin-top:2.5rem">🖥️ Frontend — Pages & Fonctionnalités</h2>
+  <div class="grid">
+    <a class="card" href="11-front-dashboard.html">
+      <div class="icon">📊</div>
+      <h3>Dashboard</h3>
+      <p>Statistiques, tableau des classes, derniers élèves, accès rapides</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="12-front-classes.html">
+      <div class="icon">🏫</div>
+      <h3>Gestion des Classes</h3>
+      <p>Liste paginée, création, élèves par classe, modes de salle</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="13-front-eleves.html">
+      <div class="icon">👥</div>
+      <h3>Gestion des Élèves</h3>
+      <p>Liste filtrée et paginée, inscription, bulletin individuel</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="14-front-matieres.html">
+      <div class="icon">📚</div>
+      <h3>Gestion des Matières</h3>
+      <p>Grille de cartes colorées, création avec aperçu en temps réel</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="15-front-notes.html">
+      <div class="icon">📝</div>
+      <h3>Saisie des Notes</h3>
+      <p>Sélection classe/matière/trimestre, saisie en lot, statistiques</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="16-front-planning.html">
+      <div class="icon">📅</div>
+      <h3>Planning</h3>
+      <p>Sélection de classe, calendrier hebdomadaire, formulaire de créneaux</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="17-front-salles.html">
+      <div class="icon">🏠</div>
+      <h3>Gestion des Salles</h3>
+      <p>Cartes typées, formulaire inline, vérification de disponibilité</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="18-front-cycle.html">
+      <div class="icon">🔄</div>
+      <h3>Cycle Scolaire</h3>
+      <p>Gestion des années, transitions d'état, archives, consultation historique</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+    <a class="card" href="19-front-archives.html">
+      <div class="icon">📂</div>
+      <h3>Mode Archive</h3>
+      <p>Consultation d'années terminées, bannière, lecture seule, snapshot</p>
+      <span class="tag tag-front">Frontend</span>
+    </a>
+  </div>
+
+  <!-- TRANSVERSE -->
+  <h2 style="margin-top:2.5rem">🔗 Transverse</h2>
+  <div class="grid">
+    <a class="card" href="20-temps-reel.html">
+      <div class="icon">⚡</div>
+      <h3>Temps réel</h3>
+      <p>Socket.IO, événements, synchronisation multi-clients</p>
+      <span class="tag tag-infra">Infra</span>
+    </a>
+    <a class="card" href="21-donnees-mock.html">
+      <div class="icon">🎲</div>
+      <h3>Données Mock & Seeder</h3>
+      <p>Fallback frontend, seeder MongoDB, volumes de données</p>
+      <span class="tag tag-infra">Infra</span>
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  GestionÉcole — Documentation technique v1.0 — 2025
+</footer>
+
+</body>
+</html>

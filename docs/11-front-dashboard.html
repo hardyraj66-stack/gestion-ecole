@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Dashboard — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>📊 Dashboard</h1>
+<p class="subtitle">Route <code>/dashboard</code> — Vue d'ensemble de l'établissement</p>
+<h2>Composants</h2>
+<table>
+<tr><th>Zone</th><th>Fichier</th><th>Description</th></tr>
+<tr><td>Page</td><td>Dashboard.tsx</td><td>Orchestre les données via <code>useData()</code> hook</td></tr>
+<tr><td>Statistiques</td><td>4 × StatCard</td><td>Classes, Élèves, Matières, Notes saisies</td></tr>
+<tr><td>Tableau</td><td>ClassesTable.tsx</td><td>5 premières classes avec jauge de remplissage, paginé</td></tr>
+<tr><td>Derniers élèves</td><td>RecentEleves.tsx</td><td>5 derniers inscrits avec avatar, classe, lien bulletin</td></tr>
+<tr><td>Accès rapides</td><td>QuickActions.tsx</td><td>4 liens : nouvelle classe, nouvel élève, notes, planning</td></tr>
+</table>
+<h2>Intégration année scolaire</h2>
+<ul>
+<li>En-tête : badge de l'année active + statut</li>
+<li>Bannière d'avertissement si aucune année active (avec lien vers le cycle scolaire)</li>
+<li>Masquage des accès rapides en mode archive (lecture seule)</li>
+<li>Utilise <code>useData()</code> : en mode archive, les stats affichent les données du snapshot</li>
+</ul>
+<h2>Layout</h2>
+<div class="schema">
+┌─ Stats ─────────────────────────────────────────────┐
+│ [Classes: 15] [Élèves: 350] [Matières: 15] [Notes] │
+└─────────────────────────────────────────────────────┘
+
+┌─ Grid 2/3 + 1/3 ───────────────────────────────────┐
+│ ┌─ ClassesTable ────────┐  ┌─ RecentEleves ───────┐ │
+│ │ Tableau paginé 5/page │  │ 5 derniers inscrits  │ │
+│ └───────────────────────┘  ├─ QuickActions ───────┤ │
+│                            │ 4 liens rapides      │ │
+│                            └──────────────────────┘ │
+└─────────────────────────────────────────────────────┘
+</div>
+<div class="doc-footer">
+<a href="10-api-annees.html">← Module Cycle Scolaire</a>
+<a href="12-front-classes.html">Gestion des Classes →</a>
+</div>
+</div>
+</body></html>

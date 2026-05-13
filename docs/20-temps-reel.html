@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Temps réel — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>⚡ Temps réel — Socket.IO</h1>
+<p class="subtitle">Synchronisation multi-clients via WebSocket</p>
+
+<h2>Architecture</h2>
+<div class="schema">
+Client A (navigateur)                     Client B (navigateur)
+    │                                          │
+    │ POST /classes { nom: "1ère L" }          │
+    │──────────────────►┐                      │
+    │                   │ NestJS Controller     │
+    │                   │ → service.create()   │
+    │                   │ → events.emit(       │
+    │                   │     'classe:created', │
+    │                   │     newClasse         │
+    │                   │   )                   │
+    │                   │──────────────────────►│
+    │◄──────────────────│                      │
+    │ classe:created    │     classe:created    │
+    │ (socket)          │     (socket)          │
+    │                   │                      │
+    │ setState(prev =>  │     setState(prev =>  │
+    │   [...prev, new]) │       [...prev, new]) │
+</div>
+
+<h2>Événements</h2>
+<table>
+<tr><th>Module</th><th>Created</th><th>Updated</th><th>Deleted</th></tr>
+<tr><td>Classes</td><td><code>classe:created</code></td><td><code>classe:updated</code></td><td><code>classe:deleted</code></td></tr>
+<tr><td>Élèves</td><td><code>eleve:created</code></td><td><code>eleve:updated</code></td><td><code>eleve:deleted</code></td></tr>
+<tr><td>Matières</td><td><code>matiere:created</code></td><td><code>matiere:updated</code></td><td><code>matiere:deleted</code></td></tr>
+<tr><td>Notes</td><td><code>note:created</code></td><td><code>note:updated</code></td><td><code>note:deleted</code></td></tr>
+<tr><td>Créneaux</td><td><code>creneau:created</code></td><td><code>creneau:updated</code></td><td><code>creneau:deleted</code></td></tr>
+<tr><td>Salles</td><td><code>salle:created</code></td><td><code>salle:updated</code></td><td><code>salle:deleted</code></td></tr>
+<tr><td>Années</td><td><code>annee:created</code></td><td><code>annee:updated</code></td><td><code>annee:deleted</code></td></tr>
+</table>
+
+<h2>Client — socketService.ts</h2>
+<pre><code>// Singleton socket.io-client
+const socket = io('http://localhost:3000', {
+  transports: ['websocket'],
+  autoConnect: true,
+});
+
+// Helpers
+onEvent&lt;T&gt;(event, callback) → unsubscribe function
+emitEvent(event, data?)     → emit to server</code></pre>
+
+<h2>Écoute dans les contextes</h2>
+<pre><code>useEffect(() =&gt; {
+  const unsub1 = onEvent&lt;Classe&gt;('classe:created', (data) =&gt; {
+    setClasses(prev =&gt; {
+      if (prev.find(c =&gt; c.id === data.id)) return prev; // anti-doublon
+      return [...prev, data];
+    });
+  });
+
+  const unsub2 = onEvent&lt;Classe&gt;('classe:updated', (data) =&gt; {
+    setClasses(prev =&gt; prev.map(c =&gt; c.id === data.id ? data : c));
+  });
+
+  const unsub3 = onEvent&lt;{id:string}&gt;('classe:deleted', (data) =&gt; {
+    setClasses(prev =&gt; prev.filter(c =&gt; c.id !== data.id));
+  });
+
+  return () =&gt; { unsub1(); unsub2(); unsub3(); };
+}, []);</code></pre>
+
+<div class="callout callout-warn"><p><strong>Cas spécial Salles</strong> : les opérations CRUD ne mettent pas à jour le state local après le POST/PATCH/DELETE. Seul l'événement socket fait la mise à jour, pour éviter les doublons.</p></div>
+
+<div class="doc-footer">
+<a href="19-front-archives.html">← Mode Archive</a>
+<a href="21-donnees-mock.html">Données Mock →</a>
+</div>
+</div>
+</body></html>

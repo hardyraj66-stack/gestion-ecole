@@ -1,0 +1,56 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7}
+a{color:#2563eb}
+a:hover{text-decoration:underline}
+
+/* NAV */
+.topbar{background:#0f172a;padding:.75rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100;border-bottom:1px solid #1e293b}
+.topbar a{color:#94a3b8;text-decoration:none;font-size:.85rem;font-weight:500}
+.topbar a:hover{color:#f8fafc}
+.topbar .home{color:#f8fafc;font-weight:700;font-size:1rem;margin-right:auto}
+.topbar .sep{color:#334155}
+
+/* CONTENT */
+.doc{max-width:880px;margin:0 auto;padding:2rem}
+.doc h1{font-size:2rem;font-weight:800;color:#0f172a;margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
+.doc .subtitle{font-size:1rem;color:#64748b;margin-bottom:2rem}
+.doc h2{font-size:1.3rem;font-weight:700;color:#0f172a;margin-top:2.5rem;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0}
+.doc h3{font-size:1.05rem;font-weight:600;color:#1e293b;margin-top:1.5rem;margin-bottom:.5rem}
+.doc p{margin-bottom:1rem;color:#334155}
+.doc ul,.doc ol{margin-bottom:1rem;padding-left:1.5rem}
+.doc li{margin-bottom:.35rem;color:#334155}
+.doc li strong{color:#0f172a}
+
+/* CODE */
+pre{background:#0f172a;color:#e2e8f0;padding:1rem 1.25rem;border-radius:8px;overflow-x:auto;font-size:.85rem;line-height:1.5;margin-bottom:1.25rem;border:1px solid #1e293b}
+code{font-family:'Fira Code','Cascadia Code',Consolas,monospace}
+p code,li code{background:#f1f5f9;color:#dc2626;padding:.15rem .4rem;border-radius:4px;font-size:.85em}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;margin-bottom:1.5rem;font-size:.9rem}
+th{text-align:left;padding:.6rem .75rem;background:#f1f5f9;border-bottom:2px solid #e2e8f0;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b}
+td{padding:.6rem .75rem;border-bottom:1px solid #e2e8f0}
+tr:hover td{background:#f8fafc}
+
+/* BADGES */
+.badge{display:inline-block;padding:.15rem .55rem;border-radius:20px;font-size:.7rem;font-weight:600}
+.b-get{background:#dcfce7;color:#16a34a}
+.b-post{background:#dbeafe;color:#2563eb}
+.b-patch{background:#fef3c7;color:#d97706}
+.b-delete{background:#fee2e2;color:#dc2626}
+.b-socket{background:#ecfeff;color:#0891b2}
+
+/* CALLOUT */
+.callout{padding:1rem 1.25rem;border-radius:8px;margin-bottom:1.5rem;border-left:4px solid}
+.callout-info{background:#eff6ff;border-color:#2563eb;color:#1e40af}
+.callout-warn{background:#fffbeb;border-color:#d97706;color:#92400e}
+.callout-danger{background:#fef2f2;border-color:#dc2626;color:#991b1b}
+.callout-success{background:#f0fdf4;border-color:#16a34a;color:#166534}
+.callout p{margin:0;color:inherit}
+
+/* SCHEMA DIAGRAM */
+.schema{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:1.25rem;margin-bottom:1.5rem;font-family:'Fira Code',monospace;font-size:.8rem;line-height:1.6;white-space:pre;overflow-x:auto}
+
+/* FOOTER */
+.doc-footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:.85rem;color:#94a3b8}
+.doc-footer a{color:#64748b}

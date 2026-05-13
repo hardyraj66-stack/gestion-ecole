@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Planning — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>📅 Planning</h1>
+<p class="subtitle">Pages <code>/planning</code> et <code>/classes/:id/planning</code></p>
+<h2>Layout</h2>
+<div class="schema">
+┌─ Liste classes (280px) ─┬─ Contenu ──────────────────────┐
+│                          │                                │
+│  ┌─ ClasseItem ────────┐ │  ┌─ Configuration ──────────┐  │
+│  │ 6ème A    [3]       │ │  │ Nom │ Niveau │ Salle │…  │  │
+│  └─────────────────────┘ │  └──────────────────────────┘  │
+│  ┌─ ClasseItem (actif) ┐ │                                │
+│  │ 5ème B    [8]       │ │  ┌─ CreneauForm ────────────┐  │
+│  └─────────────────────┘ │  │ (toggle) Matière, jour…  │  │
+│  …                       │  └──────────────────────────┘  │
+│                          │                                │
+│                          │  ┌─ Calendrier ─────────────┐  │
+│                          │  │ Lun │ Mar │ Mer │ Jeu │…  │  │
+│                          │  │ 08h │     │ [M] │     │   │  │
+│                          │  │ 09h │ [F] │     │ [E] │   │  │
+│                          │  └──────────────────────────┘  │
+└──────────────────────────┴────────────────────────────────┘
+</div>
+<h2>Sélection de classe</h2>
+<p>Liste à gauche avec toutes les classes. Chaque item affiche le nom, le niveau, la salle et un badge avec le nombre de créneaux. La classe sélectionnée est surlignée.</p>
+<h2>Configuration</h2>
+<p>Barre d'informations : nom de classe, niveau, salle, mode (badge Fixe/Variable), nombre de créneaux, heures/semaine.</p>
+<h2>Formulaire de créneau</h2>
+<ul>
+<li>Grille 3 colonnes : matière*, jour*, enseignant</li>
+<li>Grille 3 colonnes : heure début*, heure fin*, salle*</li>
+<li>Salle en mode <strong>fixe</strong> : input readonly avec badge « Fixe »</li>
+<li>Salle en mode <strong>variable</strong> : select avec vérification de disponibilité en temps réel (re-fetch quand jour/heure changent), légende vert/rouge</li>
+</ul>
+<h2>Calendrier hebdomadaire</h2>
+<p>Table <code>planning-table</code> : lignes = heures (07:00→18:00, pas 30min), colonnes = jours (Lun→Sam). Chaque créneau = bloc coloré (couleur matière) avec nom, horaires, salle, enseignant. Bouton ✕ au survol pour supprimer.</p>
+<div class="doc-footer">
+<a href="15-front-notes.html">← Saisie des Notes</a>
+<a href="17-front-salles.html">Gestion des Salles →</a>
+</div>
+</div>
+</body></html>

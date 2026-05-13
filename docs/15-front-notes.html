@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Saisie des Notes — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>📝 Saisie des Notes</h1>
+<p class="subtitle">Page <code>/notes</code></p>
+<h2>Flux utilisateur</h2>
+<ol>
+<li>Sélectionner une <strong>classe</strong>, une <strong>matière</strong>, un <strong>trimestre</strong> et une <strong>date d'évaluation</strong></li>
+<li>Cliquer <strong>« Charger les élèves »</strong></li>
+<li>Saisir les notes (0-20, pas 0.5) et commentaires optionnels pour chaque élève</li>
+<li>Cliquer <strong>« ✓ Enregistrer toutes les notes »</strong></li>
+</ol>
+<h2>Composants</h2>
+<table>
+<tr><th>Composant</th><th>Rôle</th></tr>
+<tr><td>NotesFilters</td><td>Card de sélection (classe, matière, trimestre, date) + bouton charger</td></tr>
+<tr><td>NotesStatsBar</td><td>Bande : « X / Y saisies » + « Z — Moy. classe »</td></tr>
+<tr><td>NotesTable</td><td>Tableau paginé (10/page) : avatar, nom, input note, input commentaire, badge statut</td></tr>
+</table>
+<h2>Logique</h2>
+<ul>
+<li>Au chargement, les notes existantes (même élève + matière + trimestre) sont pré-remplies avec <code>existingId</code></li>
+<li>À l'enregistrement : si <code>existingId</code> → <code>PATCH</code>, sinon → <code>POST</code></li>
+<li>L'input note a une classe CSS <code>note-good</code> (vert, ≥10) ou <code>note-bad</code> (rouge, &lt;10)</li>
+<li>Badge statut : « Existante » (gris), « Nouvelle » (vert), ou « — »</li>
+</ul>
+<div class="doc-footer">
+<a href="14-front-matieres.html">← Gestion des Matières</a>
+<a href="16-front-planning.html">Planning →</a>
+</div>
+</div>
+</body></html>

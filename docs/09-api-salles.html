@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Salles — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>🏠 Module Salles</h1>
+<p class="subtitle">Salles de l'établissement, types et vérification de disponibilité</p>
+<h2>Schéma Salle</h2>
+<pre><code>{
+  nom:         String  (requis)
+  capacite:    Number  (requis, défaut 30)
+  description: String  (défaut "")
+  type:        Enum    ['standard','laboratoire','informatique','sport','arts']
+}</code></pre>
+<h2>Endpoints API</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/salles</code></td><td>Toutes les salles</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/salles/disponibles?jour=Lundi&heure_debut=08:00&heure_fin=09:00</code></td><td>Disponibilité</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/salles/:id</code></td><td>Une salle</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/salles</code></td><td>Créer</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/salles/:id</code></td><td>Modifier</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/salles/:id</code></td><td>Supprimer</td></tr>
+</table>
+<h2>Endpoint Disponibilité — Détail</h2>
+<p>Retourne toutes les salles avec un champ <code>disponible: boolean</code> et, si occupée, les détails de l'occupant :</p>
+<pre><code>[{
+  id: "...", nom: "Salle 101", capacite: 30, type: "standard",
+  disponible: false,
+  occupant: {
+    classe_id: "...",
+    matiere_nom: "Mathématiques",
+    heure_debut: "08:00",
+    heure_fin: "09:00"
+  }
+}]</code></pre>
+<h3>Algorithme de conflit</h3>
+<p>Deux créneaux sont en conflit si : <code>creneau.salle === salle.nom && creneau.jour === jour && creneau_debut &lt; heure_fin && creneau_fin &gt; heure_debut</code></p>
+<h2>Types de salles</h2>
+<table>
+<tr><th>Type</th><th>Label</th><th>Couleur bordure</th></tr>
+<tr><td>standard</td><td>Salle standard</td><td style="color:#2563eb">■ #2563eb</td></tr>
+<tr><td>laboratoire</td><td>Laboratoire</td><td style="color:#7c3aed">■ #7c3aed</td></tr>
+<tr><td>informatique</td><td>Salle informatique</td><td style="color:#0891b2">■ #0891b2</td></tr>
+<tr><td>sport</td><td>Salle de sport</td><td style="color:#16a34a">■ #16a34a</td></tr>
+<tr><td>arts</td><td>Salle arts</td><td style="color:#db2777">■ #db2777</td></tr>
+</table>
+<div class="callout callout-info"><p><strong>Règle métier Socket</strong> : pour les salles, les opérations create/update/delete ne mettent <em>pas</em> à jour le state local côté frontend. On laisse le socket arriver pour éviter les doublons.</p></div>
+<div class="doc-footer">
+<a href="08-api-planning.html">← Module Planning</a>
+<a href="10-api-annees.html">Module Cycle Scolaire →</a>
+</div>
+</div>
+</body></html>

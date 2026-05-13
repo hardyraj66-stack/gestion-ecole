@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Cycle Scolaire — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>🔄 Cycle Scolaire (Frontend)</h1>
+<p class="subtitle">Page <code>/annee-scolaire</code></p>
+<h2>Layout de la page</h2>
+<div class="schema">
+┌─ PageHeader ────────────────────────────────────────┐
+│ Cycle scolaire              [+ Préparer une année]  │
+└─────────────────────────────────────────────────────┘
+
+┌─ Formulaire (toggle) ──────────────────────────────┐
+│ Label* │ Date début* │ Date fin*    [Créer]         │
+└─────────────────────────────────────────────────────┘
+
+┌─ Pipeline visuel ──────────────────────────────────┐
+│   [Active]  →  [Terminée]  →  [Préparation]       │
+└─────────────────────────────────────────────────────┘
+
+┌─ Carte année ACTIVE (bordure verte) ───────────────┐
+│ 🟢 2024-2025   [Active]                            │
+│ 📅 02/09/2024 → 05/07/2025  🏫 15  👥 350  📝 2000│
+│                                   [Terminer]       │
+└─────────────────────────────────────────────────────┘
+
+┌─ Carte année PRÉPARATION (bordure orange) ─────────┐
+│ 🟡 2025-2026   [En préparation]                    │
+│ Configurez les classes avant de démarrer.           │
+│                     [🚀 Démarrer]  [Supprimer]      │
+│ ⚠️ Terminez 2024-2025 d'abord                       │
+└─────────────────────────────────────────────────────┘
+
+┌─ Historique ───────────────────────────────────────┐
+│ [Active] 2024-2025  02/09/2024 → 05/07/2025       │
+│ [Terminée] 2023-2024  04/09/2023 → 06/07/2024     │
+│                                    [📂 Consulter]  │
+└─────────────────────────────────────────────────────┘
+
+┌─ Journal d'audit (scrollable) ─────────────────────┐
+│ 🟢 Année 2024-2025 démarrée     02/09/2024 08:00  │
+│ 🔵 Année 2024-2025 créée        01/07/2024 10:00  │
+│ 🔴 Année 2023-2024 terminée     06/07/2024 17:00  │
+│ …                                                  │
+└─────────────────────────────────────────────────────┘
+</div>
+
+<h2>Actions et confirmations</h2>
+<table>
+<tr><th>Action</th><th>Étapes de confirmation</th></tr>
+<tr><td><strong>Terminer l'année</strong></td><td>1ère popup warning (« irréversible… ») → 2ème popup danger (« Je confirme la clôture »)</td></tr>
+<tr><td><strong>Démarrer l'année</strong></td><td>1 popup info (« Assurez-vous que tout est configuré… »)</td></tr>
+<tr><td><strong>Supprimer (préparation)</strong></td><td>1 popup danger</td></tr>
+<tr><td><strong>Consulter (terminée)</strong></td><td>Pas de confirmation → bascule en mode archive</td></tr>
+</table>
+
+<h2>Intégration Sidebar</h2>
+<ul>
+<li>Lien « Cycle scolaire » avec icône de cycle (flèches circulaires)</li>
+<li>Encart dans le footer : année courante avec badge statut, cliquable pour revenir de l'archive</li>
+<li>En mode archive : bordure droite orange sur la sidebar, fond ambre sur l'encart</li>
+</ul>
+
+<div class="doc-footer">
+<a href="17-front-salles.html">← Gestion des Salles</a>
+<a href="19-front-archives.html">Mode Archive →</a>
+</div>
+</div>
+</body></html>

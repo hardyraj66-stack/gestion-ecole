@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Données Mock & Seeder — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>🎲 Données Mock & Seeder</h1>
+<p class="subtitle">Fallback frontend et peuplement initial MongoDB</p>
+
+<h2>Stratégie de fallback</h2>
+<p>Chaque contexte React suit le même pattern :</p>
+<pre><code>const getAll = async () =&gt; {
+  try {
+    const res = await fetch(API_URL + '/xxx');
+    if (res.ok) {
+      const data = await res.json();
+      // Si l'API retourne des données → les utiliser
+      if (data &amp;&amp; data.length > 0) setItems(data);
+      // Sinon → fallback mock
+      else setItems(mockXxx);
+    } else {
+      setItems(mockXxx);  // Erreur HTTP → mock
+    }
+  } catch {
+    setItems(mockXxx);    // Réseau inaccessible → mock
+  }
+};</code></pre>
+<div class="callout callout-success"><p>L'application est <strong>100% fonctionnelle sans backend</strong>. Les données mock permettent de démontrer toutes les fonctionnalités.</p></div>
+
+<h2>Volumes de données mock</h2>
+<table>
+<tr><th>Entité</th><th>Quantité</th><th>Détail</th></tr>
+<tr><td>Salles</td><td>12</td><td>5 standard, 2 labo, 2 info, 1 sport, 2 arts</td></tr>
+<tr><td>Classes</td><td>15</td><td>3×6ème, 2×5ème, 2×4ème, 2×3ème, 2×2nde, 2×1ère, 2×Terminale</td></tr>
+<tr><td>Matières</td><td>15</td><td>Math, Français, HG, Anglais, Espagnol, PC, SVT, Tech, EPS, Arts, Musique, Allemand, Latin, Philo, SES</td></tr>
+<tr><td>Élèves</td><td>~350</td><td>22-28 par classe, noms français réalistes, dates de naissance cohérentes</td></tr>
+<tr><td>Notes</td><td>~2000+</td><td>6-9 matières par élève, 2-4 notes par matière, distribution réaliste</td></tr>
+<tr><td>Créneaux</td><td>~200+</td><td>8-11 matières par classe, 1-4 créneaux par matière, salles adaptées</td></tr>
+<tr><td>Années</td><td>2</td><td>2024-2025 (active), 2023-2024 (terminée)</td></tr>
+</table>
+
+<h2>Génération des données</h2>
+<h3>Élèves</h3>
+<ul>
+<li>30 prénoms masculins + 30 prénoms féminins + 40 noms de famille</li>
+<li>Genre aléatoire 50/50</li>
+<li>Date de naissance cohérente avec le niveau : 6ème → 2013, Terminale → 2007</li>
+<li>Email auto-généré : <code>prenom.nom@ecole.fr</code></li>
+</ul>
+<h3>Notes</h3>
+<ul>
+<li>Base = 8 + random(0-10), variation ±2 → distribution réaliste centrée sur 13</li>
+<li>Arrondi au demi-point (step 0.5)</li>
+<li>30% de chance d'avoir un commentaire aléatoire</li>
+</ul>
+<h3>Créneaux</h3>
+<ul>
+<li>Nombre de créneaux par matière proportionnel au coefficient</li>
+<li>Anti-collision : un set de créneaux occupés par classe</li>
+<li>Salles spécialisées : PC → Labo Physique, EPS → Gymnase, etc.</li>
+</ul>
+
+<h2>Seeder MongoDB</h2>
+<p><code>SeederService</code> dans <code>server/src/data/</code> :</p>
+<ul>
+<li>Implémente <code>OnModuleInit</code></li>
+<li>Vérifie <code>salleModel.countDocuments()</code></li>
+<li>Si 0 → insère toutes les données avec les vrais <code>_id</code> MongoDB comme références</li>
+<li>Si &gt; 0 → skip (« Base déjà peuplée »)</li>
+</ul>
+<div class="callout callout-info"><p>Le seeder et les mocks frontend utilisent les <strong>mêmes données source</strong>. La seule différence est que le seeder utilise les ObjectId MongoDB pour les références, tandis que les mocks utilisent des IDs string simples.</p></div>
+
+<div class="doc-footer">
+<a href="20-temps-reel.html">← Temps réel</a>
+<a href="index.html">Sommaire →</a>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Gestion des Salles — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>🏠 Gestion des Salles</h1>
+<p class="subtitle">Page <code>/salles</code></p>
+<h2>Composants</h2>
+<table>
+<tr><th>Composant</th><th>Rôle</th></tr>
+<tr><td>SallesList</td><td>Page principale : formulaire toggle + grille paginée (8/page)</td></tr>
+<tr><td>SalleForm</td><td>Formulaire inline (création ou modification) : nom*, type, capacité, description</td></tr>
+<tr><td>SalleCard</td><td>Carte avec bordure colorée par type, badge type + icône, capacité, description, boutons modifier/supprimer</td></tr>
+</table>
+<h2>Types et couleurs</h2>
+<table>
+<tr><th>Type</th><th>Couleur</th><th>Icône</th></tr>
+<tr><td>standard</td><td style="color:#2563eb">■ Bleu</td><td>Maison</td></tr>
+<tr><td>laboratoire</td><td style="color:#7c3aed">■ Violet</td><td>Table de labo</td></tr>
+<tr><td>informatique</td><td style="color:#0891b2">■ Cyan</td><td>Écran</td></tr>
+<tr><td>sport</td><td style="color:#16a34a">■ Vert</td><td>Cercle</td></tr>
+<tr><td>arts</td><td style="color:#db2777">■ Rose</td><td>Pinceau</td></tr>
+</table>
+<h2>Formulaire inline</h2>
+<p>Le titre change dynamiquement entre « Nouvelle salle » et « Modifier la salle ». En mode édition, les champs sont pré-remplis. Le formulaire est en grille 4 colonnes.</p>
+<div class="callout callout-warn"><p><strong>Socket-only</strong> : les opérations create/update/delete ne mettent pas à jour l'état local. Seul l'événement Socket.IO fait la mise à jour, pour éviter les doublons.</p></div>
+<div class="doc-footer">
+<a href="16-front-planning.html">← Planning</a>
+<a href="18-front-cycle.html">Cycle Scolaire →</a>
+</div>
+</div>
+</body></html>

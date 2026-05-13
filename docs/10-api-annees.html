@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Cycle Scolaire — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+<h1>🔄 Module Cycle Scolaire</h1>
+<p class="subtitle">Gestion des années scolaires : machine à états, transitions, snapshot, audit</p>
+
+<h2>Schéma AnneeScolaire</h2>
+<pre><code>{
+  label:      String  (requis, unique)  // "2024-2025"
+  debut:      String  (requis)          // "2024-09-02"
+  fin:        String  (requis)          // "2025-07-05"
+  statut:     Enum    ['active','terminee','preparation']
+  historique: [{
+    action:   String,   // 'creation' | 'demarrage' | 'cloture' | 'creation_auto'
+    date:     String,   // ISO timestamp
+    details:  String    // description lisible
+  }]
+}</code></pre>
+
+<h2>Machine à états</h2>
+<div class="schema">
+                 ┌──────────────┐
+                 │  PRÉPARATION │
+                 └──────┬───────┘
+                        │ POST /:id/demarrer
+                        │ (vérifie: aucune année active)
+                        ▼
+                 ┌──────────────┐
+                 │    ACTIVE    │  ← une seule à la fois
+                 └──────┬───────┘
+                        │ POST /:id/terminer
+                        │ (double confirmation frontend)
+                        ▼
+                 ┌──────────────┐
+                 │   TERMINÉE   │  ← lecture seule
+                 └──────┬───────┘
+                        │ (automatique)
+                        │ crée la nouvelle année
+                        ▼
+                 ┌──────────────┐
+                 │  PRÉPARATION │  ← nouvelle année
+                 └──────────────┘
+</div>
+
+<h2>Endpoints API</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/annees</code></td><td>Toutes les années (tri desc)</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/annees/active</code></td><td>L'année active ou null</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/annees/:id</code></td><td>Détail d'une année</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/annees/:id/snapshot</code></td><td>Données complètes de l'année</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/annees</code></td><td>Créer en préparation</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/annees/:id/demarrer</code></td><td>Préparation → Active</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/annees/:id/terminer</code></td><td>Active → Terminée (+ crée suivante)</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/annees/:id</code></td><td>Modifier (interdit si terminée)</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/annees/:id</code></td><td>Supprimer (seulement préparation)</td></tr>
+</table>
+
+<h2>Endpoint Snapshot</h2>
+<p><code>GET /annees/:id/snapshot</code> retourne :</p>
+<pre><code>{
+  annee:    AnneeScolaire,
+  classes:  Classe[]       // filtrées par annee_scolaire === label
+  eleves:   Eleve[]        // filtrés par classe_id ∈ classes
+  notes:    Note[]          // filtrées par eleve_id ∈ eleves
+  creneaux: Creneau[]      // filtrés par classe_id ∈ classes
+  matieres: Matiere[]      // toutes (partagées)
+}</code></pre>
+
+<h2>Règles métier</h2>
+<table>
+<tr><th>Règle</th><th>Vérification</th></tr>
+<tr><td>Une seule année active</td><td><code>demarrer()</code> vérifie qu'aucune autre n'est active</td></tr>
+<tr><td>Lecture seule une fois terminée</td><td><code>update()</code> et <code>delete()</code> refusent si <code>statut === 'terminee'</code></td></tr>
+<tr><td>Suppression interdite si active</td><td><code>delete()</code> vérifie le statut</td></tr>
+<tr><td>Création auto de la suivante</td><td><code>terminer()</code> calcule le label N+1 et crée en préparation</td></tr>
+<tr><td>Traçabilité</td><td>Chaque transition ajoute une entrée dans <code>historique[]</code></td></tr>
+</table>
+
+<h2>Double confirmation (frontend)</h2>
+<ul>
+<li><strong>Terminer</strong> : 1ère popup (warning) « Vous êtes sur le point de clôturer… » → 2ème popup (danger) « Confirmez-vous la clôture définitive ? »</li>
+<li><strong>Démarrer</strong> : popup (info) « Assurez-vous que tout est configuré… »</li>
+</ul>
+
+<div class="doc-footer">
+<a href="09-api-salles.html">← Module Salles</a>
+<a href="11-front-dashboard.html">Frontend Dashboard →</a>
+</div>
+</div>
+</body></html>

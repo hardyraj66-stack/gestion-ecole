@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Composants partagés — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🧩 Composants partagés</h1>
+<p class="subtitle">17 composants réutilisables dans <code>src/components/shared/</code></p>
+
+<h2>Catalogue</h2>
+<table>
+<tr><th>Composant</th><th>Fichier</th><th>Props principales</th></tr>
+<tr><td><strong>Button</strong></td><td>Button.tsx</td><td><code>variant</code> (primary/secondary/outline/danger/link), <code>size</code> (sm/md/lg), <code>as</code> (button/link), <code>to</code>, <code>loading</code>, <code>disabled</code></td></tr>
+<tr><td><strong>Input</strong></td><td>Input.tsx</td><td><code>label</code>, <code>error</code>, <code>hint</code>, <code>icon</code>, <code>readOnly</code> — extends <code>InputHTMLAttributes</code></td></tr>
+<tr><td><strong>Select</strong></td><td>Select.tsx</td><td><code>label</code>, <code>options: SelectOption[]</code>, <code>placeholder</code>, <code>error</code>, <code>badge</code></td></tr>
+<tr><td><strong>Textarea</strong></td><td>Textarea.tsx</td><td><code>label</code>, <code>error</code>, <code>hint</code> — extends <code>TextareaHTMLAttributes</code></td></tr>
+<tr><td><strong>Card</strong></td><td>Card.tsx</td><td><code>padding</code> (none/sm/md/lg), <code>borderTop</code> (couleur), <code>style</code>, <code>onClick</code></td></tr>
+<tr><td><strong>CardHeader</strong></td><td>Card.tsx</td><td><code>title</code>, <code>action</code>, <code>linkTo</code>, <code>linkText</code></td></tr>
+<tr><td><strong>AddCard</strong></td><td>Card.tsx</td><td><code>label</code>, <code>to</code> ou <code>onClick</code> — carte dashed « + »</td></tr>
+<tr><td><strong>Alert</strong></td><td>Alert.tsx</td><td><code>variant</code> (success/error/warning/info), <code>icon</code> (bool), <code>children</code></td></tr>
+<tr><td><strong>Avatar</strong></td><td>Avatar.tsx</td><td><code>initiales</code>, <code>genre</code> (M/F → couleur), <code>size</code> (sm/md/lg)</td></tr>
+<tr><td><strong>Table</strong></td><td>Table.tsx</td><td>Composants <code>Table</code>, <code>TableHead</code>, <code>TableBody</code>, <code>TableRow</code>, <code>TableCell</code>, <code>TableFooter</code></td></tr>
+<tr><td><strong>Pagination</strong></td><td>Pagination.tsx</td><td><code>currentPage</code>, <code>totalItems</code>, <code>pageSize</code>, <code>onPageChange</code> + utilitaire <code>paginate()</code></td></tr>
+<tr><td><strong>ProgressBar</strong></td><td>ProgressBar.tsx</td><td><code>value</code>, <code>max</code>, <code>showLabel</code>, <code>variant</code> — rouge auto si ≥ 90%</td></tr>
+<tr><td><strong>Icon</strong></td><td>Icon.tsx</td><td><code>path</code> (SVG d), <code>size</code>, <code>strokeWidth</code> + dictionnaire <code>Icons</code></td></tr>
+<tr><td><strong>SearchInput</strong></td><td>SearchInput.tsx</td><td><code>onSearch</code>, icône loupe intégrée</td></tr>
+<tr><td><strong>ColorPicker</strong></td><td>ColorPicker.tsx</td><td><code>colors: ColorOption[]</code>, <code>value</code>, <code>onChange</code></td></tr>
+<tr><td><strong>FormGrid</strong></td><td>FormGrid.tsx</td><td><code>columns</code> (1-4), + <code>FormSection</code> (titre), + <code>FormActions</code></td></tr>
+<tr><td><strong>InfoBar / FilterBar</strong></td><td>InfoBar.tsx / FilterBar.tsx</td><td>Barres contextuelles avec <code>items</code> ou <code>children</code> + <code>count</code></td></tr>
+<tr><td><strong>ConfirmDialog</strong></td><td>ConfirmDialog.tsx</td><td>Provider global + hook <code>useConfirm()</code> → <code>Promise&lt;boolean&gt;</code></td></tr>
+</table>
+
+<h2>ConfirmDialog — Détails</h2>
+<p>Remplace tous les <code>window.confirm()</code> natifs par une popup stylisée.</p>
+<pre><code>const confirm = useConfirm();
+
+const ok = await confirm({
+  title: 'Supprimer la classe',
+  message: 'Êtes-vous sûr ?',
+  confirmText: 'Supprimer',
+  cancelText: 'Annuler',       // optionnel, défaut "Annuler"
+  variant: 'danger',           // danger | warning | info
+});
+
+if (ok) { /* supprimer */ }</code></pre>
+
+<div class="callout callout-info"><p><strong>Architecture</strong> : <code>ConfirmProvider</code> est placé tout en haut de l'arbre dans <code>AppProviders</code>. Il gère un état unique (une seule popup à la fois) avec une Promise pour le retour.</p></div>
+
+<h2>Pagination — Détails</h2>
+<pre><code>import { Pagination, paginate } from './Pagination';
+
+const PAGE_SIZE = 10;
+const [page, setPage] = useState(1);
+const paged = paginate(items, page, PAGE_SIZE);
+
+// Dans le JSX :
+&lt;Pagination
+  currentPage={page}
+  totalItems={items.length}
+  pageSize={PAGE_SIZE}
+  onPageChange={setPage}
+/&gt;</code></pre>
+<p>La pagination affiche des ellipses intelligentes quand il y a plus de 7 pages. Elle se masque automatiquement pour 1 seule page.</p>
+
+<h2>Button — Détails</h2>
+<p>Le composant <code>Button</code> peut rendre un <code>&lt;button&gt;</code> ou un <code>&lt;Link&gt;</code> React Router :</p>
+<pre><code>// Bouton standard
+&lt;Button variant="primary" onClick={save} loading={saving}&gt;
+  Sauvegarder
+&lt;/Button&gt;
+
+// Bouton-lien
+&lt;Button as="link" to="/classes/nouvelle" variant="outline"&gt;
+  + Nouvelle classe
+&lt;/Button&gt;</code></pre>
+
+<div class="doc-footer">
+<a href="01-design-system.html">← Design System</a>
+<a href="03-backend-general.html">Backend général →</a>
+</div>
+</div>
+</body></html>

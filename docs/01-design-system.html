@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Design System — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🎨 Design System</h1>
+<p class="subtitle">Variables CSS, couleurs, typographie, layout</p>
+
+<h2>Palette de couleurs</h2>
+<table>
+<tr><th>Variable</th><th>Valeur</th><th>Usage</th></tr>
+<tr><td><code>--primary</code></td><td><span style="color:#2563eb">■</span> #2563eb</td><td>Actions principales, liens, focus</td></tr>
+<tr><td><code>--primary-dark</code></td><td><span style="color:#1d4ed8">■</span> #1d4ed8</td><td>Hover sur boutons primaires</td></tr>
+<tr><td><code>--primary-light</code></td><td>#eff6ff</td><td>Fonds légers, badges primaires</td></tr>
+<tr><td><code>--secondary</code></td><td><span style="color:#7c3aed">■</span> #7c3aed</td><td>Accents secondaires</td></tr>
+<tr><td><code>--success</code></td><td><span style="color:#16a34a">■</span> #16a34a</td><td>Validations, notes ≥ 16</td></tr>
+<tr><td><code>--warning</code></td><td><span style="color:#d97706">■</span> #d97706</td><td>Alertes, notes 10-13, mode préparation</td></tr>
+<tr><td><code>--danger</code></td><td><span style="color:#dc2626">■</span> #dc2626</td><td>Erreurs, suppressions, notes &lt; 8</td></tr>
+<tr><td><code>--info</code></td><td><span style="color:#0891b2">■</span> #0891b2</td><td>Informations, badges genre masculin</td></tr>
+</table>
+
+<h2>Typographie</h2>
+<pre><code>font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;</code></pre>
+<table>
+<tr><th>Élément</th><th>Taille</th><th>Poids</th></tr>
+<tr><td>Titre page (h1)</td><td>1.5rem</td><td>700</td></tr>
+<tr><td>Titre carte (h3)</td><td>1.1rem</td><td>600</td></tr>
+<tr><td>Corps de texte</td><td>0.9rem</td><td>400</td></tr>
+<tr><td>Texte secondaire</td><td>0.85rem</td><td>400 / couleur <code>--text-muted</code></td></tr>
+<tr><td>Labels de formulaire</td><td>0.85rem</td><td>500</td></tr>
+<tr><td>Badges</td><td>0.75rem</td><td>600</td></tr>
+<tr><td>En-têtes de tableau (th)</td><td>0.75rem</td><td>600 / uppercase</td></tr>
+</table>
+
+<h2>Layout</h2>
+<div class="schema">
+┌──────────┬─────────────────────────────────────────┐
+│          │                                         │
+│ SIDEBAR  │            MAIN CONTENT                 │
+│  260px   │         (scrollable, 2rem padding)      │
+│  fixed   │                                         │
+│  100vh   │  ┌─ PageHeader ──────────────────────┐  │
+│          │  │ Titre        [Actions]             │  │
+│  ┌────┐  │  └───────────────────────────────────┘  │
+│  │Nav │  │                                         │
+│  │    │  │  ┌─ Contenu ─────────────────────────┐  │
+│  │    │  │  │ Stats / Tableaux / Cartes / Forms  │  │
+│  │    │  │  │                                    │  │
+│  └────┘  │  │ ┌─ Pagination ──────────────────┐  │  │
+│          │  │ │ 1-8 sur 15    [1][2][>]        │  │  │
+│  ┌────┐  │  │ └────────────────────────────────┘  │  │
+│  │User│  │  └───────────────────────────────────┘  │
+│  └────┘  │                                         │
+└──────────┴─────────────────────────────────────────┘
+</div>
+
+<h2>Rayons et ombres</h2>
+<table>
+<tr><th>Variable</th><th>Valeur</th><th>Usage</th></tr>
+<tr><td><code>--radius</code></td><td>12px</td><td>Cartes, modals</td></tr>
+<tr><td><code>--radius-sm</code></td><td>8px</td><td>Boutons, inputs, badges de navigation</td></tr>
+<tr><td><code>--card-shadow</code></td><td>0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)</td><td>Toutes les cartes</td></tr>
+</table>
+
+<h2>Variantes de boutons</h2>
+<table>
+<tr><th>Classe</th><th>Apparence</th><th>Usage</th></tr>
+<tr><td><code>.btn-primary</code></td><td>Fond bleu, texte blanc</td><td>Actions principales (créer, sauvegarder)</td></tr>
+<tr><td><code>.btn-secondary</code></td><td>Fond transparent, bordure grise</td><td>Annuler, retour</td></tr>
+<tr><td><code>.btn-outline</code></td><td>Fond transparent, bordure bleue</td><td>Actions secondaires (voir, planning)</td></tr>
+<tr><td><code>.btn-danger</code></td><td>Fond rouge clair, texte rouge</td><td>Supprimer, terminer</td></tr>
+<tr><td><code>.btn-link</code></td><td>Texte bleu, sans fond</td><td>Liens inline</td></tr>
+</table>
+
+<h2>Variantes de badges</h2>
+<table>
+<tr><th>Variant</th><th>Fond</th><th>Texte</th><th>Usage</th></tr>
+<tr><td><code>success</code></td><td>#f0fdf4</td><td>#16a34a</td><td>Année active, note ≥ 16</td></tr>
+<tr><td><code>warning</code></td><td>#fffbeb</td><td>#d97706</td><td>Préparation, note 10-13, genre féminin</td></tr>
+<tr><td><code>danger</code></td><td>#fef2f2</td><td>#dc2626</td><td>Note &lt; 8, erreurs</td></tr>
+<tr><td><code>info</code></td><td>#ecfeff</td><td>#0891b2</td><td>Mode salle fixe, genre masculin</td></tr>
+<tr><td><code>primary</code></td><td>#eff6ff</td><td>#2563eb</td><td>Niveau de classe</td></tr>
+<tr><td><code>default</code></td><td>#f1f5f9</td><td>#64748b</td><td>Coefficients, lecture seule</td></tr>
+</table>
+
+<div class="doc-footer">
+<a href="00-vue-ensemble.html">← Vue d'ensemble</a>
+<a href="02-composants-shared.html">Composants partagés →</a>
+</div>
+</div>
+</body></html>
