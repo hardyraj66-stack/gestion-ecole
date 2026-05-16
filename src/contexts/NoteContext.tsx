@@ -42,9 +42,9 @@ export function NoteProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const u1 = onEvent('note:created', () => notifyDataChange());
-    const u2 = onEvent('note:updated', () => notifyDataChange());
-    const u3 = onEvent('note:deleted', () => notifyDataChange());
+    const u1 = onEvent('note:created', () => notifyDataChange('notes'));
+    const u2 = onEvent('note:updated', () => notifyDataChange('notes'));
+    const u3 = onEvent('note:deleted', () => notifyDataChange('notes'));
     return () => { u1(); u2(); u3(); };
   }, []);
 

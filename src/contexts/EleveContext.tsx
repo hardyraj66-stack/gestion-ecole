@@ -25,9 +25,9 @@ export function EleveProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const u1 = onEvent('eleve:created', () => notifyDataChange());
-    const u2 = onEvent('eleve:updated', () => notifyDataChange());
-    const u3 = onEvent('eleve:deleted', () => notifyDataChange());
+    const u1 = onEvent('eleve:created', () => notifyDataChange('eleves'));
+    const u2 = onEvent('eleve:updated', () => notifyDataChange('eleves'));
+    const u3 = onEvent('eleve:deleted', () => notifyDataChange('eleves'));
     return () => { u1(); u2(); u3(); };
   }, []);
 

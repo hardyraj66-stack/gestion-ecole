@@ -23,9 +23,9 @@ export function MatiereProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const u1 = onEvent('matiere:created', () => notifyDataChange());
-    const u2 = onEvent('matiere:updated', () => notifyDataChange());
-    const u3 = onEvent('matiere:deleted', () => notifyDataChange());
+    const u1 = onEvent('matiere:created', () => notifyDataChange('matieres'));
+    const u2 = onEvent('matiere:updated', () => notifyDataChange('matieres'));
+    const u3 = onEvent('matiere:deleted', () => notifyDataChange('matieres'));
     return () => { u1(); u2(); u3(); };
   }, []);
 

@@ -1,75 +1,63 @@
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_URL } from '../config/api';
 
+type Channel = 'classes' | 'eleves' | 'matieres' | 'notes' | 'planning' | 'salles' | 'annees' | 'all';
 type Listener = () => void;
 
 class SocketService {
   private socket: Socket | null = null;
   private static instance: SocketService;
-  private refreshListeners: Set<Listener> = new Set();
+  private refreshListeners = new Map<Channel, Set<Listener>>();
 
   private constructor() {
     this.connect();
+    this.refreshListeners.set('classes', new Set());
+    this.refreshListeners.set('eleves', new Set());
+    this.refreshListeners.set('matieres', new Set());
+    this.refreshListeners.set('notes', new Set());
+    this.refreshListeners.set('planning', new Set());
+    this.refreshListeners.set('salles', new Set());
+    this.refreshListeners.set('annees', new Set());
+    this.refreshListeners.set('all', new Set());
   }
 
   static getInstance(): SocketService {
-    if (!SocketService.instance) {
-      SocketService.instance = new SocketService();
-    }
+    if (!SocketService.instance) SocketService.instance = new SocketService();
     return SocketService.instance;
   }
 
   private connect(): void {
-    this.socket = io(SOCKET_URL, {
-      transports: ['websocket'],
-      autoConnect: true,
-    });
-
-    this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket?.id);
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-    });
-
-    this.socket.on('connect_error', (error) => {
-      console.log('Socket connection error:', error.message);
-    });
+    this.socket = io(SOCKET_URL, { transports: ['websocket'], autoConnect: true });
+    this.socket.on('connect', () => console.log('Socket connected:', this.socket?.id));
+    this.socket.on('disconnect', () => console.log('Socket disconnected'));
+    this.socket.on('connect_error', (error) => console.log('Socket connection error:', error.message));
   }
 
   onEvent<T>(event: string, callback: (data: T) => void): () => void {
     if (this.socket) {
       this.socket.on(event, callback);
-      return () => {
-        this.socket?.off(event, callback);
-      };
+      return () => this.socket?.off(event, callback);
     }
     return () => {};
   }
 
   emitEvent(event: string, data?: unknown): void {
-    if (this.socket) {
-      this.socket.emit(event, data);
-    }
+    this.socket?.emit(event, data);
   }
 
-  /** Enregistre un callback qui sera appelé quand les données changent (via socket) */
-  onDataChange(listener: Listener): () => void {
-    this.refreshListeners.add(listener);
-    return () => { this.refreshListeners.delete(listener); };
+  onDataChange(channel: Channel, listener: Listener): () => void {
+    const set = this.refreshListeners.get(channel);
+    set?.add(listener);
+    return () => { set?.delete(listener); };
   }
 
-  /** Notifie tous les listeners qu'un changement est arrivé */
-  notifyDataChange(): void {
-    this.refreshListeners.forEach(fn => fn());
+  notifyDataChange(channel: Channel): void {
+    this.refreshListeners.get(channel)?.forEach(fn => fn());
+    this.refreshListeners.get('all')?.forEach(fn => fn());
   }
 
   disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-    }
+    if (this.socket) { this.socket.disconnect(); this.socket = null; }
   }
 
   isConnected(): boolean {
@@ -79,16 +67,9 @@ class SocketService {
 
 const socketService = SocketService.getInstance();
 
-export const onEvent = <T>(event: string, callback: (data: T) => void) =>
-  socketService.onEvent(event, callback);
-
-export const emitEvent = (event: string, data?: unknown) =>
-  socketService.emitEvent(event, data);
-
-export const onDataChange = (listener: Listener) =>
-  socketService.onDataChange(listener);
-
-export const notifyDataChange = () =>
-  socketService.notifyDataChange();
-
+export const onEvent = <T>(event: string, callback: (data: T) => void) => socketService.onEvent(event, callback);
+export const emitEvent = (event: string, data?: unknown) => socketService.emitEvent(event, data);
+export const onDataChange = (channel: Channel, listener: Listener) => socketService.onDataChange(channel, listener);
+export const notifyDataChange = (channel: Channel) => socketService.notifyDataChange(channel);
 export default socketService;
+export type { Channel };

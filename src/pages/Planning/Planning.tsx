@@ -74,7 +74,7 @@ export function Planning() {
   useEffect(() => { if (id) setSelectedClasseId(id); }, [id]);
 
   const { data: classesData, loading: classesLoading, readOnly } = usePlanningClasses();
-  const { data: classeData, loading: classeLoading } = usePlanningClasse(selectedClasseId);
+  const { data: classeData, loading: classeLoading, refreshing: classeRefreshing } = usePlanningClasse(selectedClasseId);
 
   const niveaux = useMemo(() => {
     if (!classesData?.classes) return [];
@@ -88,7 +88,8 @@ export function Planning() {
   if (classesLoading) return <PageLoader />;
   if (!classesData) return <Alert variant="error">Problème de chargement.</Alert>;
 
-  const selectedClasse = classeData?.classe || null;
+  const selectedClasseFromList = classesData.classes.find((c: any) => c.id === selectedClasseId) || null;
+  const selectedClasse = classeData?.classe || selectedClasseFromList || null;
   const classeCreneaux: any[] = classeData?.creneaux || [];
   const allMatieres: any[] = classeData?.matieres || [];
   const totalHeures = classeCreneaux.reduce((t: number, c: any) => t + calculateDuration(c.heure_debut, c.heure_fin), 0);
@@ -272,8 +273,6 @@ export function Planning() {
         <div>
           {!selectedClasseId ? (
             <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Sélectionnez un niveau puis une classe" /></Card>
-          ) : classeLoading ? (
-            <PageLoader />
           ) : !selectedClasse ? (
             <Card><EmptyState icon={<Icon path={Icons.warning} size={28} />} message="Classe introuvable" /></Card>
           ) : (
@@ -281,14 +280,23 @@ export function Planning() {
               <Card style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
                   <StatItem label="Classe" value={selectedClasse.nom} />
-                  <StatItem label="Créneaux" value={classeCreneaux.length} />
-                  <StatItem label="Heures/sem" value={`${totalHeures}h`} />
+                  <StatItem label="Créneaux" value={classeLoading && !classeData ? '…' : classeCreneaux.length} />
+                  <StatItem label="Heures/sem" value={classeLoading && !classeData ? '…' : `${totalHeures}h`} />
                   <StatItem label="Mode" value={<Badge label={selectedClasse.salle_type === 'fixe' ? 'Fixe' : 'Variable'} variant={selectedClasse.salle_type === 'fixe' ? 'info' : 'warning'} />} />
                 </div>
               </Card>
 
               <Card padding="none">
-                <div style={{ overflowX: 'auto' }} onMouseLeave={handleGridMouseLeave}>
+                <div style={{ position: 'relative', overflowX: 'auto' }} onMouseLeave={handleGridMouseLeave}>
+                  {classeRefreshing && (
+                    <div className="planning-table-overlay">
+                      <div className="spinner"></div>
+                      <span className="planning-table-overlay-text">Mise à jour du planning…</span>
+                    </div>
+                  )}
+                  {classeLoading && !classeData ? (
+                    <div style={{ padding: '2rem' }}><PageLoader /></div>
+                  ) : (
                   <table className="planning-table planning-interactive">
                     <thead><tr><th>Horaire</th>{JOURS.map(j => <th key={j}>{j}</th>)}</tr></thead>
                     <tbody>
@@ -338,6 +346,7 @@ export function Planning() {
                       })}
                     </tbody>
                   </table>
+                  )}
                 </div>
               </Card>
             </>

@@ -51,9 +51,9 @@ export function AnneeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const u1 = onEvent<AnneeScolaire>('annee:created', () => { notifyDataChange(); getAll(); });
-    const u2 = onEvent<AnneeScolaire>('annee:updated', () => { notifyDataChange(); getAll(); });
-    const u3 = onEvent<{ id: string }>('annee:deleted', () => { notifyDataChange(); getAll(); });
+    const u1 = onEvent<AnneeScolaire>('annee:created', () => { notifyDataChange('annees'); getAll(); });
+    const u2 = onEvent<AnneeScolaire>('annee:updated', () => { notifyDataChange('annees'); getAll(); });
+    const u3 = onEvent<{ id: string }>('annee:deleted', () => { notifyDataChange('annees'); getAll(); });
     return () => { u1(); u2(); u3(); };
   }, [getAll]);
 

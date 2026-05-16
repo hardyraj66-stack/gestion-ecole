@@ -31,9 +31,9 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const u1 = onEvent('creneau:created', () => notifyDataChange());
-    const u2 = onEvent('creneau:updated', () => notifyDataChange());
-    const u3 = onEvent('creneau:deleted', () => notifyDataChange());
+    const u1 = onEvent('creneau:created', () => notifyDataChange('planning'));
+    const u2 = onEvent('creneau:updated', () => notifyDataChange('planning'));
+    const u3 = onEvent('creneau:deleted', () => notifyDataChange('planning'));
     return () => { u1(); u2(); u3(); };
   }, []);
 

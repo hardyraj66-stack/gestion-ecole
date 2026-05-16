@@ -55,9 +55,9 @@ export function SalleProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const u1 = onEvent<Salle>('salle:created', () => { notifyDataChange(); getAll(); });
-    const u2 = onEvent<Salle>('salle:updated', () => { notifyDataChange(); getAll(); });
-    const u3 = onEvent<{ id: string }>('salle:deleted', () => { notifyDataChange(); getAll(); });
+    const u1 = onEvent<Salle>('salle:created', () => { notifyDataChange('salles'); getAll(); });
+    const u2 = onEvent<Salle>('salle:updated', () => { notifyDataChange('salles'); getAll(); });
+    const u3 = onEvent<{ id: string }>('salle:deleted', () => { notifyDataChange('salles'); getAll(); });
     return () => { u1(); u2(); u3(); };
   }, [getAll]);
 

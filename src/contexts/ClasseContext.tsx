@@ -30,9 +30,9 @@ export function ClasseProvider({ children }: { children: ReactNode }) {
 
   // Écoute les sockets et notifie les pages de re-fetcher
   useEffect(() => {
-    const u1 = onEvent('classe:created', () => notifyDataChange());
-    const u2 = onEvent('classe:updated', () => notifyDataChange());
-    const u3 = onEvent('classe:deleted', () => notifyDataChange());
+    const u1 = onEvent('classe:created', () => notifyDataChange('classes'));
+    const u2 = onEvent('classe:updated', () => notifyDataChange('classes'));
+    const u3 = onEvent('classe:deleted', () => notifyDataChange('classes'));
     return () => { u1(); u2(); u3(); };
   }, []);
 
