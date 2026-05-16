@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useViewing } from '../contexts/ViewingContext';
 import { useClasses } from '../contexts/ClasseContext';
 import { useEleves } from '../contexts/EleveContext';
@@ -14,22 +14,33 @@ interface DataResult {
   notes: Note[];
   creneaux: Creneau[];
   loading: boolean;
-  /** true si on regarde une archive (lecture seule) */
   readOnly: boolean;
 }
 
 /**
- * Retourne les données de l'année consultée (snapshot) ou les données live.
- * Les pages utilisent ce hook pour être transparentes au mode archive.
+ * Hook central : déclenche les fetches à la demande et retourne
+ * soit les données live, soit le snapshot en mode archive.
+ * Chaque page qui appelle useData() déclenche le chargement.
  */
 export function useData(): DataResult {
   const { isViewingArchive, snapshot, loadingSnapshot } = useViewing();
 
-  const { classes: liveClasses, loading: l1 } = useClasses();
-  const { eleves: liveEleves, loading: l2 } = useEleves();
-  const { matieres: liveMatieres, loading: l3 } = useMatieres();
-  const { notes: liveNotes, loading: l4 } = useNotes();
-  const { creneaux: liveCreneaux, loading: l5 } = usePlanning();
+  const { classes: liveClasses, loading: l1, getAll: fetchClasses } = useClasses();
+  const { eleves: liveEleves, loading: l2, getAll: fetchEleves } = useEleves();
+  const { matieres: liveMatieres, loading: l3, getAll: fetchMatieres } = useMatieres();
+  const { notes: liveNotes, loading: l4, getAll: fetchNotes } = useNotes();
+  const { creneaux: liveCreneaux, loading: l5, getAll: fetchPlanning } = usePlanning();
+
+  // Déclencher les fetches à chaque montage de composant qui utilise useData()
+  useEffect(() => {
+    if (!isViewingArchive) {
+      fetchClasses();
+      fetchEleves();
+      fetchMatieres();
+      fetchNotes();
+      fetchPlanning();
+    }
+  }, [isViewingArchive, fetchClasses, fetchEleves, fetchMatieres, fetchNotes, fetchPlanning]);
 
   return useMemo(() => {
     if (isViewingArchive && snapshot) {

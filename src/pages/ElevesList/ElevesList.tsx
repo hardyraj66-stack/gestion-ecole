@@ -1,64 +1,56 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useEleves } from '../../contexts/EleveContext';
-import { useData } from '../../hooks/useData';
+import { useViewing } from '../../contexts/ViewingContext';
+import { useElevesListData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/shared/Button';
 import { Icon, Icons } from '../../components/shared/Icon';
+import { Pagination } from '../../components/shared/Pagination';
+import { Alert } from '../../components/shared/Alert';
 import { ElevesFiltersBar } from './ElevesFiltersBar';
 import { ElevesListTable } from './ElevesListTable';
 
 export function ElevesList() {
   const { delete: deleteEleve } = useEleves();
-  const { classes, eleves, loading, readOnly } = useData();
+  const { isViewingArchive: readOnly } = useViewing();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [classeId, setClasseId] = useState('');
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClasseId, setSelectedClasseId] = useState('');
+  const { data, loading, error } = useElevesListData(page, search, classeId);
 
-  const filteredEleves = useMemo(() => {
-    let result = eleves;
-    if (selectedClasseId) result = result.filter(e => e.classe_id === selectedClasseId);
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(e => e.nom.toLowerCase().includes(term) || e.prenom.toLowerCase().includes(term));
-    }
-    return result;
-  }, [eleves, searchTerm, selectedClasseId]);
+  const eleves = data?.eleves || [];
+  const classes = data?.classes || [];
+  const total = data?.total || 0;
+  const totalAll = data?.totalAll || 0;
 
-  if (loading) return <PageLoader />;
+  if (loading && !data) return <PageLoader />;
+  if (error) return <Alert variant="error">Problème de chargement des élèves.</Alert>;
+
+  const handleSearch = (s: string) => { setSearch(s); setPage(1); };
+  const handleClasseFilter = (cid: string) => { setClasseId(cid); setPage(1); };
 
   return (
     <div>
-      <PageHeader title="Élèves" subtitle={`${eleves.length} élève(s) inscrit(s)`}>
-        {!readOnly && (
-          <Button as="link" to="/eleves/nouveau" variant="primary">+ Nouvel élève</Button>
-        )}
+      <PageHeader title="Élèves" subtitle={`${totalAll} élève(s) inscrit(s)`}>
+        {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">+ Nouvel élève</Button>}
       </PageHeader>
 
-      <ElevesFiltersBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        selectedClasseId={selectedClasseId}
-        onClasseChange={setSelectedClasseId}
-        classes={classes}
-        count={filteredEleves.length}
-      />
+      <ElevesFiltersBar searchTerm={search} onSearchChange={handleSearch} selectedClasseId={classeId}
+        onClasseChange={handleClasseFilter} classes={classes} count={total} />
 
-      {eleves.length === 0 ? (
+      {totalAll === 0 ? (
         <EmptyState icon={<Icon path={Icons.users} size={28} />} message="Aucun élève inscrit"
-          action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">Inscrire un élève</Button> : undefined}
-        />
-      ) : filteredEleves.length === 0 ? (
-        <EmptyState icon={<Icon path={Icons.search} size={28} />} message="Aucun élève ne correspond à votre recherche" />
+          action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">Inscrire</Button> : undefined} />
+      ) : total === 0 ? (
+        <EmptyState icon={<Icon path={Icons.search} size={28} />} message="Aucun élève ne correspond" />
       ) : (
-        <ElevesListTable
-          key={`${searchTerm}-${selectedClasseId}`}
-          eleves={filteredEleves}
-          classes={classes}
-          onDelete={readOnly ? () => {} : deleteEleve}
-          readOnly={readOnly}
-        />
+        <>
+          <ElevesListTable eleves={eleves} classes={classes} onDelete={readOnly ? () => {} : deleteEleve} readOnly={readOnly} />
+          <Pagination currentPage={page} totalItems={total} pageSize={12} onPageChange={setPage} />
+        </>
       )}
     </div>
   );

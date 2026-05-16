@@ -4,28 +4,27 @@
 <div class="doc">
 <h1>👥 Gestion des Élèves</h1>
 <p class="subtitle">Pages <code>/eleves</code>, <code>/eleves/nouveau</code>, <code>/eleves/:id/bulletin</code></p>
+
 <h2>Liste — <code>/eleves</code></h2>
+<p>La page appelle <code>GET /read/eleves?page=X&limit=12&search=...&classeId=...</code>.</p>
 <ul>
-<li><strong>FilterBar</strong> : champ recherche (nom/prénom) + select classe + compteur</li>
-<li><strong>Table</strong> : paginée (12/page), colonnes avatar, genre, classe (lien), email, actions</li>
-<li>Pagination reset automatique quand les filtres changent (via <code>key</code>)</li>
-<li>Utilise <code>useData()</code> pour supporter le mode archive</li>
+<li><strong>Pagination backend</strong> : le frontend ne stocke que la page courante</li>
+<li><strong>Recherche backend</strong> : MongoDB filtre via <code>$or</code> sur <code>nom</code> et <code>prenom</code></li>
+<li><strong>Filtre classe backend</strong> : MongoDB filtre sur <code>classe_id</code></li>
+<li><strong>Réponse API</strong> : <code>{ eleves, classes, total, totalAll, page, limit, totalPages }</code></li>
 </ul>
+<p><strong>Important</strong> : les données proviennent de la collection <code>read_eleves</code>, qui contient déjà <code>classe_nom</code> et <code>classe_niveau</code>.</p>
+
 <h2>Inscription — <code>/eleves/nouveau</code></h2>
-<p>Formulaire en 3 sections :</p>
-<ol>
-<li><strong>Informations personnelles</strong> (3 colonnes) : prénom*, nom*, genre*</li>
-<li><strong>Scolarité</strong> (2 colonnes) : date de naissance*, classe*</li>
-<li><strong>Contact</strong> (2 colonnes) : email, téléphone, adresse</li>
-</ol>
+<p>Le formulaire charge la liste des classes via <code>GET /read/create-eleve</code> au montage, une seule fois. En mode archive, la page redirige automatiquement.</p>
+
 <h2>Bulletin — <code>/eleves/:id/bulletin</code></h2>
+<p>Le bulletin est chargé via <code>GET /read/bulletin/:eleveId?trimestre=X</code>. Chaque changement d’onglet trimestre déclenche un nouvel appel API ciblé.</p>
 <ul>
-<li>Layout 2 colonnes : <strong>StudentCard</strong> (avatar, nom, classe, moyenne générale) + contenu</li>
-<li><strong>TrimestreTabs</strong> : 3 onglets cliquables</li>
-<li><strong>GradesTable</strong> : matière, code, coefficient, notes (chips colorées), moyenne, mention</li>
-<li>Pied de tableau avec la moyenne générale pondérée</li>
-<li>Le bulletin est chargé depuis <code>GET /notes/bulletin/:id?trimestre=X</code> à chaque changement de trimestre</li>
+<li>Données renvoyées : <code>{ eleve, classe, bulletin[] }</code></li>
+<li>Le frontend calcule la moyenne générale pondérée à partir de <code>bulletin[]</code></li>
 </ul>
+
 <div class="doc-footer">
 <a href="12-front-classes.html">← Gestion des Classes</a>
 <a href="14-front-matieres.html">Gestion des Matières →</a>

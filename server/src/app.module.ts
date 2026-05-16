@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ClassesModule } from './classes/classes.module';
 import { ElevesModule } from './eleves/eleves.module';
@@ -7,8 +7,10 @@ import { NotesModule } from './notes/notes.module';
 import { PlanningModule } from './planning/planning.module';
 import { SallesModule } from './salles/salles.module';
 import { AnneesModule } from './annees/annees.module';
+import { ReadModule } from './read/read.module';
 import { EventsModule } from './events/events.module';
 import { SeederModule } from './data/seeder.module';
+import { ApiLoggerMiddleware } from './common/api-logger.middleware';
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ecole';
 
@@ -17,6 +19,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ec
     MongooseModule.forRoot(MONGO_URI),
     EventsModule,
     SeederModule,
+    ReadModule,
     AnneesModule,
     ClassesModule,
     ElevesModule,
@@ -26,4 +29,8 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ec
     SallesModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ApiLoggerMiddleware).forRoutes('*');
+  }
+}

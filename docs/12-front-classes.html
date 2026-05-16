@@ -4,23 +4,34 @@
 <div class="doc">
 <h1>🏫 Gestion des Classes</h1>
 <p class="subtitle">Pages <code>/classes</code>, <code>/classes/nouvelle</code>, <code>/classes/:id/eleves</code></p>
+
 <h2>Liste des classes — <code>/classes</code></h2>
-<p>Grille de <code>ClasseCard</code> paginée (8 par page) + carte dashed « + Nouvelle classe ».</p>
+<p>La page utilise <code>GET /read/classes?page=X&limit=8&search=...</code>. La pagination est <strong>100% côté serveur</strong>. Le frontend ne fait plus de <code>paginate()</code> local.</p>
+<ul>
+<li><strong>Réponse API</strong> : <code>{ items, total, page, limit, totalPages }</code></li>
+<li><strong>Recherche</strong> : filtre MongoDB via <code>$regex</code> sur <code>nom</code></li>
+<li><strong>Carte « + »</strong> : affichée seulement sur la dernière page et hors mode archive</li>
+</ul>
+
 <h3>ClasseCard — contenu</h3>
 <ul>
 <li>Header : nom de la classe + badge niveau</li>
-<li>Meta : icône salle + nom de salle, année scolaire</li>
-<li>Jauge : « Élèves X / Y » + barre de progression (rouge si ≥ 90%)</li>
+<li>Meta : salle, année scolaire</li>
+<li>Jauge : « Élèves X / Y » + barre de progression</li>
 <li>Actions : Élèves (lien), Planning (lien), ✕ Supprimer (masqué en mode archive)</li>
 </ul>
+
 <h2>Créer une classe — <code>/classes/nouvelle</code></h2>
-<p>Formulaire avec : nom, niveau (select), année scolaire (3 options dynamiques), capacité (10-50), mode salle (fixe/variable), salle (select depuis SalleContext).</p>
-<div class="callout callout-info"><p>Si aucune salle n'existe, le select est désactivé avec un lien vers <code>/salles</code>.</p></div>
+<p>Formulaire avec : nom, niveau, année scolaire, capacité, mode salle, salle. Les salles sont chargées à la demande via <code>GET /read/create-classe</code>.</p>
+
 <h2>Élèves d'une classe — <code>/classes/:id/eleves</code></h2>
+<p>La page appelle <code>GET /read/classes/:id/eleves?page=X&limit=10&search=...</code>.</p>
 <ul>
-<li><strong>ClasseInfoBar</strong> : nb élèves filtrés / total, capacité, salle, champ de recherche</li>
-<li><strong>ElevesTable</strong> : tableau paginé (10/page) avec avatar, genre, date de naissance, âge, email, actions (bulletin + ✕)</li>
+<li><strong>ClasseInfoBar</strong> : compteurs + champ recherche</li>
+<li><strong>ElevesTable</strong> : tableau déjà paginé par le backend</li>
+<li>Recherche par nom/prénom faite côté MongoDB</li>
 </ul>
+
 <div class="doc-footer">
 <a href="11-front-dashboard.html">← Dashboard</a>
 <a href="13-front-eleves.html">Gestion des Élèves →</a>

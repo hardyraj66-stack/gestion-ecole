@@ -1,0 +1,27 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+
+const t = (_: any, ret: Record<string, any>) => {
+  ret.id = ret.source_id;
+  delete ret._id; delete ret.__v; delete ret.source_id;
+  return ret;
+};
+
+@Schema({ collection: 'read_eleves', timestamps: true, toJSON: { virtuals: true, transform: t } })
+export class ReadEleve extends Document {
+  @Prop({ required: true }) source_id: string;
+  @Prop() nom: string;
+  @Prop() prenom: string;
+  @Prop() date_naissance: string;
+  @Prop() genre: string;
+  @Prop() classe_id: string;
+  @Prop() email: string;
+  @Prop() telephone: string;
+  @Prop() adresse: string;
+  @Prop({ default: '' }) classe_nom: string;
+  @Prop({ default: '' }) classe_niveau: string;
+}
+
+export const ReadEleveSchema = SchemaFactory.createForClass(ReadEleve);
+ReadEleveSchema.index({ source_id: 1 }, { unique: true });
+ReadEleveSchema.index({ classe_id: 1 });

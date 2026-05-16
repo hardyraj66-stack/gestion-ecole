@@ -4,108 +4,107 @@
 <div class="doc">
 
 <h1>🔧 Backend — Architecture générale</h1>
-<p class="subtitle">NestJS 10, MongoDB, Mongoose, Socket.IO, Seeder</p>
+<p class="subtitle">NestJS 10, MongoDB, Mongoose, Socket.IO, CQRS, Change Streams</p>
 
 <h2>Démarrage</h2>
 <pre><code>cd server
 npm install
-npm run dev          # Développement (ts-node)
-npm run build        # Compilation TypeScript
-npm start            # Production (node dist/main.js)
-</code></pre>
-<div class="callout callout-info"><p>Le serveur écoute sur le port <strong>3000</strong> (configurable via <code>PORT</code>). La connexion MongoDB est sur <code>mongodb://localhost:27017/gestion-ecole</code> (configurable via <code>MONGO_URI</code>).</p></div>
+npm run dev
+npm run build && npm start</code></pre>
+<div class="callout callout-info"><p>Port <strong>3000</strong> (via <code>PORT</code>). MongoDB : <code>mongodb://localhost:27017/gestion-ecole</code> (via <code>MONGO_URI</code>).</p></div>
 
-<h2>Structure modulaire NestJS</h2>
-<p>Chaque domaine métier suit le pattern Module → Controller → Service :</p>
+<h2>Architecture modulaire</h2>
 <div class="schema">
 AppModule
-├── EventsModule (Global)     → EventsGateway (Socket.IO)
-├── SeederModule              → SeederService (OnModuleInit)
-├── AnneesModule              → AnneesController + AnneesService
-├── ClassesModule             → ClassesController + ClassesService
-├── ElevesModule              → ElevesController + ElevesService
-├── MatieresModule            → MatieresController + MatieresService
-├── NotesModule               → NotesController + NotesService
-├── PlanningModule            → PlanningController + PlanningService
-└── SallesModule              → SallesController + SallesService
+├── common/
+│   └── ApiLoggerMiddleware      Logs structurés de toutes les requêtes
+├── events/
+│   └── EventsGateway            WebSocket Gateway global (Socket.IO)
+├── data/
+│   └── SeederService            Seed des collections write si base vide
+├── read/
+│   ├── ReadController           Tous les GET /read/*
+│   ├── ReadService              Lecture depuis collections read_*
+│   ├── ViewBuilderService       Projection write → read
+│   └── schemas/                 read_classes, read_eleves, ...
+├── classes/                     Write side (POST/PATCH/DELETE)
+├── eleves/                      Write side
+├── matieres/                    Write side
+├── notes/                       Write side
+├── planning/                    Write side
+├── salles/                      Write side + GET /disponibles
+└── annees/                      Gestion cycle scolaire
 </div>
 
-<h2>Pattern commun des services</h2>
-<p>Chaque service injecte son modèle Mongoose et expose :</p>
-<pre><code>@Injectable()
-export class XxxService {
-  constructor(@InjectModel(Xxx.name) private model: Model&lt;Xxx&gt;) {}
+<h2>CQRS appliqué</h2>
+<p>Le backend sépare <strong>lecture</strong> et <strong>écriture</strong>.</p>
+<table>
+<tr><th>Responsabilité</th><th>Contrôleur</th><th>Collections</th></tr>
+<tr><td>Read</td><td><code>ReadController</code></td><td><code>read_classes</code>, <code>read_eleves</code>, <code>read_matieres</code>, <code>read_notes</code>, <code>read_creneaux</code>, <code>read_salles</code></td></tr>
+<tr><td>Write</td><td><code>ClassesController</code>, <code>ElevesController</code>, etc.</td><td><code>classes</code>, <code>eleves</code>, <code>matieres</code>, <code>notes</code>, <code>creneaux</code>, <code>salles</code>, <code>anneescolaires</code></td></tr>
+</table>
 
-  findAll()              → model.find().exec()
-  findById(id: string)   → model.findById(id).exec()
-  create(data: any)      → new this.model(data).save()
-  update(id, data)       → model.findByIdAndUpdate(id, data, { new: true })
-  delete(id)             → model.findByIdAndDelete(id)
-}</code></pre>
-
-<h2>Pattern commun des contrôleurs</h2>
-<pre><code>@Controller('xxx')
-export class XxxController {
-  constructor(
-    private readonly service: XxxService,
-    private readonly events: EventsGateway,  // injecté globalement
-  ) {}
-
-  @Get()     findAll()
-  @Get(':id') findById(@Param('id') id)
-  @Post()    create(@Body() body)    → events.emit('xxx:created', item)
-  @Patch(':id') update(...)          → events.emit('xxx:updated', item)
-  @Delete(':id') delete(...)         → events.emit('xxx:deleted', { id })
-}</code></pre>
-
-<h2>Schéma Mongoose — Transformation JSON</h2>
-<p>Tous les schémas utilisent la même transformation pour exposer <code>id</code> au lieu de <code>_id</code> :</p>
-<pre><code>@Schema({
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: (_, ret) =&gt; {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    },
-  },
-})</code></pre>
-
-<h2>CORS</h2>
-<pre><code>app.enableCors({
-  origin: '*',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-});</code></pre>
-
-<h2>Seeder automatique</h2>
-<p><code>SeederService</code> implémente <code>OnModuleInit</code>. Au démarrage, s'il n'y a aucune salle en base, il insère :</p>
+<h2>Principe des read models</h2>
+<p>Chaque collection read contient <strong>1 document par entité</strong>, enrichi par dénormalisation :</p>
 <ul>
-<li>1 année scolaire active (2024-2025)</li>
-<li>12 salles (standard, labo, info, sport, arts)</li>
-<li>15 matières avec coefficients et couleurs</li>
-<li>15 classes (6ème → Terminale)</li>
-<li>~350 élèves (22-28 par classe)</li>
-<li>~2000+ notes (trimestre 1)</li>
-<li>~200+ créneaux de planning</li>
+<li><code>read_classes</code> : + <code>nb_eleves</code>, <code>taux</code></li>
+<li><code>read_eleves</code> : + <code>classe_nom</code>, <code>classe_niveau</code></li>
+<li><code>read_notes</code> : + <code>eleve_nom</code>, <code>eleve_prenom</code>, <code>matiere_nom</code>, <code>matiere_code</code></li>
+<li><code>read_creneaux</code> : + <code>classe_nom</code></li>
 </ul>
-<div class="callout callout-warn"><p>Le seeder ne s'exécute que si la base est vide. Les lancements suivants conservent les données existantes.</p></div>
+<p>Chaque document read possède un champ <code>source_id</code> qui pointe vers l'<code>_id</code> write d'origine.</p>
 
-<h2>WebSocket Gateway</h2>
-<pre><code>@WebSocketGateway({
-  cors: { origin: '*' },
-  transports: ['websocket', 'polling'],
-})
-export class EventsGateway {
-  @WebSocketServer() server: Server;
+<h2>Transformation JSON</h2>
+<h3>Write schemas</h3>
+<pre><code>const transform = (_: any, ret: Record&lt;string, any&gt;) =&gt; {
+  ret.id = ret._id;
+  delete ret._id;
+  delete ret.__v;
+  return ret;
+};</code></pre>
+<h3>Read schemas</h3>
+<pre><code>const transform = (_: any, ret: Record&lt;string, any&gt;) =&gt; {
+  ret.id = ret.source_id;   // important : le frontend garde l'id write
+  delete ret._id;
+  delete ret.__v;
+  delete ret.source_id;
+  return ret;
+};</code></pre>
 
-  emit(event: string, data: any) {
-    this.server.emit(event, data);
-  }
-}</code></pre>
-<p>Le module <code>EventsModule</code> est marqué <code>@Global()</code>, ce qui rend <code>EventsGateway</code> injectable dans tous les contrôleurs sans import explicite du module.</p>
+<h2>ViewBuilder</h2>
+<p>Le <code>ViewBuilderService</code> reconstruit les collections read.</p>
+<h3>Au démarrage</h3>
+<ul>
+<li><code>rebuildAll()</code> reconstruit toutes les projections à partir des collections write</li>
+</ul>
+<h3>À chaque écriture</h3>
+<ul>
+<li>Les write controllers appellent explicitement <code>viewBuilder.onXxxWrite()</code></li>
+<li>Ex. <code>onEleveWrite()</code> → rebuild <code>read_eleves</code> + <code>read_classes</code></li>
+</ul>
+<h3>Change Streams (bonus)</h3>
+<ul>
+<li>Si MongoDB tourne en <strong>replica set</strong>, les Change Streams écoutent les collections write</li>
+<li>Si MongoDB est en <strong>standalone</strong>, le backend logge un warning et utilise uniquement la synchro explicite depuis les write controllers</li>
+</ul>
+<div class="callout callout-warn"><p><strong>Important</strong> : le message <code>The $changeStream stage is only supported on replica sets</code> n'est pas bloquant. Le système reste fonctionnel grâce au déclenchement explicite du ViewBuilder après chaque écriture.</p></div>
+
+<h2>Logs API</h2>
+<p>Le middleware <code>ApiLoggerMiddleware</code> logge :</p>
+<ul>
+<li>méthode HTTP</li>
+<li>endpoint</li>
+<li>timestamp</li>
+<li>durée</li>
+<li>origin / referer</li>
+<li>IP</li>
+<li>user-agent tronqué</li>
+</ul>
+<pre><code>[API] [GET] /read/dashboard → 200 (12ms) | origin: http://localhost:5173 | ip: ::1
+[API] [POST] /eleves → 201 (45ms) | origin: http://localhost:5173 | ip: ::1</code></pre>
+
+<h2>Seeder</h2>
+<p>Le seeder peuple uniquement les collections <strong>write</strong>. Les collections <strong>read</strong> sont générées ensuite par le ViewBuilder.</p>
 
 <div class="doc-footer">
 <a href="02-composants-shared.html">← Composants partagés</a>

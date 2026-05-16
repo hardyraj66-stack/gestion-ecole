@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useClasses } from '../../contexts/ClasseContext';
 import { useSalles } from '../../contexts/SalleContext';
@@ -37,9 +37,7 @@ export function CreateClasse() {
   const navigate = useNavigate();
   const { isViewingArchive } = useViewing();
   const { create } = useClasses();
-  const { salles, loading: sallesLoading } = useSalles();
-
-  if (isViewingArchive) return <Navigate to="/classes" replace />;
+  const { salles, loading: sallesLoading, getAll: fetchSalles } = useSalles();
 
   const [nom, setNom] = useState('');
   const [niveau, setNiveau] = useState(NIVEAUX[0].value as string);
@@ -59,11 +57,17 @@ export function CreateClasse() {
     label: `${s.nom} — ${s.capacite} places (${getTypeLabel(s.type)})`,
   }));
 
+  const fetchedRef = useRef(false);
+  useEffect(() => { if (fetchedRef.current) return; fetchedRef.current = true; fetchSalles(); }, [fetchSalles]);
+
   useEffect(() => {
     if (salles.length > 0 && !salleId) {
       setSalleId(salles[0].id);
     }
   }, [salles, salleId]);
+
+  // Guard archive — APRÈS tous les hooks
+  if (isViewingArchive) return <Navigate to="/classes" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -10,105 +10,122 @@
 <table>
 <tr><th>Couche</th><th>Technologie</th><th>Rôle</th></tr>
 <tr><td>Frontend</td><td>React 18 + TypeScript + Vite</td><td>SPA avec routing client-side</td></tr>
-<tr><td>Styling</td><td>CSS Modules / Variables CSS</td><td>Design system cohérent</td></tr>
-<tr><td>Backend</td><td>NestJS 10 + TypeScript</td><td>API REST + WebSocket Gateway</td></tr>
-<tr><td>Base de données</td><td>MongoDB + Mongoose 8</td><td>Stockage persistant</td></tr>
-<tr><td>Temps réel</td><td>Socket.IO 4</td><td>Synchronisation multi-clients</td></tr>
+<tr><td>Styling</td><td>Variables CSS + composants partagés</td><td>Design system cohérent</td></tr>
+<tr><td>Backend</td><td>NestJS 10 + TypeScript</td><td>API REST séparée read/write + WebSocket</td></tr>
+<tr><td>Base de données</td><td>MongoDB + Mongoose 8</td><td>Stockage persistant + projections read</td></tr>
+<tr><td>Temps réel</td><td>Socket.IO + Change Streams / fallback contrôleurs</td><td>Synchronisation front/back</td></tr>
 </table>
 
 <h2>Architecture globale</h2>
 <div class="schema">
-┌─────────────────────────────────────────────────────────────┐
-│                     NAVIGATEUR (Client)                      │
-│                                                              │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │  React App  │  │  Contexts    │  │  Socket.IO Client │  │
-│  │  (Pages)    │◄─┤  (State)     │◄─┤  (temps réel)     │  │
-│  └──────┬──────┘  └──────┬───────┘  └─────────┬─────────┘  │
-│         │                │                     │             │
-└─────────┼────────────────┼─────────────────────┼─────────────┘
-          │ HTTP REST      │ fetch()             │ WebSocket
-          ▼                ▼                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    SERVEUR (localhost:3000)                   │
-│                                                              │
-│  ┌──────────────┐  ┌───────────────┐  ┌─────────────────┐  │
-│  │  Controllers │  │   Services    │  │  Events Gateway  │  │
-│  │  (Routes)    │─►│  (Logique)    │  │  (Socket.IO)     │  │
-│  └──────────────┘  └───────┬───────┘  └─────────────────┘  │
-│                            │                                 │
-│                    ┌───────▼───────┐                         │
-│                    │   Mongoose    │                         │
-│                    │   (ODM)       │                         │
-│                    └───────┬───────┘                         │
-│                            │                                 │
-└────────────────────────────┼─────────────────────────────────┘
-                             ▼
-                    ┌─────────────────┐
-                    │    MongoDB      │
-                    │  gestion-ecole  │
-                    └─────────────────┘
+Frontend (React)
+  │
+  ├─ Pages → hooks dédiés → 1 appel API / page
+  │                      ↘  GET /read/*
+  │
+  ├─ Contexts write-only → POST/PATCH/DELETE
+  │                      ↘  Socket.IO notifyDataChange()
+  │
+  └─ ViewingContext → mode archive (snapshot)
+
+Backend (NestJS)
+  │
+  ├─ Write Controllers  → collections write (source de vérité)
+  ├─ Read Controller    → collections read dénormalisées
+  ├─ ViewBuilder        → write → read (bulkWrite / upsert)
+  ├─ EventsGateway      → Socket.IO
+  └─ ApiLoggerMiddleware→ logs structurés
 </div>
 
 <h2>Structure des dossiers</h2>
 <h3>Frontend (<code>src/</code>)</h3>
 <pre><code>src/
-├── App.tsx                    Routeur principal
-├── main.tsx                   Point d'entrée
-├── index.css                  Design system complet
-├── config/api.ts              URLs API & Socket
-├── types/index.ts             Interfaces TypeScript
-├── data/mockData.ts           Données mock (fallback)
-├── hooks/useData.ts           Hook données live/archive
-├── services/socketService.ts  Singleton Socket.IO
-├── contexts/                  7 providers React
-│   ├── AnneeContext.tsx
-│   ├── ClasseContext.tsx
-│   ├── EleveContext.tsx
-│   ├── MatiereContext.tsx
-│   ├── NoteContext.tsx
-│   ├── PlanningContext.tsx
-│   ├── SalleContext.tsx
-│   ├── ViewingContext.tsx
+├── App.tsx
+├── main.tsx
+├── index.css
+├── config/api.ts
+├── types/index.ts
+├── data/mockData.ts
+├── services/
+│   ├── socketService.ts       Singleton Socket.IO + notifyDataChange
+│   └── readApi.ts             Appels GET /read/* centralisés
+├── hooks/
+│   └── usePageData.ts         1 hook dédié par page / endpoint
+├── contexts/
+│   ├── AnneeContext.tsx       Années scolaires
+│   ├── ClasseContext.tsx      Write only + socket listen
+│   ├── EleveContext.tsx       Write only + socket listen
+│   ├── MatiereContext.tsx     Write only + socket listen
+│   ├── NoteContext.tsx        Write only + bulletin helper
+│   ├── PlanningContext.tsx    Write only + socket listen
+│   ├── SalleContext.tsx       Write + lecture salles utilitaires
+│   ├── ViewingContext.tsx     Mode archive / snapshot
 │   └── AppProviders.tsx
 ├── components/
-│   ├── layout/                Sidebar, Layout, ArchiveBanner
-│   ├── ui/                    Badge, PageHeader, StatCard…
-│   └── shared/                17 composants réutilisables
-└── pages/                     12 pages avec sous-composants</code></pre>
+│   ├── layout/
+│   ├── ui/
+│   └── shared/
+└── pages/</code></pre>
 
 <h3>Backend (<code>server/src/</code>)</h3>
 <pre><code>server/src/
-├── main.ts                    Bootstrap NestJS
-├── app.module.ts              Module racine
-├── events/                    WebSocket Gateway (global)
-├── data/                      Seeder MongoDB
-├── annees/                    Module Années scolaires
-├── classes/                   Module Classes
-├── eleves/                    Module Élèves
-├── matieres/                  Module Matières
-├── notes/                     Module Notes + Bulletin
-├── planning/                  Module Planning
-└── salles/                    Module Salles + Disponibilité</code></pre>
+├── main.ts
+├── app.module.ts
+├── common/
+│   └── api-logger.middleware.ts
+├── events/
+├── data/
+│   └── seeder.service.ts      Seed des collections write
+├── read/
+│   ├── read.controller.ts     GET /read/*
+│   ├── read.service.ts        Lecture via collections read
+│   ├── view-builder.service.ts
+│   └── schemas/
+│       ├── read-classe.schema.ts
+│       ├── read-eleve.schema.ts
+│       ├── read-matiere.schema.ts
+│       ├── read-note.schema.ts
+│       ├── read-creneau.schema.ts
+│       └── read-salle.schema.ts
+├── annees/
+├── classes/
+├── eleves/
+├── matieres/
+├── notes/
+├── planning/
+└── salles/</code></pre>
 
 <h2>Flux de données</h2>
 <ol>
-<li><strong>Chargement initial</strong> : chaque contexte React fait un <code>fetch()</code> vers l'API au montage. Si l'API est indisponible, le fallback mock est utilisé.</li>
-<li><strong>Mutations</strong> : les formulaires appellent l'API via <code>POST/PATCH/DELETE</code>. Le contrôleur NestJS exécute l'opération puis émet un événement Socket.IO.</li>
-<li><strong>Temps réel</strong> : le <code>socketService</code> client écoute les événements et met à jour les contextes React automatiquement.</li>
-<li><strong>Mode archive</strong> : quand l'utilisateur consulte une année terminée, le <code>ViewingContext</code> charge un snapshot complet depuis <code>GET /annees/:id/snapshot</code> et toutes les pages affichent les données du snapshot en lecture seule.</li>
+<li><strong>Lecture</strong> : chaque page appelle uniquement l'endpoint <code>/read/*</code> nécessaire à son affichage. Aucun préchargement global.</li>
+<li><strong>Écriture</strong> : les formulaires appellent les endpoints write (<code>POST/PATCH/DELETE</code>) sur les contrôleurs métier.</li>
+<li><strong>Projection</strong> : après chaque écriture, le <code>ViewBuilderService</code> reconstruit les documents des collections read impactées. Les Change Streams sont utilisés si disponibles ; sinon les write controllers déclenchent explicitement la projection.</li>
+<li><strong>Temps réel</strong> : le backend émet un événement Socket.IO. Le frontend reçoit l'événement, appelle <code>notifyDataChange()</code>, puis la page re-fetch son endpoint read après un petit délai.</li>
+<li><strong>Archive</strong> : en consultation d'une année terminée, le frontend lit un snapshot et passe en lecture seule.</li>
 </ol>
 
 <h2>Collections MongoDB</h2>
+<h3>Collections write</h3>
 <table>
-<tr><th>Collection</th><th>Documents (seed)</th><th>Description</th></tr>
-<tr><td><code>anneescolaires</code></td><td>1</td><td>Années scolaires avec statut et historique</td></tr>
-<tr><td><code>salles</code></td><td>12</td><td>Salles de l'établissement</td></tr>
-<tr><td><code>classes</code></td><td>15</td><td>Classes de 6ème à Terminale</td></tr>
-<tr><td><code>matieres</code></td><td>15</td><td>Matières avec coefficients</td></tr>
-<tr><td><code>eleves</code></td><td>~350</td><td>Élèves répartis dans les classes</td></tr>
-<tr><td><code>notes</code></td><td>~2000+</td><td>Notes par élève/matière/trimestre</td></tr>
-<tr><td><code>creneaux</code></td><td>~200+</td><td>Créneaux de planning</td></tr>
+<tr><th>Collection</th><th>Documents</th><th>Rôle</th></tr>
+<tr><td><code>anneescolaires</code></td><td>1 doc / année</td><td>Cycle scolaire</td></tr>
+<tr><td><code>classes</code></td><td>1 doc / classe</td><td>Source de vérité</td></tr>
+<tr><td><code>eleves</code></td><td>1 doc / élève</td><td>Source de vérité</td></tr>
+<tr><td><code>matieres</code></td><td>1 doc / matière</td><td>Source de vérité</td></tr>
+<tr><td><code>notes</code></td><td>1 doc / note</td><td>Source de vérité</td></tr>
+<tr><td><code>creneaux</code></td><td>1 doc / créneau</td><td>Source de vérité</td></tr>
+<tr><td><code>salles</code></td><td>1 doc / salle</td><td>Source de vérité</td></tr>
+</table>
+
+<h3>Collections read</h3>
+<table>
+<tr><th>Collection</th><th>1 document par</th><th>Champs enrichis</th></tr>
+<tr><td><code>read_classes</code></td><td>classe</td><td><code>nb_eleves</code>, <code>taux</code></td></tr>
+<tr><td><code>read_eleves</code></td><td>élève</td><td><code>classe_nom</code>, <code>classe_niveau</code></td></tr>
+<tr><td><code>read_matieres</code></td><td>matière</td><td>miroir dénormalisé</td></tr>
+<tr><td><code>read_notes</code></td><td>note</td><td><code>eleve_nom</code>, <code>matiere_nom</code>, <code>matiere_code</code></td></tr>
+<tr><td><code>read_creneaux</code></td><td>créneau</td><td><code>classe_nom</code></td></tr>
+<tr><td><code>read_salles</code></td><td>salle</td><td>miroir dénormalisé</td></tr>
 </table>
 
 <div class="doc-footer">

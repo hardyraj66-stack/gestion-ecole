@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Lazy Loading Frontend — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🎯 Lazy Loading Frontend</h1>
+<p class="subtitle">1 page = 1 appel API ciblé, pagination et recherche côté backend</p>
+
+<h2>Principe</h2>
+<p>L'application ne précharge plus globalement les données. Chaque page appelle uniquement l'endpoint read dont elle a besoin.</p>
+
+<table>
+<tr><th>Page</th><th>Hook</th><th>Endpoint</th></tr>
+<tr><td>Dashboard</td><td><code>usePageFetch(() => readApi.dashboard(...))</code></td><td><code>/read/dashboard?classesPage=...</code></td></tr>
+<tr><td>Classes</td><td><code>usePageFetch(() => readApi.classesList(...))</code></td><td><code>/read/classes?page=...&search=...</code></td></tr>
+<tr><td>Classe/Élèves</td><td><code>usePageFetch(() => readApi.classeEleves(...))</code></td><td><code>/read/classes/:id/eleves?page=...&search=...</code></td></tr>
+<tr><td>Élèves</td><td><code>usePageFetch(() => readApi.elevesList(...))</code></td><td><code>/read/eleves?page=...&search=...&classeId=...</code></td></tr>
+<tr><td>Matières</td><td><code>usePageFetch(() => readApi.matieresList(...))</code></td><td><code>/read/matieres?page=...</code></td></tr>
+<tr><td>Salles</td><td><code>usePageFetch(() => readApi.sallesList(...))</code></td><td><code>/read/salles?page=...</code></td></tr>
+<tr><td>Notes</td><td><code>usePageFetch(() => readApi.notesPage())</code></td><td><code>/read/notes</code></td></tr>
+<tr><td>Planning</td><td><code>usePageFetch(() => readApi.planning())</code></td><td><code>/read/planning</code></td></tr>
+<tr><td>Bulletin</td><td><code>usePageFetch(() => readApi.bulletin(id,t))</code></td><td><code>/read/bulletin/:id?trimestre=t</code></td></tr>
+</table>
+
+<h2>Anti double appel</h2>
+<p>React StrictMode monte les composants deux fois en développement. Le hook <code>usePageFetch</code> utilise <code>isFetchingRef</code> pour empêcher un second appel concurrent.</p>
+<pre><code>if (isFetchingRef.current) return;
+isFetchingRef.current = true;
+...
+isFetchingRef.current = false;</code></pre>
+
+<h2>Synchronisation temps réel</h2>
+<p>Après une mutation :</p>
+<ol>
+<li>le backend émet un événement Socket.IO</li>
+<li>le contexte correspondant appelle <code>notifyDataChange()</code></li>
+<li>les hooks <code>usePageFetch</code> écoutent <code>onDataChange()</code></li>
+<li>ils re-fetchent l'endpoint read après 500ms (temps laissé au ViewBuilder)</li>
+</ol>
+
+<h2>Pagination / recherche serveur</h2>
+<p>Le frontend n'exécute plus <code>paginate()</code>, <code>filter()</code> ou <code>useMemo()</code> pour trier les listes principales. Il envoie uniquement :</p>
+<ul>
+<li><code>page</code></li>
+<li><code>limit</code></li>
+<li><code>search</code></li>
+<li><code>classeId</code> (si applicable)</li>
+</ul>
+
+<div class="callout callout-info"><p>Le frontend reste responsable des <strong>états d'interface</strong> (page courante, valeur de recherche, classe sélectionnée), mais le backend applique le filtre et la pagination effectifs.</p></div>
+
+<div class="doc-footer">
+<a href="22-cqrs.html">← CQRS</a>
+<a href="index.html">Sommaire →</a>
+</div>
+</div>
+</body></html>

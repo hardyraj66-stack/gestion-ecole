@@ -1,9 +1,12 @@
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_URL } from '../config/api';
 
+type Listener = () => void;
+
 class SocketService {
   private socket: Socket | null = null;
   private static instance: SocketService;
+  private refreshListeners: Set<Listener> = new Set();
 
   private constructor() {
     this.connect();
@@ -51,6 +54,17 @@ class SocketService {
     }
   }
 
+  /** Enregistre un callback qui sera appelé quand les données changent (via socket) */
+  onDataChange(listener: Listener): () => void {
+    this.refreshListeners.add(listener);
+    return () => { this.refreshListeners.delete(listener); };
+  }
+
+  /** Notifie tous les listeners qu'un changement est arrivé */
+  notifyDataChange(): void {
+    this.refreshListeners.forEach(fn => fn());
+  }
+
   disconnect(): void {
     if (this.socket) {
       this.socket.disconnect();
@@ -70,5 +84,11 @@ export const onEvent = <T>(event: string, callback: (data: T) => void) =>
 
 export const emitEvent = (event: string, data?: unknown) =>
   socketService.emitEvent(event, data);
+
+export const onDataChange = (listener: Listener) =>
+  socketService.onDataChange(listener);
+
+export const notifyDataChange = () =>
+  socketService.notifyDataChange();
 
 export default socketService;

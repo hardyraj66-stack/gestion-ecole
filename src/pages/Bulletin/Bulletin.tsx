@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useNotes } from '../../contexts/NoteContext';
-import { useData } from '../../hooks/useData';
+import { useBulletinData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -14,36 +13,22 @@ import { BulletinMatiere, Trimestre } from '../../types';
 
 export function Bulletin() {
   const { id } = useParams<{ id: string }>();
-  const { eleves, classes, loading, readOnly } = useData();
-  const { getBulletinFromApi, getMoyenneGenerale } = useNotes();
-
   const [trimestre, setTrimestre] = useState<Trimestre>(1);
-  const [bulletinMatieres, setBulletinMatieres] = useState<BulletinMatiere[]>([]);
-  const [loadingBulletin, setLoadingBulletin] = useState(true);
+  const { data, loading, readOnly } = useBulletinData(id || '', trimestre);
 
-  const eleve = useMemo(() => eleves.find(e => e.id === id), [eleves, id]);
-  const classe = useMemo(() => eleve ? classes.find(c => c.id === eleve.classe_id) : undefined, [eleve, classes]);
+  if (loading || !data) return <PageLoader />;
 
-  const loadBulletin = useCallback(async () => {
-    if (!id) return;
-    setLoadingBulletin(true);
-    const data = await getBulletinFromApi(id, trimestre);
-    setBulletinMatieres(data);
-    setLoadingBulletin(false);
-  }, [id, trimestre, getBulletinFromApi]);
+  const { eleve, classe, bulletin } = data;
 
-  useEffect(() => { loadBulletin(); }, [loadBulletin]);
+  // Compute moyenne
+  const getMoyenneGenerale = (bm: BulletinMatiere[]): number => {
+    if (!bm.length) return 0;
+    let tc = 0, s = 0;
+    for (const m of bm) { if (m.notes.length > 0) { s += m.moyenne * m.coefficient; tc += m.coefficient; } }
+    return tc === 0 ? 0 : Math.round((s / tc) * 10) / 10;
+  };
 
-  const moyenneGenerale = bulletinMatieres.length > 0 ? getMoyenneGenerale(bulletinMatieres) : null;
-
-  if (loading) return <PageLoader />;
-
-  if (!eleve) {
-    return (
-      <EmptyState icon={<Icon path={Icons.warning} size={28} />} message="Élève introuvable."
-        action={<Button as="link" to="/eleves" variant="primary">Retour aux élèves</Button>} />
-    );
-  }
+  const moyenneGenerale = bulletin.length > 0 ? getMoyenneGenerale(bulletin) : null;
 
   return (
     <div>
@@ -53,16 +38,14 @@ export function Bulletin() {
       </PageHeader>
 
       <div className="bulletin-layout">
-        <StudentCard eleve={eleve} classe={classe} bulletinMatieres={bulletinMatieres} moyenneGenerale={moyenneGenerale} />
+        <StudentCard eleve={eleve} classe={classe} bulletinMatieres={bulletin} moyenneGenerale={moyenneGenerale} />
         <div>
           <TrimestreTabs selected={trimestre} onChange={setTrimestre} />
-          {loadingBulletin ? (
-            <PageLoader />
-          ) : bulletinMatieres.length === 0 || !bulletinMatieres.some(m => m.notes.length > 0) ? (
+          {bulletin.length === 0 || !bulletin.some((m: any) => m.notes.length > 0) ? (
             <EmptyState icon={<Icon path={Icons.document} size={28} />} message={`Aucune note pour le trimestre ${trimestre}`}
               action={!readOnly ? <Button as="link" to="/notes" variant="primary">Saisir des notes</Button> : undefined} />
           ) : (
-            <GradesTable bulletinMatieres={bulletinMatieres} moyenneGenerale={moyenneGenerale} />
+            <GradesTable bulletinMatieres={bulletin} moyenneGenerale={moyenneGenerale} />
           )}
         </div>
       </div>

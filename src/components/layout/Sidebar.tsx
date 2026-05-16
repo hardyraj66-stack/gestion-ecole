@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
@@ -36,8 +37,15 @@ function renderIconElement(el: IconElement, idx: number) {
 }
 
 export function Sidebar() {
-  const { active, preparation } = useAnnees();
+  const { active, preparation, getAll: fetchAnnees } = useAnnees();
   const { viewing, isViewingArchive, exitView } = useViewing();
+
+  const fetchedRef = useRef(false);
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetchAnnees();
+  }, [fetchAnnees]);
 
   const displayLabel = isViewingArchive ? viewing!.label : (active?.label || preparation?.label || '—');
   const displayStatut = isViewingArchive ? 'Archive' : active ? 'Active' : preparation ? 'Préparation' : '';

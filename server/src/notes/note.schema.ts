@@ -1,7 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema({ timestamps: true, toJSON: { virtuals: true, transform: (_, ret) => { ret._id = ret._id; delete ret._id; delete ret.__v; return ret; } } })
+const toJsonTransform = (_: any, ret: Record<string, any>) => {
+  ret.id = ret._id;
+  delete ret._id;
+  delete ret.__v;
+  return ret;
+};
+
+@Schema({ timestamps: true, toJSON: { virtuals: true, transform: toJsonTransform } })
 export class Note extends Document {
   @Prop({ required: true })
   eleve_id: string;

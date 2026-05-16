@@ -3,22 +3,23 @@ import { Document } from 'mongoose';
 
 export type AnneeStatut = 'active' | 'terminee' | 'preparation';
 
-@Schema({
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: (_, ret) => { ret._id = ret._id; delete ret._id; delete ret.__v; return ret; },
-  },
-})
+const toJsonTransform = (_: any, ret: Record<string, any>) => {
+  ret.id = ret._id;
+  delete ret._id;
+  delete ret.__v;
+  return ret;
+};
+
+@Schema({ timestamps: true, toJSON: { virtuals: true, transform: toJsonTransform } })
 export class AnneeScolaire extends Document {
   @Prop({ required: true, unique: true })
-  label: string; // ex: "2024-2025"
+  label: string;
 
   @Prop({ required: true })
-  debut: string; // "2024-09-02"
+  debut: string;
 
   @Prop({ required: true })
-  fin: string; // "2025-07-05"
+  fin: string;
 
   @Prop({ required: true, enum: ['active', 'terminee', 'preparation'], default: 'preparation' })
   statut: AnneeStatut;

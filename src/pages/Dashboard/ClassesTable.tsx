@@ -1,72 +1,55 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Classe } from '../../types';
-import { Pagination, paginate } from '../../components/shared/Pagination';
-
-interface ClasseWithCount extends Classe {
-  nb_eleves: number;
-  taux: number;
-}
+import { Card, CardHeader } from '../../components/shared/Card';
+import { ProgressBar } from '../../components/shared/ProgressBar';
+import { Table, TableHead, TableBody, TableRow, TableCell } from '../../components/shared/Table';
+import { Button } from '../../components/shared/Button';
+import { MiniPagination } from '../../components/shared/MiniPagination';
 
 interface ClassesTableProps {
-  classes: ClasseWithCount[];
+  classes: any[];
+  pagination?: { page: number; limit: number; total: number; totalPages: number };
+  onPageChange?: (page: number) => void;
 }
 
-const PAGE_SIZE = 5;
-
-export function ClassesTable({ classes }: ClassesTableProps) {
-  const [page, setPage] = useState(1);
-  const paged = paginate(classes, page, PAGE_SIZE);
-
+export function ClassesTable({ classes, pagination, onPageChange }: ClassesTableProps) {
   return (
-    <div className="card">
-      <div className="card-header">
-        <h3 className="card-title">Classes</h3>
-        <Link to="/classes" className="link-primary">Voir tout →</Link>
+    <Card padding="none">
+      <div style={{ padding: '1.25rem 1.25rem 0' }}>
+        <CardHeader title="Classes" linkTo="/classes" linkText="Voir tout →" />
       </div>
-      <div className="table-wrapper">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Classe</th>
-              <th>Niveau</th>
-              <th>Salle</th>
-              <th>Élèves</th>
-              <th>Remplissage</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {paged.map((classe) => (
-              <tr key={classe.id}>
-                <td><strong>{classe.nom}</strong></td>
-                <td>{classe.niveau}</td>
-                <td>{classe.salle}</td>
-                <td>{classe.nb_eleves} / {classe.capacite}</td>
-                <td style={{ width: '150px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div className="progress" style={{ flex: 1 }}>
-                      <div
-                        className={`progress-bar ${classe.taux >= 90 ? 'full' : ''}`}
-                        style={{ width: `${classe.taux}%` }}
-                      />
-                    </div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', width: '35px' }}>
-                      {classe.taux}%
-                    </span>
-                  </div>
-                </td>
-                <td>
-                  <Link to={`/classes/${classe.id}/eleves`} className="btn btn-sm btn-outline">
-                    Voir
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <Pagination currentPage={page} totalItems={classes.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
-    </div>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell header>Classe</TableCell>
+            <TableCell header>Niveau</TableCell>
+            <TableCell header>Salle</TableCell>
+            <TableCell header>Élèves</TableCell>
+            <TableCell header>Remplissage</TableCell>
+            <TableCell header></TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {classes.map((c: any) => (
+            <TableRow key={c.id}>
+              <TableCell><strong>{c.nom}</strong></TableCell>
+              <TableCell>{c.niveau}</TableCell>
+              <TableCell>{c.salle}</TableCell>
+              <TableCell>{c.nb_eleves} / {c.capacite}</TableCell>
+              <TableCell width="150px">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ProgressBar value={c.taux} />
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', width: '35px' }}>{c.taux}%</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <Button as="link" to={`/classes/${c.id}/eleves`} variant="outline" size="sm">Voir</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {pagination && onPageChange && (
+        <MiniPagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={onPageChange} />
+      )}
+    </Card>
   );
 }

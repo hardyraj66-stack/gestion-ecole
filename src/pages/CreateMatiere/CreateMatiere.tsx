@@ -28,8 +28,6 @@ export function CreateMatiere() {
   const navigate = useNavigate();
   const { create } = useMatieres();
 
-  if (isViewingArchive) return <Navigate to="/matieres" replace />;
-
   const [nom, setNom] = useState('');
   const [code, setCode] = useState('');
   const [coefficient, setCoefficient] = useState(1);
@@ -39,6 +37,9 @@ export function CreateMatiere() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  // Guard archive — APRÈS tous les hooks
+  if (isViewingArchive) return <Navigate to="/matieres" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

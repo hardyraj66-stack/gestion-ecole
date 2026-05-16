@@ -1,9 +1,7 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePlanning } from '../../contexts/PlanningContext';
-
-import { useSalles } from '../../contexts/SalleContext';
-import { useData } from '../../hooks/useData';
+import { usePlanningClasses, usePlanningClasse } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -12,231 +10,242 @@ import { Button } from '../../components/shared/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Alert } from '../../components/shared/Alert';
 import { Icon, Icons } from '../../components/shared/Icon';
+import { Input } from '../../components/shared/Input';
+import { Select, SelectOption } from '../../components/shared/Select';
+import { FormGrid, FormActions } from '../../components/shared/FormGrid';
+import { StatItem } from '../../components/shared/StatItem';
+import { ListItem } from '../../components/shared/ListItem';
+import { Popover } from '../../components/shared/Popover';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
-import { Classe, Creneau, JourSemaine, SalleDisponible } from '../../types';
+import { Creneau, JourSemaine } from '../../types';
 import { generatePlanningHours, calculateDuration } from '../../utils/helpers';
 
 const JOURS: JourSemaine[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 const HEURES = generatePlanningHours();
+const JOUR_OPTIONS: SelectOption[] = JOURS.map(j => ({ value: j, label: j }));
+const HEURE_OPTIONS: SelectOption[] = HEURES.map(h => ({ value: h, label: h }));
+
+const NIVEAUX_ORDRE = ['CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', '2nde', '1ère', 'Terminale'];
 
 export function Planning() {
   const { id } = useParams<{ id: string }>();
-  const { classes, creneaux: dataCreneaux, matieres: dataMatieres, loading, readOnly } = useData();
-
-  // Services live pour les mutations (seulement si pas readOnly)
   const { createWithError, delete: deleteCreneau } = usePlanning();
-  const { salles, getDisponibles } = useSalles();
-
   const confirm = useConfirm();
-  const [selectedClasseId, setSelectedClasseId] = useState<string>(id || '');
-  const [showForm, setShowForm] = useState(false);
 
-  // Form
+  const [selectedClasseId, setSelectedClasseId] = useState<string>(id || '');
+  const [openNiveau, setOpenNiveau] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [matiereId, setMatiereId] = useState('');
   const [jour, setJour] = useState<JourSemaine>('Lundi');
   const [heureDebut, setHeureDebut] = useState('08:00');
   const [heureFin, setHeureFin] = useState('09:00');
   const [salle, setSalle] = useState('');
   const [enseignant, setEnseignant] = useState('');
-  const [sallesDisponibles, setSallesDisponibles] = useState<SalleDisponible[]>([]);
-  const [loadingSalles, setLoadingSalles] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => { if (id) setSelectedClasseId(id); }, [id]);
 
-  const selectedClasse = useMemo(() => classes.find(c => c.id === selectedClasseId), [classes, selectedClasseId]);
+  // 1. Charger la liste des classes (léger, une seule fois)
+  const { data: classesData, loading: classesLoading, readOnly } = usePlanningClasses();
 
-  // En mode archive on utilise les créneaux du snapshot, sinon live
-  const allCreneaux = dataCreneaux;
-  const allMatieres = dataMatieres;
+  // 2. Charger les créneaux de la classe sélectionnée (à la demande)
+  const { data: classeData, loading: classeLoading } = usePlanningClasse(selectedClasseId);
 
-  const classeCreneaux = useMemo(() => {
-    if (!selectedClasseId) return [];
-    return allCreneaux.filter(c => c.classe_id === selectedClasseId);
-  }, [allCreneaux, selectedClasseId]);
+  // Grouper par niveau
+  const niveaux = useMemo(() => {
+    if (!classesData?.classes) return [];
+    const map = new Map<string, any[]>();
+    for (const c of classesData.classes) {
+      const n = c.niveau || 'Autre';
+      if (!map.has(n)) map.set(n, []);
+      map.get(n)!.push(c);
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => {
+        const ia = NIVEAUX_ORDRE.indexOf(a), ib = NIVEAUX_ORDRE.indexOf(b);
+        if (ia === -1 && ib === -1) return a.localeCompare(b);
+        if (ia === -1) return 1; if (ib === -1) return -1;
+        return ia - ib;
+      })
+      .map(([niveau, classes]) => ({ niveau, classes }));
+  }, [classesData]);
 
-  const totalHeures = useMemo(() => {
-    return classeCreneaux.reduce((t, c) => t + calculateDuration(c.heure_debut, c.heure_fin), 0);
-  }, [classeCreneaux]);
+  if (classesLoading) return <PageLoader />;
+  if (!classesData) return <Alert variant="error">Problème de chargement.</Alert>;
 
-  useEffect(() => { if (selectedClasse) setSalle(selectedClasse.salle); }, [selectedClasse]);
+  // Données de la classe sélectionnée
+  const selectedClasse = classeData?.classe || null;
+  const classeCreneaux: any[] = classeData?.creneaux || [];
+  const allMatieres: any[] = classeData?.matieres || [];
+  const totalHeures = classeCreneaux.reduce((t: number, c: any) => t + calculateDuration(c.heure_debut, c.heure_fin), 0);
+  const getCreneaux = (j: JourSemaine, h: string) => classeCreneaux.filter((c: any) => c.jour === j && c.heure_debut === h);
+  const matiereOptions: SelectOption[] = allMatieres.map((m: any) => ({ value: m.id, label: m.nom }));
+  const selectedNiveau = selectedClasse?.niveau || null;
 
-  const loadSallesDisponibles = useCallback(async () => {
-    if (readOnly || !selectedClasse || selectedClasse.salle_type !== 'variable' || salles.length === 0) return;
-    setLoadingSalles(true);
-    const d = await getDisponibles(jour, heureDebut, heureFin);
-    setSallesDisponibles(d);
-    setLoadingSalles(false);
-  }, [readOnly, selectedClasse, jour, heureDebut, heureFin, salles.length, getDisponibles]);
+  const handleSelectClasse = (cid: string) => {
+    setSelectedClasseId(cid);
+    setOpenNiveau(null);
+    setShowForm(false);
+    setError('');
+  };
 
-  useEffect(() => {
-    if (showForm && selectedClasse?.salle_type === 'variable') loadSallesDisponibles();
-  }, [showForm, loadSallesDisponibles, selectedClasse?.salle_type]);
-
-  const handleSelectClasse = (classeId: string) => { setSelectedClasseId(classeId); setShowForm(false); setError(''); };
-
-  const resetForm = () => { setMatiereId(''); setJour('Lundi'); setHeureDebut('08:00'); setHeureFin('09:00'); setEnseignant(''); setError(''); if (selectedClasse) setSalle(selectedClasse.salle); };
+  const resetForm = () => {
+    setMatiereId(''); setJour('Lundi'); setHeureDebut('08:00'); setHeureFin('09:00');
+    setEnseignant(''); setError('');
+    if (selectedClasse) setSalle(selectedClasse.salle);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (readOnly) return;
-    if (!matiereId || !salle || !selectedClasse) { setError('Veuillez remplir tous les champs obligatoires'); return; }
-    const mat = allMatieres.find(m => m.id === matiereId);
-    if (!mat) { setError('Matière invalide'); return; }
+    if (readOnly || !matiereId || !salle || !selectedClasse) return;
+    const mat = allMatieres.find((m: any) => m.id === matiereId);
+    if (!mat) return;
     setSubmitting(true); setError('');
     await createWithError(
       { classe_id: selectedClasse.id, matiere_id: matiereId, matiere_nom: mat.nom, matiere_couleur: mat.couleur || '#2563eb', jour, heure_debut: heureDebut, heure_fin: heureFin, salle, enseignant: enseignant.trim() },
-      () => { resetForm(); setShowForm(false); },
-      (err) => setError(err),
+      () => { resetForm(); setShowForm(false); }, (err) => setError(err),
     );
     setSubmitting(false);
   };
 
-  const handleDeleteCreneau = async (creneau: Creneau) => {
+  const handleDeleteCreneau = async (cr: Creneau) => {
     if (readOnly) return;
-    const ok = await confirm({ title: 'Supprimer le créneau', message: `Supprimer le créneau de ${creneau.matiere_nom} (${creneau.jour} ${creneau.heure_debut}–${creneau.heure_fin}) ?`, confirmText: 'Supprimer', variant: 'danger' });
-    if (ok) deleteCreneau(creneau.id);
+    const ok = await confirm({ title: 'Supprimer', message: `Supprimer ${cr.matiere_nom} (${cr.jour} ${cr.heure_debut}–${cr.heure_fin}) ?`, confirmText: 'Supprimer', variant: 'danger' });
+    if (ok) deleteCreneau(cr.id);
   };
-
-  const getCreneaux = (j: JourSemaine, h: string) => classeCreneaux.filter(c => c.jour === j && c.heure_debut === h);
-
-  if (loading) return <PageLoader />;
 
   return (
     <div>
-      <PageHeader title="Planning" subtitle={selectedClasse ? `Emploi du temps de ${selectedClasse.nom}` : 'Sélectionnez une classe'}>
-        {selectedClasse && !readOnly && (
-          <Button variant="primary" onClick={() => setShowForm(!showForm)}>
-            {showForm ? 'Fermer' : '+ Ajouter un créneau'}
-          </Button>
-        )}
+      <PageHeader title="Planning" subtitle={selectedClasse ? `Emploi du temps de ${selectedClasse.nom}` : 'Sélectionnez un niveau puis une classe'}>
+        {selectedClasse && !readOnly && <Button variant="primary" onClick={() => setShowForm(!showForm)}>{showForm ? 'Fermer' : '+ Ajouter un créneau'}</Button>}
       </PageHeader>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.5rem' }}>
-        {/* Liste classes */}
+      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.5rem' }}>
+        {/* ===== SIDEBAR NIVEAUX ===== */}
         <div>
           <Card>
-            <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--text)' }}>Classes</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {classes.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Aucune classe</p>
-              ) : classes.map(c => (
-                <ClasseItem key={c.id} classe={c} isSelected={c.id === selectedClasseId}
-                  creneauxCount={allCreneaux.filter(cr => cr.classe_id === c.id).length}
-                  onClick={() => handleSelectClasse(c.id)} />
-              ))}
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Niveaux</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {niveaux.map(({ niveau, classes: nClasses }) => {
+                const isSelected = selectedNiveau === niveau;
+                const totalCr = nClasses.reduce((t: number, c: any) => t + (c._creneauxCount || 0), 0);
+
+                return (
+                  <Popover
+                    key={niveau}
+                    open={openNiveau === niveau}
+                    onClose={() => setOpenNiveau(null)}
+                    trigger={
+                      <div
+                        className={`niveau-item ${isSelected ? 'niveau-item-selected' : openNiveau === niveau ? 'niveau-item-active' : ''}`}
+                        onClick={() => setOpenNiveau(openNiveau === niveau ? null : niveau)}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>{niveau}</span>
+                          <Badge label={`${nClasses.length}`} variant={isSelected ? 'primary' : 'default'} />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span className="niveau-item-count" style={{ color: isSelected ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}>{totalCr}h</span>
+                          <span className="niveau-item-arrow">▾</span>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <div style={{ padding: '0.35rem 0' }}>
+                      <div style={{ padding: '0.4rem 0.85rem', fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Classes — {niveau}
+                      </div>
+                      {nClasses.map((c: any) => (
+                        <ListItem
+                          key={c.id}
+                          title={c.nom}
+                          subtitle={c.salle}
+                          selected={c.id === selectedClasseId}
+                          onClick={() => handleSelectClasse(c.id)}
+                          trailing={<Badge label={`${c._creneauxCount || 0}`} variant={c.id === selectedClasseId ? 'primary' : (c._creneauxCount || 0) > 0 ? 'info' : 'default'} />}
+                        />
+                      ))}
+                    </div>
+                  </Popover>
+                );
+              })}
             </div>
+
+            {selectedClasse && (
+              <div style={{ marginTop: '1rem', padding: '0.65rem 0.85rem', background: 'var(--primary-light)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.2rem' }}>Sélection</div>
+                <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--primary)' }}>{selectedClasse.nom}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedClasse.niveau} • {selectedClasse.salle}</div>
+              </div>
+            )}
           </Card>
         </div>
 
-        {/* Contenu */}
+        {/* ===== CONTENU ===== */}
         <div>
-          {!selectedClasse ? (
-            <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Sélectionnez une classe" /></Card>
+          {!selectedClasseId ? (
+            <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Sélectionnez un niveau dans la liste, puis choisissez une classe" /></Card>
+          ) : classeLoading ? (
+            <PageLoader />
+          ) : !selectedClasse ? (
+            <Card><EmptyState icon={<Icon path={Icons.warning} size={28} />} message="Classe introuvable" /></Card>
           ) : (
             <>
-              {/* Config */}
               <Card style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                  <div><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Classe</span><p style={{ fontWeight: 600 }}>{selectedClasse.nom}</p></div>
-                  <div><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Niveau</span><p style={{ fontWeight: 600 }}>{selectedClasse.niveau}</p></div>
-                  <div><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Salle</span><p style={{ fontWeight: 600 }}>{selectedClasse.salle}</p></div>
-                  <div><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mode</span><p><Badge label={selectedClasse.salle_type === 'fixe' ? 'Fixe' : 'Variable'} variant={selectedClasse.salle_type === 'fixe' ? 'info' : 'warning'} /></p></div>
-                  <div><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Créneaux</span><p style={{ fontWeight: 600 }}>{classeCreneaux.length}</p></div>
-                  <div><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Heures/sem</span><p style={{ fontWeight: 600 }}>{totalHeures}h</p></div>
+                  <StatItem label="Classe" value={selectedClasse.nom} />
+                  <StatItem label="Créneaux" value={classeCreneaux.length} />
+                  <StatItem label="Heures/sem" value={`${totalHeures}h`} />
+                  <StatItem label="Mode" value={<Badge label={selectedClasse.salle_type === 'fixe' ? 'Fixe' : 'Variable'} variant={selectedClasse.salle_type === 'fixe' ? 'info' : 'warning'} />} />
                 </div>
               </Card>
 
-              {/* Form — JAMAIS en readOnly */}
               {showForm && !readOnly && (
                 <Card style={{ marginBottom: '1rem' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Nouveau créneau</h3>
                   {error && <Alert variant="error">{error}</Alert>}
                   <form onSubmit={handleSubmit}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
-                      <div className="form-group">
-                        <label className="form-label">Matière *</label>
-                        <select className="select" value={matiereId} onChange={e => setMatiereId(e.target.value)} required>
-                          <option value="">Choisir</option>
-                          {allMatieres.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Jour *</label>
-                        <select className="select" value={jour} onChange={e => setJour(e.target.value as JourSemaine)}>
-                          {JOURS.map(j => <option key={j} value={j}>{j}</option>)}
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Enseignant</label>
-                        <input type="text" className="input" value={enseignant} onChange={e => setEnseignant(e.target.value)} placeholder="M. Dupont" />
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
-                      <div className="form-group">
-                        <label className="form-label">Début *</label>
-                        <select className="select" value={heureDebut} onChange={e => setHeureDebut(e.target.value)}>
-                          {HEURES.map(h => <option key={h} value={h}>{h}</option>)}
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Fin *</label>
-                        <select className="select" value={heureFin} onChange={e => setHeureFin(e.target.value)}>
-                          {HEURES.map(h => <option key={h} value={h}>{h}</option>)}
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Salle * {selectedClasse.salle_type === 'fixe' && <Badge label="Fixe" variant="info" />}</label>
-                        {selectedClasse.salle_type === 'fixe' ? (
-                          <input type="text" className="input input-readonly" value={selectedClasse.salle} readOnly />
-                        ) : salles.length > 0 ? (
-                          <select className="select" value={salle} onChange={e => setSalle(e.target.value)} disabled={loadingSalles}>
-                            {loadingSalles ? <option>Vérification...</option> : sallesDisponibles.map(s => (
-                              <option key={s.id} value={s.nom} disabled={!s.disponible}>{s.nom} — {s.disponible ? `${s.capacite} places` : 'Occupée'}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input type="text" className="input" value={salle} onChange={e => setSalle(e.target.value)} placeholder="Salle" />
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                    <FormGrid columns={3}>
+                      <Select label="Matière *" value={matiereId} onChange={e => setMatiereId(e.target.value)} options={matiereOptions} placeholder="Choisir" />
+                      <Select label="Jour *" value={jour} onChange={e => setJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
+                      <Input label="Enseignant" value={enseignant} onChange={e => setEnseignant(e.target.value)} placeholder="M. Dupont" />
+                    </FormGrid>
+                    <FormGrid columns={3}>
+                      <Select label="Début *" value={heureDebut} onChange={e => setHeureDebut(e.target.value)} options={HEURE_OPTIONS} />
+                      <Select label="Fin *" value={heureFin} onChange={e => setHeureFin(e.target.value)} options={HEURE_OPTIONS} />
+                      <Input label="Salle *" value={salle} onChange={e => setSalle(e.target.value)} placeholder="Salle" />
+                    </FormGrid>
+                    <FormActions>
                       <Button type="button" variant="secondary" onClick={() => { setShowForm(false); resetForm(); }}>Annuler</Button>
-                      <Button type="submit" variant="primary" disabled={submitting || !matiereId || !salle} loading={submitting}>Ajouter le créneau</Button>
-                    </div>
+                      <Button type="submit" variant="primary" disabled={submitting || !matiereId || !salle} loading={submitting}>Ajouter</Button>
+                    </FormActions>
                   </form>
                 </Card>
               )}
 
-              {/* Calendrier */}
               {classeCreneaux.length === 0 && !showForm ? (
-                <Card>
-                  <EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Aucun créneau"
-                    action={!readOnly ? <Button variant="primary" onClick={() => setShowForm(true)}>Ajouter un créneau</Button> : undefined} />
-                </Card>
+                <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Aucun créneau"
+                  action={!readOnly ? <Button variant="primary" onClick={() => setShowForm(true)}>Ajouter</Button> : undefined} /></Card>
               ) : (
                 <Card padding="none">
                   <div style={{ overflowX: 'auto' }}>
                     <table className="planning-table">
                       <thead><tr><th>Horaire</th>{JOURS.map(j => <th key={j}>{j}</th>)}</tr></thead>
                       <tbody>
-                        {HEURES.map(heure => (
-                          <tr key={heure}>
-                            <td>{heure}</td>
+                        {HEURES.map(h => (
+                          <tr key={h}>
+                            <td>{h}</td>
                             {JOURS.map(j => {
-                              const cc = getCreneaux(j, heure);
+                              const cc = getCreneaux(j, h);
                               return (
-                                <td key={`${j}-${heure}`}>
-                                  {cc.map(cr => (
+                                <td key={`${j}-${h}`}>
+                                  {cc.map((cr: any) => (
                                     <div key={cr.id} className="creneau-block" style={{ backgroundColor: cr.matiere_couleur }}>
                                       <div className="creneau-block-title">{cr.matiere_nom}</div>
                                       <div className="creneau-block-time">{cr.heure_debut}–{cr.heure_fin}</div>
                                       <div className="creneau-block-salle">{cr.salle}</div>
-                                      {cr.enseignant && <div className="creneau-block-salle">{cr.enseignant}</div>}
-                                      {!readOnly && (
-                                        <button type="button" className="creneau-block-delete" onClick={() => handleDeleteCreneau(cr)}>✕</button>
-                                      )}
+                                      {!readOnly && <button type="button" className="creneau-block-delete" onClick={() => handleDeleteCreneau(cr)}>✕</button>}
                                     </div>
                                   ))}
                                 </td>
@@ -252,20 +261,6 @@ export function Planning() {
             </>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function ClasseItem({ classe, isSelected, creneauxCount, onClick }: { classe: Classe; isSelected: boolean; creneauxCount: number; onClick: () => void }) {
-  return (
-    <div onClick={onClick} style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', background: isSelected ? 'var(--primary-light)' : 'transparent', border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border)', transition: 'all 0.2s' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? 'var(--primary)' : 'var(--text)' }}>{classe.nom}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{classe.niveau} • {classe.salle}</div>
-        </div>
-        <Badge label={`${creneauxCount}`} variant={creneauxCount > 0 ? 'primary' : 'default'} />
       </div>
     </div>
   );

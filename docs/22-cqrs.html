@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>CQRS — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🔀 Architecture CQRS</h1>
+<p class="subtitle">Séparation lecture / écriture, collections read dédiées, ViewBuilder, pagination serveur</p>
+
+<h2>Principe</h2>
+<p>L'application applique le pattern <strong>CQRS (Command Query Responsibility Segregation)</strong> :</p>
+<ul>
+<li>Les <strong>écritures</strong> (POST, PATCH, DELETE) passent par les write controllers et écrivent dans les collections write (source de vérité).</li>
+<li>Les <strong>lectures</strong> (GET) passent par un unique ReadController et lisent des collections read dénormalisées, pré-calculées, paginées côté serveur.</li>
+<li>Les deux côtés ne partagent jamais les mêmes collections MongoDB.</li>
+</ul>
+
+<h2>Flux complet</h2>
+<div class="schema">
+  Frontend
+    │
+    ├── GET /read/eleves?page=2&search=dup&classeId=abc
+    │       │
+    │       ▼
+    │   ReadController → ReadService
+    │       │
+    │       ▼
+    │   Collection READ: read_eleves
+    │   (skip/limit/regex côté MongoDB)
+    │       │
+    │       ▼
+    │   { eleves: [...10 docs...], total: 87, page: 2, totalPages: 8 }
+    │
+    │
+    ├── POST /eleves { nom: "Dupont", classe_id: "abc" }
+    │       │
+    │       ▼
+    │   Write Controller
+    │       ├── 1. ElevesService.create()     → INSERT dans "eleves" (write)
+    │       ├── 2. EventsGateway.emit()       → Socket.IO: eleve:created
+    │       └── 3. ViewBuilder.onEleveWrite() → PROJECTION dans "read_eleves" + "read_classes"
+    │
+    │
+    └── Socket.IO: eleve:created
+            │
+            ▼
+        EleveContext → notifyDataChange()
+            │
+            ▼
+        usePageFetch → setTimeout(500ms) → re-GET /read/eleves → page mise à jour
+</div>
+
+<h2>Collections MongoDB</h2>
+
+<h3>Write (source de vérité)</h3>
+<table>
+<tr><th>Collection</th><th>Modifiée par</th><th>Contenu</th></tr>
+<tr><td><code>classes</code></td><td>ClassesController</td><td>1 doc / classe</td></tr>
+<tr><td><code>eleves</code></td><td>ElevesController</td><td>1 doc / élève</td></tr>
+<tr><td><code>matieres</code></td><td>MatieresController</td><td>1 doc / matière</td></tr>
+<tr><td><code>notes</code></td><td>NotesController</td><td>1 doc / note</td></tr>
+<tr><td><code>creneaux</code></td><td>PlanningController</td><td>1 doc / créneau</td></tr>
+<tr><td><code>salles</code></td><td>SallesController</td><td>1 doc / salle</td></tr>
+<tr><td><code>anneescolaires</code></td><td>AnneesController</td><td>1 doc / année</td></tr>
+</table>
+
+<h3>Read (projections dénormalisées)</h3>
+<table>
+<tr><th>Collection</th><th>1 doc par</th><th>Champs enrichis</th><th>Index</th></tr>
+<tr><td><code>read_classes</code></td><td>classe</td><td><code>nb_eleves</code>, <code>taux</code></td><td><code>source_id</code> unique</td></tr>
+<tr><td><code>read_eleves</code></td><td>élève</td><td><code>classe_nom</code>, <code>classe_niveau</code></td><td><code>source_id</code> unique, <code>classe_id</code></td></tr>
+<tr><td><code>read_matieres</code></td><td>matière</td><td>miroir</td><td><code>source_id</code> unique</td></tr>
+<tr><td><code>read_notes</code></td><td>note</td><td><code>eleve_nom</code>, <code>eleve_prenom</code>, <code>matiere_nom</code>, <code>matiere_code</code></td><td><code>source_id</code> unique, <code>eleve_id+trimestre</code></td></tr>
+<tr><td><code>read_creneaux</code></td><td>créneau</td><td><code>classe_nom</code></td><td><code>source_id</code> unique, <code>classe_id</code></td></tr>
+<tr><td><code>read_salles</code></td><td>salle</td><td>miroir</td><td><code>source_id</code> unique</td></tr>
+</table>
+
+<div class="callout callout-info"><p>Chaque document read possède un <code>source_id</code> = l'<code>_id</code> du document write. Le <code>toJSON</code> fait <code>ret.id = ret.source_id</code> pour que le frontend reçoive le même <code>id</code> qu'auparavant.</p></div>
+
+<h2>Write Controllers</h2>
+<p>Les write controllers n'exposent que <strong>POST, PATCH, DELETE</strong> (pas de GET). Après chaque mutation :</p>
+<ol>
+<li>Écriture dans la collection write via le service</li>
+<li>Émission d'un événement Socket.IO via <code>EventsGateway</code></li>
+<li>Appel explicite au <code>ViewBuilder</code> pour projeter les changements dans le read model</li>
+</ol>
+<pre><code>@Post()
+async create(@Body() body: any) {
+  const item = await this.service.create(body);
+  this.events.emit('eleve:created', item);
+  this.viewBuilder.onEleveWrite();       // ← projection immédiate
+  return item;
+}</code></pre>
+
+<h2>Read Controller</h2>
+<p>Un <strong>unique</strong> contrôleur <code>@Controller('read')</code> expose tous les GET. Chaque endpoint accepte des <strong>query params</strong> pour la pagination, la recherche et le filtrage :</p>
+<table>
+<tr><th>Endpoint</th><th>Params</th><th>Retour</th></tr>
+<tr><td><code>GET /read/dashboard</code></td><td><code>classesPage</code>, <code>classesLimit</code></td><td>stats + classesWithCount paginé + recentEleves</td></tr>
+<tr><td><code>GET /read/classes</code></td><td><code>page</code>, <code>limit</code>, <code>search</code></td><td><code>{ items[], total, page, limit, totalPages }</code></td></tr>
+<tr><td><code>GET /read/classes/:id/eleves</code></td><td><code>page</code>, <code>limit</code>, <code>search</code></td><td><code>{ classe, eleves[], total, page, ... }</code></td></tr>
+<tr><td><code>GET /read/eleves</code></td><td><code>page</code>, <code>limit</code>, <code>search</code>, <code>classeId</code></td><td><code>{ eleves[], classes[], total, totalAll, ... }</code></td></tr>
+<tr><td><code>GET /read/matieres</code></td><td><code>page</code>, <code>limit</code></td><td><code>{ items[], total, page, limit, totalPages }</code></td></tr>
+<tr><td><code>GET /read/salles</code></td><td><code>page</code>, <code>limit</code></td><td><code>{ items[], total, page, limit, totalPages }</code></td></tr>
+<tr><td><code>GET /read/planning</code></td><td>—</td><td>classes + creneaux + matieres + salles</td></tr>
+<tr><td><code>GET /read/notes</code></td><td>—</td><td>classes + matieres + eleves + notes</td></tr>
+<tr><td><code>GET /read/bulletin/:id</code></td><td><code>trimestre</code></td><td>eleve + classe + bulletin[]</td></tr>
+<tr><td><code>GET /read/annees/:id/snapshot</code></td><td>—</td><td>Toutes les données d'une année archivée</td></tr>
+</table>
+
+<h2>ViewBuilder</h2>
+<p>Le <code>ViewBuilderService</code> projette les données write dans les collections read.</p>
+
+<h3>Déclenchement</h3>
+<table>
+<tr><th>Mécanisme</th><th>Quand</th><th>Fiabilité</th></tr>
+<tr><td><strong>Appel explicite</strong></td><td>Après chaque POST/PATCH/DELETE dans un write controller</td><td>✅ Toujours fiable (standalone ou replica set)</td></tr>
+<tr><td><strong>Change Streams</strong></td><td>Automatique sur chaque changement MongoDB</td><td>⚠️ Requiert un replica set. Sur standalone, un warning est loggé et le mécanisme est désactivé.</td></tr>
+<tr><td><strong>Rebuild initial</strong></td><td>Au démarrage du serveur (<code>onModuleInit</code>)</td><td>✅ Reconstruit tout à partir des collections write</td></tr>
+</table>
+
+<h3>Cascade de projection</h3>
+<p>Quand une entité change, le ViewBuilder reconstruit les collections read qui dénormalisent cette entité :</p>
+<table>
+<tr><th>Écriture sur</th><th>Méthode</th><th>Projections</th></tr>
+<tr><td><code>classes</code></td><td><code>onClasseWrite()</code></td><td><code>read_classes</code> + <code>read_eleves</code> (classe_nom) + <code>read_creneaux</code> (classe_nom)</td></tr>
+<tr><td><code>eleves</code></td><td><code>onEleveWrite()</code></td><td><code>read_eleves</code> + <code>read_classes</code> (nb_eleves, taux)</td></tr>
+<tr><td><code>matieres</code></td><td><code>onMatiereWrite()</code></td><td><code>read_matieres</code> + <code>read_notes</code> (matiere_nom)</td></tr>
+<tr><td><code>notes</code></td><td><code>onNoteWrite()</code></td><td><code>read_notes</code></td></tr>
+<tr><td><code>creneaux</code></td><td><code>onCreneauWrite()</code></td><td><code>read_creneaux</code></td></tr>
+<tr><td><code>salles</code></td><td><code>onSalleWrite()</code></td><td><code>read_salles</code></td></tr>
+</table>
+
+<h3>Méthode de projection</h3>
+<pre><code>// Exemple : rebuildEleves()
+const [eleves, classes] = await Promise.all([
+  eleveModel.find().lean(),       // lecture write
+  classeModel.find().lean(),
+]);
+
+const classesMap = new Map(classes.map(c => [c._id.toString(), c]));
+
+const ops = eleves.map(e => ({
+  updateOne: {
+    filter: { source_id: e._id.toString() },
+    update: { $set: {
+      source_id: e._id.toString(),
+      nom: e.nom, prenom: e.prenom, ...,
+      classe_nom: classesMap.get(e.classe_id)?.nom || '',
+    }},
+    upsert: true,
+  },
+}));
+
+// Supprimer les orphelins (documents read sans source write)
+await readEleveModel.deleteMany({ source_id: { $nin: ids } });
+// Upsert en bulk
+await readEleveModel.bulkWrite(ops);</code></pre>
+
+<h2>Pagination côté serveur</h2>
+<p>Toute la pagination et la recherche sont exécutées par MongoDB via <code>find(filter).skip().limit()</code>. Le frontend n'exécute plus de <code>paginate()</code>, <code>filter()</code> ou <code>useMemo()</code> pour les listes.</p>
+
+<h3>Exemple — recherche d'élèves</h3>
+<pre><code>// Backend ReadService
+async getElevesList(page = 1, limit = 12, search = '', classeId = '') {
+  const filter: any = {};
+  if (classeId) filter.classe_id = classeId;
+  if (search) {
+    filter.$or = [
+      { nom: { $regex: search, $options: 'i' } },
+      { prenom: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  const [items, total] = await Promise.all([
+    this.readEleveModel.find(filter).skip((page - 1) * limit).limit(limit),
+    this.readEleveModel.countDocuments(filter),
+  ]);
+
+  return { eleves: items, total, page, limit, totalPages: Math.ceil(total / limit) };
+}
+
+// Frontend
+const { data } = usePageFetch(
+  useCallback(() => readApi.elevesList(page, 12, search, classeId), [page, search, classeId]),
+);</code></pre>
+
+<h2>Synchronisation temps réel</h2>
+<p>Après chaque mutation :</p>
+<ol>
+<li>Le write controller émet un événement Socket.IO (<code>eleve:created</code>, etc.)</li>
+<li>Le contexte React correspondant appelle <code>notifyDataChange()</code></li>
+<li>Tous les hooks <code>usePageFetch</code> écoutent via <code>onDataChange()</code></li>
+<li>Après un délai de 500ms (temps pour le ViewBuilder), ils re-fetchent leur endpoint read</li>
+<li>La page se met à jour avec les données fraîches</li>
+</ol>
+
+<div class="callout callout-warn"><p>Le délai de 500ms entre le socket et le re-fetch garantit que le ViewBuilder a eu le temps de projeter les changements dans les collections read. Sur un système chargé, ce délai peut être augmenté.</p></div>
+
+<h2>Middleware de logs</h2>
+<p><code>ApiLoggerMiddleware</code> logge chaque requête HTTP avec méthode, endpoint, code réponse, durée, origin et IP :</p>
+<pre><code>[API] [GET] /read/eleves?page=2&search=dup → 200 (8ms) | origin: http://localhost:5173
+[API] [POST] /eleves → 201 (32ms) | origin: http://localhost:5173
+[API] [DELETE] /notes/abc → 200 (5ms) | origin: http://localhost:5173</code></pre>
+
+<div class="doc-footer">
+<a href="21-donnees-mock.html">← Données Mock</a>
+<a href="23-front-lazy.html">Lazy Loading Frontend →</a>
+</div>
+</div>
+</body></html>

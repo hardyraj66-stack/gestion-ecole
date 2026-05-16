@@ -4,27 +4,39 @@
 <div class="doc">
 <h1>📝 Saisie des Notes</h1>
 <p class="subtitle">Page <code>/notes</code></p>
-<h2>Flux utilisateur</h2>
-<ol>
-<li>Sélectionner une <strong>classe</strong>, une <strong>matière</strong>, un <strong>trimestre</strong> et une <strong>date d'évaluation</strong></li>
-<li>Cliquer <strong>« Charger les élèves »</strong></li>
-<li>Saisir les notes (0-20, pas 0.5) et commentaires optionnels pour chaque élève</li>
-<li>Cliquer <strong>« ✓ Enregistrer toutes les notes »</strong></li>
-</ol>
+
+<h2>Source des données</h2>
+<p>La page charge sa configuration via <code>GET /read/notes</code> :</p>
+<ul>
+<li>classes</li>
+<li>matières</li>
+<li>élèves</li>
+<li>notes existantes</li>
+</ul>
+<p>La page de saisie ne pagine plus côté front. Le backend fournit les données et le frontend les regroupe pour la saisie.</p>
+
 <h2>Composants</h2>
 <table>
 <tr><th>Composant</th><th>Rôle</th></tr>
-<tr><td>NotesFilters</td><td>Card de sélection (classe, matière, trimestre, date) + bouton charger</td></tr>
-<tr><td>NotesStatsBar</td><td>Bande : « X / Y saisies » + « Z — Moy. classe »</td></tr>
-<tr><td>NotesTable</td><td>Tableau paginé (10/page) : avatar, nom, input note, input commentaire, badge statut</td></tr>
+<tr><td>NotesFilters</td><td>Card de sélection (classe, matière, trimestre, date)</td></tr>
+<tr><td>NotesStatsBar</td><td>Bande : « X / Y saisies » + moyenne</td></tr>
+<tr><td>NotesTable</td><td>Tableau de saisie avec composants stylés pour note et commentaire</td></tr>
 </table>
-<h2>Logique</h2>
+
+<h2>Inputs stylés</h2>
 <ul>
-<li>Au chargement, les notes existantes (même élève + matière + trimestre) sont pré-remplies avec <code>existingId</code></li>
-<li>À l'enregistrement : si <code>existingId</code> → <code>PATCH</code>, sinon → <code>POST</code></li>
-<li>L'input note a une classe CSS <code>note-good</code> (vert, ≥10) ou <code>note-bad</code> (rouge, &lt;10)</li>
-<li>Badge statut : « Existante » (gris), « Nouvelle » (vert), ou « — »</li>
+<li><strong>note-field</strong> : champ numérique stylé, couleurs par valeur, indicateur visuel</li>
+<li><strong>comment-field</strong> : champ texte uniforme avec focus et mode lecture seule</li>
 </ul>
+
+<h2>Lecture seule archive</h2>
+<p>En mode archive :</p>
+<ul>
+<li>les champs sont <code>disabled</code></li>
+<li>le bouton d'enregistrement est masqué</li>
+<li>une alerte orange indique le mode consultation</li>
+</ul>
+
 <div class="doc-footer">
 <a href="14-front-matieres.html">← Gestion des Matières</a>
 <a href="16-front-planning.html">Planning →</a>
