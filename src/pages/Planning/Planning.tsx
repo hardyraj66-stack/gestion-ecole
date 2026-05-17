@@ -6,12 +6,12 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Card } from '../../components/shared/Card';
-import { Button } from '../../components/shared/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Alert } from '../../components/shared/Alert';
 import { Icon, Icons } from '../../components/shared/Icon';
 import { Input } from '../../components/shared/Input';
 import { Select, SelectOption } from '../../components/shared/Select';
+import { Button } from '../../components/shared/Button';
 import { FormGrid, FormActions } from '../../components/shared/FormGrid';
 import { StatItem } from '../../components/shared/StatItem';
 import { ListItem } from '../../components/shared/ListItem';
@@ -26,17 +26,14 @@ const JOUR_OPTIONS: SelectOption[] = JOURS.map(j => ({ value: j, label: j }));
 const HEURE_OPTIONS: SelectOption[] = HEURES.map(h => ({ value: h, label: h }));
 const NIVEAUX_ORDRE = ['CP','CE1','CE2','CM1','CM2','6ème','5ème','4ème','3ème','2nde','1ère','Terminale'];
 
-// Plage bloquée pause déjeuner
 const isBreakSlot = (h: string) => h === '12:00' || h === '12:30';
-const breaksOverlap = (start: string, end: string) => {
-  const s = toMin(start), e = toMin(end);
-  const bs = toMin('12:00'), be = toMin('12:30');
-  return s < be && e > bs;
-};
+const breaksOverlap = (start: string, end: string) => { const s = toMin(start), e = toMin(end); return s < toMin('12:30') && e > toMin('12:00'); };
 function toMin(t: string) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
-function nextSlot(h: string) {
-  const i = HEURES.indexOf(h);
-  return i < HEURES.length - 1 ? HEURES[i + 1] : h;
+function nextSlot(h: string) { const i = HEURES.indexOf(h); return i < HEURES.length - 1 ? HEURES[i + 1] : h; }
+function slotSpan(start: string, end: string) { return HEURES.indexOf(end) > 0 ? HEURES.indexOf(end) - HEURES.indexOf(start) : 1; }
+function isOccupied(jour: JourSemaine, heure: string, creneaux: any[]) {
+  const m = toMin(heure);
+  return creneaux.some((c: any) => c.jour === jour && toMin(c.heure_debut) <= m && toMin(c.heure_fin) > m);
 }
 
 export function Planning() {
@@ -47,12 +44,12 @@ export function Planning() {
   const [selectedClasseId, setSelectedClasseId] = useState<string>(id || '');
   const [openNiveau, setOpenNiveau] = useState<string | null>(null);
 
-  // Sélection par glisser
+  // Selection
   const [selecting, setSelecting] = useState(false);
   const [selStart, setSelStart] = useState<{ jour: JourSemaine; heure: string } | null>(null);
   const [selEnd, setSelEnd] = useState<string | null>(null);
 
-  // Popup création
+  // Create popup (multi-slot only)
   const [showCreatePopup, setShowCreatePopup] = useState(false);
   const [formJour, setFormJour] = useState<JourSemaine>('Lundi');
   const [formDebut, setFormDebut] = useState('08:00');
@@ -63,11 +60,18 @@ export function Planning() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
+  // Inline create (single-slot)
+  const [inlineSlot, setInlineSlot] = useState<{ jour: JourSemaine; heure: string } | null>(null);
+
   // Drag-and-drop
   const [dragging, setDragging] = useState<any>(null);
   const [showMovePopover, setShowMovePopover] = useState(false);
   const [moveTarget, setMoveTarget] = useState<{ jour: JourSemaine; heure: string } | null>(null);
   const [moveCreneau, setMoveCreneau] = useState<any>(null);
+
+  // Resize
+  const [resizing, setResizing] = useState<{ cr: any; edge: 'top' | 'bottom' } | null>(null);
+  const [resizeHeure, setResizeHeure] = useState<string | null>(null);
 
   const [error, setError] = useState('');
 
@@ -93,13 +97,25 @@ export function Planning() {
   const classeCreneaux: any[] = classeData?.creneaux || [];
   const allMatieres: any[] = classeData?.matieres || [];
   const totalHeures = classeCreneaux.reduce((t: number, c: any) => t + calculateDuration(c.heure_debut, c.heure_fin), 0);
-  const getCreneaux = (j: JourSemaine, h: string) => classeCreneaux.filter((c: any) => c.jour === j && c.heure_debut === h);
   const matiereOptions: SelectOption[] = allMatieres.map((m: any) => ({ value: m.id, label: m.nom }));
   const selectedNiveau = selectedClasse?.niveau || null;
 
-  const handleSelectClasse = (cid: string) => { setSelectedClasseId(cid); setOpenNiveau(null); setError(''); };
+  // Which cells to hide (covered by a multi-slot creneau)
+  const coveredCells = useMemo(() => {
+    const set = new Set<string>();
+    for (const cr of classeCreneaux) {
+      const si = HEURES.indexOf(cr.heure_debut);
+      const ei = HEURES.findIndex(h => h === cr.heure_fin);
+      const end = ei > si ? ei : si + 1;
+      for (let i = si + 1; i < end; i++) set.add(`${cr.jour}-${HEURES[i]}`);
+    }
+    return set;
+  }, [classeCreneaux]);
 
-  // ===== SÉLECTION PAR GLISSER =====
+  const getCreneauAt = (jour: JourSemaine, heure: string) => classeCreneaux.find((c: any) => c.jour === jour && c.heure_debut === heure);
+  const handleSelectClasse = (cid: string) => { setSelectedClasseId(cid); setOpenNiveau(null); setError(''); setInlineSlot(null); };
+
+  // ===== SELECTION =====
   const isInSelection = (jour: JourSemaine, heure: string) => {
     if (!selStart || !selEnd || selStart.jour !== jour) return false;
     const si = HEURES.indexOf(selStart.heure), ei = HEURES.indexOf(selEnd), ci = HEURES.indexOf(heure);
@@ -108,17 +124,14 @@ export function Planning() {
 
   const handleCellMouseDown = (jour: JourSemaine, heure: string) => {
     if (readOnly || !selectedClasse) return;
-    if (isBreakSlot(heure)) { setError('⏸ Cette plage (12h00–12h30) est réservée à la pause.'); return; }
-    if (getCreneaux(jour, heure).length > 0) return; // occupée
-    setSelecting(true);
-    setSelStart({ jour, heure });
-    setSelEnd(heure);
-    setError('');
+    if (isBreakSlot(heure)) { setError('⏸ Plage réservée à la pause.'); return; }
+    if (isOccupied(jour, heure, classeCreneaux)) return;
+    setSelecting(true); setSelStart({ jour, heure }); setSelEnd(heure); setError(''); setInlineSlot(null);
   };
 
   const handleCellMouseEnter = (jour: JourSemaine, heure: string) => {
     if (!selecting || !selStart || selStart.jour !== jour) return;
-    if (isBreakSlot(heure)) return; // ne pas étendre sur la pause
+    if (isBreakSlot(heure) || isOccupied(jour, heure, classeCreneaux)) return;
     setSelEnd(heure);
   };
 
@@ -130,149 +143,148 @@ export function Planning() {
     const startH = HEURES[Math.min(si, ei)];
     const endH = nextSlot(HEURES[Math.max(si, ei)]);
 
-    if (breaksOverlap(startH, endH)) { setError('⏸ La sélection chevauche la pause déjeuner (12h00–12h30).'); setSelStart(null); setSelEnd(null); return; }
+    if (breaksOverlap(startH, endH)) { setError('⏸ Chevauche la pause.'); setSelStart(null); setSelEnd(null); return; }
 
-    setFormJour(selStart.jour);
-    setFormDebut(startH);
-    setFormFin(endH);
-    setFormSalle(selectedClasse?.salle || '');
-    setFormMatiereId('');
-    setFormEnseignant('');
-    setFormError('');
-    setShowCreatePopup(true);
-    setSelStart(null);
-    setSelEnd(null);
+    const isSingle = si === ei;
+
+    if (isSingle) {
+      // Single slot → inline creation (no popup)
+      setInlineSlot({ jour: selStart.jour, heure: startH });
+      setFormJour(selStart.jour); setFormDebut(startH); setFormFin(endH);
+      setFormSalle(selectedClasse?.salle || ''); setFormMatiereId(''); setFormEnseignant(''); setFormError('');
+    } else {
+      // Multi slot → popup
+      setFormJour(selStart.jour); setFormDebut(startH); setFormFin(endH);
+      setFormSalle(selectedClasse?.salle || ''); setFormMatiereId(''); setFormEnseignant(''); setFormError('');
+      setShowCreatePopup(true);
+    }
+    setSelStart(null); setSelEnd(null);
   };
 
-  // Annuler la sélection si on sort de la grille
   const handleGridMouseLeave = () => { if (selecting) { setSelecting(false); setSelStart(null); setSelEnd(null); } };
 
-  // ===== POPUP CRÉATION =====
-  const handleCreateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ===== CREATE (shared logic) =====
+  const doCreate = async () => {
     if (!formMatiereId || !formSalle || !selectedClasse) return;
-    if (breaksOverlap(formDebut, formFin)) { setFormError('Le créneau chevauche la pause 12h00–12h30.'); return; }
+    if (breaksOverlap(formDebut, formFin)) { setFormError('Chevauche la pause.'); return; }
     const mat = allMatieres.find((m: any) => m.id === formMatiereId);
     if (!mat) return;
     setFormSubmitting(true); setFormError('');
     await createWithError(
       { classe_id: selectedClasse.id, matiere_id: formMatiereId, matiere_nom: mat.nom, matiere_couleur: mat.couleur || '#2563eb', jour: formJour, heure_debut: formDebut, heure_fin: formFin, salle: formSalle, enseignant: formEnseignant.trim() },
-      () => { setShowCreatePopup(false); },
-      (err) => { setFormError(err); },
+      () => { setShowCreatePopup(false); setInlineSlot(null); },
+      (err) => setFormError(err),
     );
     setFormSubmitting(false);
   };
 
-  // ===== DRAG AND DROP =====
+  const handleCreateSubmit = (e: React.FormEvent) => { e.preventDefault(); doCreate(); };
+
+  // ===== DRAG-DROP =====
   const handleDragStart = (e: React.DragEvent, cr: any) => {
     if (readOnly) { e.preventDefault(); return; }
-    setDragging(cr);
-    e.dataTransfer.effectAllowed = 'move';
+    setDragging(cr); e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent, _jour: JourSemaine, heure: string) => {
-    if (!dragging || isBreakSlot(heure)) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+  const handleDragOver = (e: React.DragEvent, _j: JourSemaine, h: string) => {
+    if (!dragging || isBreakSlot(h)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = async (e: React.DragEvent, jour: JourSemaine, heure: string) => {
-    e.preventDefault();
-    if (!dragging) return;
-
-    if (isBreakSlot(heure)) { setError('⏸ Impossible de déplacer sur la pause (12h00–12h30).'); setDragging(null); return; }
-
-    const duration = toMin(dragging.heure_fin) - toMin(dragging.heure_debut);
-    const newEnd = HEURES.find(h => toMin(h) === toMin(heure) + duration) || dragging.heure_fin;
-
-    if (breaksOverlap(heure, newEnd)) { setError('⏸ Le créneau déplacé chevaucherait la pause déjeuner.'); setDragging(null); return; }
-
-    setMoveCreneau(dragging);
-    setMoveTarget({ jour, heure });
-    setShowMovePopover(true);
-    setDragging(null);
+  const handleDrop = (e: React.DragEvent, jour: JourSemaine, heure: string) => {
+    e.preventDefault(); if (!dragging) return;
+    if (isBreakSlot(heure)) { setError('⏸ Pause.'); setDragging(null); return; }
+    const dur = toMin(dragging.heure_fin) - toMin(dragging.heure_debut);
+    const ne = HEURES.find(h => toMin(h) === toMin(heure) + dur) || dragging.heure_fin;
+    if (breaksOverlap(heure, ne)) { setError('⏸ Chevaucherait la pause.'); setDragging(null); return; }
+    setMoveCreneau(dragging); setMoveTarget({ jour, heure }); setShowMovePopover(true); setDragging(null);
   };
 
   const handleMoveConfirm = async (moveAll: boolean) => {
     if (!moveCreneau || !moveTarget) return;
     setShowMovePopover(false);
-
-    const duration = toMin(moveCreneau.heure_fin) - toMin(moveCreneau.heure_debut);
-    const newEnd = HEURES.find(h => toMin(h) === toMin(moveTarget.heure) + duration) || moveCreneau.heure_fin;
-
+    const dur = toMin(moveCreneau.heure_fin) - toMin(moveCreneau.heure_debut);
+    const ne = HEURES.find(h => toMin(h) === toMin(moveTarget.heure) + dur) || moveCreneau.heure_fin;
     if (moveAll) {
-      // Déplacer tous les créneaux de la même matière du même jour
-      const sameMatiereCreneaux = classeCreneaux.filter((c: any) => c.matiere_id === moveCreneau.matiere_id && c.jour === moveCreneau.jour);
-      for (const cr of sameMatiereCreneaux) {
-        const offset = toMin(cr.heure_debut) - toMin(moveCreneau.heure_debut);
-        const nStart = HEURES.find(h => toMin(h) === toMin(moveTarget.heure) + offset);
-        const nEnd = HEURES.find(h => toMin(h) === toMin(moveTarget.heure) + offset + (toMin(cr.heure_fin) - toMin(cr.heure_debut)));
-        if (nStart && nEnd) await updateCreneau(cr.id, { jour: moveTarget.jour, heure_debut: nStart, heure_fin: nEnd });
+      const same = classeCreneaux.filter((c: any) => c.matiere_id === moveCreneau.matiere_id && c.jour === moveCreneau.jour);
+      for (const cr of same) {
+        const off = toMin(cr.heure_debut) - toMin(moveCreneau.heure_debut);
+        const ns = HEURES.find(h => toMin(h) === toMin(moveTarget.heure) + off);
+        const nne = HEURES.find(h => toMin(h) === toMin(moveTarget.heure) + off + (toMin(cr.heure_fin) - toMin(cr.heure_debut)));
+        if (ns && nne) await updateCreneau(cr.id, { jour: moveTarget.jour, heure_debut: ns, heure_fin: nne });
       }
     } else {
-      await updateCreneau(moveCreneau.id, { jour: moveTarget.jour, heure_debut: moveTarget.heure, heure_fin: newEnd });
+      await updateCreneau(moveCreneau.id, { jour: moveTarget.jour, heure_debut: moveTarget.heure, heure_fin: ne });
     }
+    setMoveCreneau(null); setMoveTarget(null);
+  };
 
-    setMoveCreneau(null);
-    setMoveTarget(null);
+  // ===== RESIZE =====
+  const handleResizeStart = (e: React.MouseEvent, cr: any, edge: 'top' | 'bottom') => {
+    e.preventDefault(); e.stopPropagation();
+    if (readOnly) return;
+    setResizing({ cr, edge }); setResizeHeure(edge === 'top' ? cr.heure_debut : cr.heure_fin);
+  };
+
+  const handleResizeEnter = (heure: string) => {
+    if (!resizing) return;
+    if (isBreakSlot(heure) || isBreakSlot(nextSlot(heure))) return;
+    setResizeHeure(resizing.edge === 'bottom' ? nextSlot(heure) : heure);
+  };
+
+  const handleResizeEnd = async () => {
+    if (!resizing || !resizeHeure) { setResizing(null); return; }
+    const { cr, edge } = resizing;
+    const newStart = edge === 'top' ? resizeHeure : cr.heure_debut;
+    const newEnd = edge === 'bottom' ? resizeHeure : cr.heure_fin;
+    setResizing(null); setResizeHeure(null);
+    if (newStart === cr.heure_debut && newEnd === cr.heure_fin) return;
+    if (toMin(newEnd) <= toMin(newStart)) return;
+    if (breaksOverlap(newStart, newEnd)) { setError('⏸ Chevauche la pause.'); return; }
+    await updateCreneau(cr.id, { heure_debut: newStart, heure_fin: newEnd });
   };
 
   // ===== DELETE =====
   const handleDeleteCreneau = async (cr: Creneau) => {
     if (readOnly) return;
-    const ok = await confirm({ title: 'Supprimer', message: `Supprimer ${cr.matiere_nom} (${cr.jour} ${cr.heure_debut}–${cr.heure_fin}) ?`, confirmText: 'Supprimer', variant: 'danger' });
+    const ok = await confirm({ title: 'Supprimer', message: `Supprimer ${cr.matiere_nom} ?`, confirmText: 'Supprimer', variant: 'danger' });
     if (ok) deleteCreneau(cr.id);
   };
 
   return (
-    <div>
-      <PageHeader title="Planning" subtitle={selectedClasse ? `Emploi du temps de ${selectedClasse.nom}` : 'Sélectionnez un niveau puis une classe'} />
-
+    <div onMouseUp={() => { if (resizing) handleResizeEnd(); }}>
+      <PageHeader title="Planning" subtitle={selectedClasse ? `${selectedClasse.nom}` : 'Sélectionnez une classe'} />
       {error && <Alert variant="warning">{error}</Alert>}
 
       <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.5rem' }}>
-        {/* ===== SIDEBAR ===== */}
+        {/* SIDEBAR */}
         <div>
           <Card>
             <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Niveaux</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {niveaux.map(({ niveau, classes: nClasses }) => (
+              {niveaux.map(({ niveau, classes: nc }) => (
                 <Popover key={niveau} open={openNiveau === niveau} onClose={() => setOpenNiveau(null)}
-                  trigger={
-                    <div className={`niveau-item ${selectedNiveau === niveau ? 'niveau-item-selected' : openNiveau === niveau ? 'niveau-item-active' : ''}`} onClick={() => setOpenNiveau(openNiveau === niveau ? null : niveau)}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>{niveau}</span><Badge label={`${nClasses.length}`} variant={selectedNiveau === niveau ? 'primary' : 'default'} /></div>
-                      <span className="niveau-item-arrow">▾</span>
-                    </div>
-                  }>
+                  trigger={<div className={`niveau-item ${selectedNiveau === niveau ? 'niveau-item-selected' : openNiveau === niveau ? 'niveau-item-active' : ''}`} onClick={() => setOpenNiveau(openNiveau === niveau ? null : niveau)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>{niveau}</span><Badge label={`${nc.length}`} variant={selectedNiveau === niveau ? 'primary' : 'default'} /></div>
+                    <span className="niveau-item-arrow">▾</span>
+                  </div>}>
                   <div style={{ padding: '0.35rem 0' }}>
-                    <div style={{ padding: '0.4rem 0.85rem', fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Classes — {niveau}</div>
-                    {nClasses.map((c: any) => (
-                      <ListItem key={c.id} title={c.nom} subtitle={c.salle} selected={c.id === selectedClasseId} onClick={() => handleSelectClasse(c.id)}
-                        trailing={<Badge label={`${c._creneauxCount || 0}`} variant={c.id === selectedClasseId ? 'primary' : 'default'} />} />
-                    ))}
+                    {nc.map((c: any) => <ListItem key={c.id} title={c.nom} subtitle={c.salle} selected={c.id === selectedClasseId} onClick={() => handleSelectClasse(c.id)} trailing={<Badge label={`${c._creneauxCount || 0}`} variant={c.id === selectedClasseId ? 'primary' : 'default'} />} />)}
                   </div>
                 </Popover>
               ))}
             </div>
-            {selectedClasse && (
-              <div style={{ marginTop: '1rem', padding: '0.65rem 0.85rem', background: 'var(--primary-light)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Sélection</div>
-                <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--primary)' }}>{selectedClasse.nom}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedClasse.niveau} • {selectedClasse.salle}</div>
-              </div>
-            )}
-            {selectedClasse && !readOnly && (
-              <p style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                💡 Cliquez et glissez sur les cases vides pour créer un créneau. Glissez-déposez un créneau existant pour le déplacer.
-              </p>
-            )}
+            {selectedClasse && <div style={{ marginTop: '1rem', padding: '0.65rem 0.85rem', background: 'var(--primary-light)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Sélection</div>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--primary)' }}>{selectedClasse.nom}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedClasse.niveau} • {selectedClasse.salle}</div>
+            </div>}
           </Card>
         </div>
 
-        {/* ===== CONTENU ===== */}
+        {/* GRID */}
         <div>
           {!selectedClasseId ? (
-            <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Sélectionnez un niveau puis une classe" /></Card>
+            <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Sélectionnez une classe" /></Card>
           ) : !selectedClasse ? (
             <Card><EmptyState icon={<Icon path={Icons.warning} size={28} />} message="Classe introuvable" /></Card>
           ) : (
@@ -288,15 +300,8 @@ export function Planning() {
 
               <Card padding="none">
                 <div style={{ position: 'relative', overflowX: 'auto' }} onMouseLeave={handleGridMouseLeave}>
-                  {classeRefreshing && (
-                    <div className="planning-table-overlay">
-                      <div className="spinner"></div>
-                      <span className="planning-table-overlay-text">Mise à jour du planning…</span>
-                    </div>
-                  )}
-                  {classeLoading && !classeData ? (
-                    <div style={{ padding: '2rem' }}><PageLoader /></div>
-                  ) : (
+                  {classeRefreshing && <div className="planning-table-overlay"><div className="spinner" /><span className="planning-table-overlay-text">Mise à jour…</span></div>}
+                  {classeLoading && !classeData ? <div style={{ padding: '2rem' }}><PageLoader /></div> : (
                   <table className="planning-table planning-interactive">
                     <thead><tr><th>Horaire</th>{JOURS.map(j => <th key={j}>{j}</th>)}</tr></thead>
                     <tbody>
@@ -305,39 +310,59 @@ export function Planning() {
                         return (
                           <tr key={h} className={isBreak ? 'planning-break-row' : ''}>
                             <td className={isBreak ? 'planning-break-cell' : ''}>
-                              {h}
-                              {isBreak && <span className="planning-break-label">pause</span>}
+                              {h}{isBreak && <span className="planning-break-label">pause</span>}
                             </td>
                             {JOURS.map(j => {
-                              const cc = getCreneaux(j, h);
+                              // Skip cells covered by a multi-slot creneau
+                              if (coveredCells.has(`${j}-${h}`)) return null;
+
+                              const cr = getCreneauAt(j, h);
                               const inSel = isInSelection(j, h);
-                              const isEmpty = cc.length === 0 && !isBreak;
+                              const isInline = inlineSlot?.jour === j && inlineSlot?.heure === h;
+                              const occupied = isOccupied(j, h, classeCreneaux);
+                              const isEmpty = !occupied && !isBreak;
+                              const span = cr ? slotSpan(cr.heure_debut, cr.heure_fin) : 1;
 
                               return (
                                 <td
                                   key={`${j}-${h}`}
-                                  className={`${isBreak ? 'planning-break-cell' : ''} ${inSel ? 'planning-cell-selected' : ''} ${isEmpty && !readOnly ? 'planning-cell-empty' : ''}`}
+                                  rowSpan={cr ? Math.max(span, 1) : 1}
+                                  className={`${isBreak ? 'planning-break-cell' : ''} ${inSel ? 'planning-cell-selected' : ''} ${isEmpty && !readOnly ? 'planning-cell-empty' : ''} ${cr ? 'planning-cell-creneau' : ''}`}
                                   onMouseDown={() => isEmpty && handleCellMouseDown(j, h)}
-                                  onMouseEnter={() => selecting && handleCellMouseEnter(j, h)}
-                                  onMouseUp={handleCellMouseUp}
+                                  onMouseEnter={() => { if (selecting) handleCellMouseEnter(j, h); if (resizing) handleResizeEnter(h); }}
+                                  onMouseUp={() => { handleCellMouseUp(); if (resizing) handleResizeEnd(); }}
                                   onDragOver={e => handleDragOver(e, j, h)}
                                   onDrop={e => handleDrop(e, j, h)}
                                 >
-                                  {isBreak && cc.length === 0 && <div className="planning-break-indicator">🍽</div>}
-                                  {cc.map((cr: any) => (
-                                    <div
-                                      key={cr.id}
-                                      className="creneau-block"
-                                      style={{ backgroundColor: cr.matiere_couleur }}
-                                      draggable={!readOnly}
-                                      onDragStart={e => handleDragStart(e, cr)}
-                                    >
+                                  {isBreak && !cr && <div className="planning-break-indicator">🍽</div>}
+
+                                  {cr && (
+                                    <div className="creneau-block creneau-block-span" style={{ backgroundColor: cr.matiere_couleur }} draggable={!readOnly} onDragStart={e => handleDragStart(e, cr)}>
+                                      {!readOnly && <div className="creneau-resize-handle creneau-resize-top" onMouseDown={e => handleResizeStart(e, cr, 'top')} />}
                                       <div className="creneau-block-title">{cr.matiere_nom}</div>
                                       <div className="creneau-block-time">{cr.heure_debut}–{cr.heure_fin}</div>
                                       <div className="creneau-block-salle">{cr.salle}</div>
-                                      {!readOnly && <button type="button" className="creneau-block-delete" onClick={(e) => { e.stopPropagation(); handleDeleteCreneau(cr); }}>✕</button>}
+                                      {cr.enseignant && <div className="creneau-block-salle">{cr.enseignant}</div>}
+                                      {!readOnly && <button type="button" className="creneau-block-delete" onClick={e => { e.stopPropagation(); handleDeleteCreneau(cr); }}>✕</button>}
+                                      {!readOnly && <div className="creneau-resize-handle creneau-resize-bottom" onMouseDown={e => handleResizeStart(e, cr, 'bottom')} />}
                                     </div>
-                                  ))}
+                                  )}
+
+                                  {/* Inline single-slot create */}
+                                  {isInline && !cr && (
+                                    <div className="inline-create">
+                                      <select className="inline-create-select" value={formMatiereId} onChange={e => setFormMatiereId(e.target.value)} autoFocus>
+                                        <option value="">Matière…</option>
+                                        {matiereOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                      </select>
+                                      {formMatiereId && (
+                                        <div className="inline-create-actions">
+                                          <button className="inline-create-btn inline-create-ok" onClick={doCreate} disabled={formSubmitting}>✓</button>
+                                          <button className="inline-create-btn inline-create-cancel" onClick={() => setInlineSlot(null)}>✕</button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </td>
                               );
                             })}
@@ -354,7 +379,7 @@ export function Planning() {
         </div>
       </div>
 
-      {/* ===== POPUP CRÉATION ===== */}
+      {/* POPUP MULTI-SLOT CREATE */}
       {showCreatePopup && (
         <div className="classe-popup-overlay" onClick={() => setShowCreatePopup(false)}>
           <div className="classe-popup" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
@@ -377,7 +402,7 @@ export function Planning() {
                 <Input label="Salle *" value={formSalle} onChange={e => setFormSalle(e.target.value)} placeholder="Salle" />
                 <FormActions>
                   <Button type="button" variant="secondary" onClick={() => setShowCreatePopup(false)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={formSubmitting || !formMatiereId || !formSalle} loading={formSubmitting}>Créer le créneau</Button>
+                  <Button type="submit" variant="primary" disabled={formSubmitting || !formMatiereId || !formSalle} loading={formSubmitting}>Créer</Button>
                 </FormActions>
               </form>
             </div>
@@ -385,31 +410,17 @@ export function Planning() {
         </div>
       )}
 
-      {/* ===== POPOVER DÉPLACEMENT ===== */}
+      {/* MOVE POPOVER */}
       {showMovePopover && moveCreneau && moveTarget && (
         <div className="classe-popup-overlay" onClick={() => { setShowMovePopover(false); setMoveCreneau(null); }}>
           <div className="classe-popup" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>Déplacer le créneau</h3>
-              <button type="button" className="classe-popup-close" onClick={() => { setShowMovePopover(false); setMoveCreneau(null); }}>✕</button>
-            </div>
+            <div className="classe-popup-header"><h3>Déplacer</h3><button type="button" className="classe-popup-close" onClick={() => { setShowMovePopover(false); setMoveCreneau(null); }}>✕</button></div>
             <div style={{ padding: '1.25rem' }}>
-              <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                <strong>{moveCreneau.matiere_nom}</strong> → {moveTarget.jour} à {moveTarget.heure}
-              </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                Que souhaitez-vous déplacer ?
-              </p>
+              <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}><strong>{moveCreneau.matiere_nom}</strong> → {moveTarget.jour} {moveTarget.heure}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <Button variant="primary" onClick={() => handleMoveConfirm(false)} fullWidth>
-                  Déplacer uniquement ce créneau
-                </Button>
-                <Button variant="outline" onClick={() => handleMoveConfirm(true)} fullWidth>
-                  Déplacer tous les créneaux de {moveCreneau.matiere_nom} ({moveCreneau.jour})
-                </Button>
-                <Button variant="secondary" onClick={() => { setShowMovePopover(false); setMoveCreneau(null); }} fullWidth>
-                  Annuler
-                </Button>
+                <Button variant="primary" onClick={() => handleMoveConfirm(false)} fullWidth>Ce créneau uniquement</Button>
+                <Button variant="outline" onClick={() => handleMoveConfirm(true)} fullWidth>Tous les {moveCreneau.matiere_nom} ({moveCreneau.jour})</Button>
+                <Button variant="secondary" onClick={() => { setShowMovePopover(false); setMoveCreneau(null); }} fullWidth>Annuler</Button>
               </div>
             </div>
           </div>
