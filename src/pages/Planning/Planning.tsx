@@ -59,8 +59,7 @@ export function Planning() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Inline create (single-slot)
-  const [inlineSlot, setInlineSlot] = useState<{ jour: JourSemaine; heure: string } | null>(null);
+  // (inline slot supprimé — on utilise toujours le popup)
 
   // Drag-and-drop
   const [dragging, setDragging] = useState<any>(null);
@@ -116,7 +115,7 @@ export function Planning() {
   if (classesLoading) return <PageLoader />;
   if (!classesData) return <Alert variant="error">Problème de chargement.</Alert>;
 
-  const handleSelectClasse = (cid: string) => { setSelectedClasseId(cid); setOpenNiveau(null); setError(''); setInlineSlot(null); };
+  const handleSelectClasse = (cid: string) => { setSelectedClasseId(cid); setOpenNiveau(null); setError(''); };
 
   // ===== SELECTION =====
   const isInSelection = (jour: JourSemaine, heure: string) => {
@@ -129,7 +128,7 @@ export function Planning() {
     if (readOnly || !selectedClasse) return;
     if (isBreakSlot(heure)) { setError('⏸ Plage réservée à la pause.'); return; }
     if (isOccupied(jour, heure, classeCreneaux)) return;
-    setSelecting(true); setSelStart({ jour, heure }); setSelEnd(heure); setError(''); setInlineSlot(null);
+    setSelecting(true); setSelStart({ jour, heure }); setSelEnd(heure); setError('');
   };
 
   const handleCellMouseEnter = (jour: JourSemaine, heure: string) => {
@@ -148,19 +147,10 @@ export function Planning() {
 
     if (breaksOverlap(startH, endH)) { setError('⏸ Chevauche la pause.'); setSelStart(null); setSelEnd(null); return; }
 
-    const isSingle = si === ei;
-
-    if (isSingle) {
-      // Single slot → inline creation (no popup)
-      setInlineSlot({ jour: selStart.jour, heure: startH });
-      setFormJour(selStart.jour); setFormDebut(startH); setFormFin(endH);
-      setFormSalle(selectedClasse?.salle || ''); setFormMatiereId(''); setFormEnseignant(''); setFormError('');
-    } else {
-      // Multi slot → popup
-      setFormJour(selStart.jour); setFormDebut(startH); setFormFin(endH);
-      setFormSalle(selectedClasse?.salle || ''); setFormMatiereId(''); setFormEnseignant(''); setFormError('');
-      setShowCreatePopup(true);
-    }
+    // Toujours ouvrir le popup (single ou multi)
+    setFormJour(selStart.jour); setFormDebut(startH); setFormFin(endH);
+    setFormSalle(selectedClasse?.salle || ''); setFormMatiereId(''); setFormEnseignant(''); setFormError('');
+    setShowCreatePopup(true);
     setSelStart(null); setSelEnd(null);
   };
 
@@ -175,7 +165,7 @@ export function Planning() {
     setFormSubmitting(true); setFormError('');
     await createWithError(
       { classe_id: selectedClasse.id, matiere_id: formMatiereId, matiere_nom: mat.nom, matiere_couleur: mat.couleur || '#2563eb', jour: formJour, heure_debut: formDebut, heure_fin: formFin, salle: formSalle, enseignant: formEnseignant.trim() },
-      () => { setShowCreatePopup(false); setInlineSlot(null); },
+      () => { setShowCreatePopup(false); },
       (err) => setFormError(err),
     );
     setFormSubmitting(false);
@@ -189,16 +179,37 @@ export function Planning() {
     setDragging(cr); e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent, _j: JourSemaine, h: string) => {
-    if (!dragging || isBreakSlot(h)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  const handleDragOver = (e: React.DragEvent, j: JourSemaine, h: string) => {
+    if (!dragging || isBreakSlot(h)) return;
+    // Bloquer si la cible est occupée par un AUTRE créneau
+    const targetCr = cellCreneauMap.get(`${j}-${h}`);
+    if (targetCr && targetCr.id !== dragging.id) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDrop = (e: React.DragEvent, jour: JourSemaine, heure: string) => {
     e.preventDefault(); if (!dragging) return;
     if (isBreakSlot(heure)) { setError('⏸ Pause.'); setDragging(null); return; }
+
+    // Vérifier que toute la plage cible est libre
     const dur = toMin(dragging.heure_fin) - toMin(dragging.heure_debut);
     const ne = HEURES.find(h => toMin(h) === toMin(heure) + dur) || dragging.heure_fin;
     if (breaksOverlap(heure, ne)) { setError('⏸ Chevaucherait la pause.'); setDragging(null); return; }
+
+    // Vérifier chaque slot de la plage cible
+    const startIdx = HEURES.indexOf(heure);
+    const endIdx = HEURES.indexOf(ne);
+    for (let i = startIdx; i < endIdx; i++) {
+      const slot = HEURES[i];
+      if (isBreakSlot(slot)) { setError('⏸ Chevaucherait la pause.'); setDragging(null); return; }
+      const existing = cellCreneauMap.get(`${jour}-${slot}`);
+      if (existing && existing.id !== dragging.id) {
+        setError(`⚠ Impossible : ${slot} est déjà occupée par ${existing.matiere_nom}.`);
+        setDragging(null);
+        return;
+      }
+    }
+
     setMoveCreneau(dragging); setMoveTarget({ jour, heure }); setShowMovePopover(true); setDragging(null);
   };
 
@@ -319,7 +330,6 @@ export function Planning() {
                               const cellKey = `${j}-${h}`;
                               const cellCr = cellCreneauMap.get(cellKey);
                               const inSel = isInSelection(j, h);
-                              const isInline = inlineSlot?.jour === j && inlineSlot?.heure === h;
                               const occupied = !!cellCr;
                               const isEmpty = !occupied && !isBreak;
                               const isStart = cellCr?._isStart;
@@ -357,21 +367,7 @@ export function Planning() {
                                     </div>
                                   )}
 
-                                  {/* Inline single-slot create */}
-                                  {isInline && !occupied && (
-                                    <div className="inline-create">
-                                      <select className="inline-create-select" value={formMatiereId} onChange={e => setFormMatiereId(e.target.value)} autoFocus>
-                                        <option value="">Matière…</option>
-                                        {matiereOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                      </select>
-                                      {formMatiereId && (
-                                        <div className="inline-create-actions">
-                                          <button className="inline-create-btn inline-create-ok" onClick={doCreate} disabled={formSubmitting}>✓</button>
-                                          <button className="inline-create-btn inline-create-cancel" onClick={() => setInlineSlot(null)}>✕</button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
+
                                 </td>
                               );
                             })}
