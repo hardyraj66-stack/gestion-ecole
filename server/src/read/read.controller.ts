@@ -11,8 +11,8 @@ export class ReadController {
   }
 
   @Get('classes')
-  getClassesList(@Query('page') p?: string, @Query('limit') l?: string, @Query('search') s?: string) {
-    return this.service.getClassesList(parseInt(p!) || 1, parseInt(l!) || 8, s || '');
+  getClassesList(@Query('page') p?: string, @Query('limit') l?: string, @Query('search') s?: string, @Query('niveau') n?: string) {
+    return this.service.getClassesList(parseInt(p!) || 1, parseInt(l!) || 8, s || '', n || '');
   }
 
   @Get('classes/:id/eleves')

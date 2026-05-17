@@ -31,6 +31,7 @@ export function ClassesList() {
   const { isViewingArchive: readOnly } = useViewing();
   const confirm = useConfirm();
   const [page, setPage] = useState(1);
+  const [filterNiveau, setFilterNiveau] = useState('');
 
   // Edit popup
   const [editClasse, setEditClasse] = useState<any>(null);
@@ -41,7 +42,7 @@ export function ClassesList() {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
 
-  const { data, loading, error } = useClassesListData(page);
+  const { data, loading, error } = useClassesListData(page, '', filterNiveau);
 
   // Charger les salles au montage pour le formulaire d'édition
   const fetchedSalles = useRef(false);
@@ -50,7 +51,13 @@ export function ClassesList() {
   if (loading) return <PageLoader />;
   if (error || !data) return <Alert variant="error">Problème de chargement des classes.</Alert>;
 
-  const { items, total, totalPages } = data;
+  const { items, total, totalPages, niveaux: availableNiveaux } = data;
+  const niveauOptions: SelectOption[] = [
+    { value: '', label: 'Tous les niveaux' },
+    ...((availableNiveaux || []) as string[]).map((n: string) => ({ value: n, label: n })),
+  ];
+
+  const handleNiveauFilter = (n: string) => { setFilterNiveau(n); setPage(1); };
 
   const salleOptions: SelectOption[] = salles.map(s => ({
     value: s.id,
@@ -77,16 +84,11 @@ export function ClassesList() {
     const salle = salles.find(s => s.id === editSalleId);
     if (!salle) { setEditError('Salle invalide.'); return; }
 
-    // Validation capacité vs salle
+    // Avertissement si capacité dépasse la salle (ne bloque pas)
     if (editCapacite > salle.capacite) {
-      if (editSalleType === 'fixe') {
-        setEditError(`La salle « ${salle.nom} » ne peut accueillir que ${salle.capacite} élèves. Réduisez la capacité ou changez de salle.`);
-        return;
-      }
-      // Salle variable → avertissement avec confirmation
       const ok = await confirm({
         title: 'Capacité supérieure à la salle',
-        message: `La salle « ${salle.nom} » a une capacité de ${salle.capacite} places, mais vous définissez ${editCapacite} élèves pour cette classe.\n\nVoulez-vous continuer ?`,
+        message: `La salle « ${salle.nom} » a une capacité de ${salle.capacite} places, mais vous définissez ${editCapacite} élèves pour cette classe.\n\nVoulez-vous continuer malgré ce dépassement ?`,
         confirmText: 'Confirmer',
         variant: 'warning',
       });
@@ -108,7 +110,25 @@ export function ClassesList() {
         {!readOnly && <Button as="link" to="/classes/nouvelle" variant="primary">+ Nouvelle classe</Button>}
       </PageHeader>
 
-      {total === 0 ? (
+      {/* Filtre par niveau */}
+      <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Filtrer :</span>
+        {niveauOptions.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            className={`niveau-filter-btn ${filterNiveau === opt.value ? 'niveau-filter-btn-active' : ''}`}
+            onClick={() => handleNiveauFilter(opt.value as string)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {total === 0 && filterNiveau ? (
+        <EmptyState icon={<Icon path={Icons.building} size={28} />} message={`Aucune classe en ${filterNiveau}`}
+          action={<Button variant="secondary" onClick={() => handleNiveauFilter('')}>Voir toutes les classes</Button>} />
+      ) : total === 0 ? (
         <EmptyState icon={<Icon path={Icons.building} size={28} />} message="Aucune classe créée"
           action={!readOnly ? <Button as="link" to="/classes/nouvelle" variant="primary">Créer une classe</Button> : undefined} />
       ) : (
@@ -154,8 +174,8 @@ export function ClassesList() {
                     {editCapacite > selectedSalle.capacite && (
                       <> · <Badge label={`+${editCapacite - selectedSalle.capacite} dépassement`} variant="warning" /></>
                     )}
-                    {editSalleType === 'fixe' && editCapacite > selectedSalle.capacite && (
-                      <p style={{ marginTop: '0.35rem', fontSize: '0.8rem' }}>⚠ En mode fixe, la capacité ne peut pas dépasser celle de la salle.</p>
+                    {editCapacite > selectedSalle.capacite && (
+                      <p style={{ marginTop: '0.35rem', fontSize: '0.8rem' }}>Un avertissement sera affiché à la validation.</p>
                     )}
                   </div>
                 )}

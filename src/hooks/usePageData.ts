@@ -91,8 +91,8 @@ export function useDashboardData(classesPage = 1) {
   return usePageFetch(useCallback(() => readApi.dashboard(classesPage, 5), [classesPage]), undefined, 'classes');
 }
 
-export function useClassesListData(page = 1, search = '') {
-  return usePageFetch(useCallback(() => readApi.classesList(page, 8, search), [page, search]), undefined, 'classes');
+export function useClassesListData(page = 1, search = '', niveau = '') {
+  return usePageFetch(useCallback(() => readApi.classesList(page, 8, search, niveau), [page, search, niveau]), undefined, 'classes');
 }
 
 export function useClasseElevesData(classeId: string, page = 1, search = '') {

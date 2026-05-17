@@ -54,17 +54,20 @@ export class ReadService {
   }
 
   // ============ CLASSES LIST ============
-  async getClassesList(page = 1, limit = 8, search = '') {
+  async getClassesList(page = 1, limit = 8, search = '', niveau = '') {
     const filter: any = {};
     if (search) filter.nom = { $regex: search, $options: 'i' };
+    if (niveau) filter.niveau = niveau;
 
-    const [items, total] = await Promise.all([
+    const [items, total, allNiveaux] = await Promise.all([
       this.readClasseModel.find(filter).skip((page - 1) * limit).limit(limit).exec(),
       this.readClasseModel.countDocuments(filter).exec(),
+      this.readClasseModel.distinct('niveau').exec(),
     ]);
 
     return {
       items: items.map(c => c.toJSON()),
+      niveaux: allNiveaux.sort(),
       total, page, limit,
       totalPages: Math.ceil(total / limit),
     };

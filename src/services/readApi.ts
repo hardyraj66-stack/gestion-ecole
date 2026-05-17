@@ -17,8 +17,8 @@ export const readApi = {
   dashboard: (classesPage?: number, classesLimit?: number) =>
     get<any>(`/dashboard${qs({ classesPage, classesLimit })}`),
 
-  classesList: (page?: number, limit?: number, search?: string) =>
-    get<any>(`/classes${qs({ page, limit, search })}`),
+  classesList: (page?: number, limit?: number, search?: string, niveau?: string) =>
+    get<any>(`/classes${qs({ page, limit, search, niveau })}`),
 
   classeEleves: (id: string, page?: number, limit?: number, search?: string) =>
     get<any>(`/classes/${id}/eleves${qs({ page, limit, search })}`),

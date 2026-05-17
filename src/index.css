@@ -2025,6 +2025,36 @@ a {
   flex-shrink: 0;
 }
 
+/* ========== NIVEAU FILTER BUTTONS ========== */
+.niveau-filter-btn {
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.niveau-filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.niveau-filter-btn-active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.niveau-filter-btn-active:hover {
+  background: var(--primary-dark);
+}
+
 /* ========== CLASSE SELECTION (CreateEleve) ========== */
 .classe-selection-badge {
   display: flex;

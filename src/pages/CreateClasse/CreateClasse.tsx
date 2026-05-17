@@ -85,16 +85,12 @@ export function CreateClasse() {
       return;
     }
 
-    // Validation capacité vs salle
+    // Avertissement si capacité dépasse la salle (ne bloque pas)
     if (capacite > selectedSalle.capacite) {
-      if (salleType === 'fixe') {
-        setError(`En mode salle fixe, la capacité (${capacite}) ne peut pas dépasser celle de la salle « ${selectedSalle.nom} » (${selectedSalle.capacite} places).`);
-        return;
-      }
       const ok = await confirm({
         title: 'Capacité supérieure à la salle',
-        message: `La salle « ${selectedSalle.nom} » a une capacité de ${selectedSalle.capacite} places, mais vous définissez ${capacite} élèves.\n\nVoulez-vous continuer ?`,
-        confirmText: 'Confirmer',
+        message: `La salle « ${selectedSalle.nom} » a une capacité de ${selectedSalle.capacite} places, mais vous définissez ${capacite} élèves pour cette classe.\n\nVoulez-vous continuer malgré ce dépassement ?`,
+        confirmText: 'Confirmer la création',
         variant: 'warning',
       });
       if (!ok) return;
@@ -235,8 +231,8 @@ export function CreateClasse() {
               }}>
                 <strong>{s.nom}</strong> — capacité : {s.capacite} places
                 {over && <span> · ⚠ Dépassement de {capacite - s.capacite} place(s)</span>}
-                {salleType === 'fixe' && over && (
-                  <p style={{ marginTop: '0.3rem', fontSize: '0.8rem' }}>En mode fixe, la capacité ne peut pas dépasser celle de la salle.</p>
+                {over && (
+                  <p style={{ marginTop: '0.3rem', fontSize: '0.8rem' }}>Un avertissement sera affiché à la validation.</p>
                 )}
               </div>
             );
