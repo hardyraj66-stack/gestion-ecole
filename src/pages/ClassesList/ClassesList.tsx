@@ -14,8 +14,7 @@ import { Pagination } from '../../components/shared/Pagination';
 import { Alert } from '../../components/shared/Alert';
 import { Input } from '../../components/shared/Input';
 import { Select, SelectOption } from '../../components/shared/Select';
-import { FormGrid, FormActions } from '../../components/shared/FormGrid';
-import { Badge } from '../../components/ui/Badge';
+import { FormActions } from '../../components/shared/FormGrid';
 import { SalleType } from '../../types';
 import { getTypeLabel } from '../../utils/helpers';
 import { ClasseCard } from './ClasseCard';
@@ -77,31 +76,41 @@ export function ClassesList() {
     setEditError('');
   };
 
+  const editIsFixe = editSalleType === 'fixe';
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editClasse || !editNom.trim() || !editSalleId) { setEditError('Champs obligatoires manquants.'); return; }
+    if (!editClasse || !editNom.trim()) { setEditError('Le nom est obligatoire.'); return; }
 
-    const salle = salles.find(s => s.id === editSalleId);
-    if (!salle) { setEditError('Salle invalide.'); return; }
+    if (editIsFixe) {
+      if (!editSalleId) { setEditError('Sélectionnez une salle.'); return; }
+      const salle = salles.find(s => s.id === editSalleId);
+      if (!salle) { setEditError('Salle invalide.'); return; }
 
-    // Avertissement si capacité dépasse la salle (ne bloque pas)
-    if (editCapacite > salle.capacite) {
-      const ok = await confirm({
-        title: 'Capacité supérieure à la salle',
-        message: `La salle « ${salle.nom} » a une capacité de ${salle.capacite} places, mais vous définissez ${editCapacite} élèves pour cette classe.\n\nVoulez-vous continuer malgré ce dépassement ?`,
-        confirmText: 'Confirmer',
-        variant: 'warning',
-      });
-      if (!ok) return;
+      if (editCapacite > salle.capacite) {
+        const ok = await confirm({
+          title: 'Capacité supérieure à la salle',
+          message: `La salle « ${salle.nom} » a ${salle.capacite} places mais vous définissez ${editCapacite} élèves.\n\nContinuer ?`,
+          confirmText: 'Confirmer', variant: 'warning',
+        });
+        if (!ok) return;
+      }
+
+      setEditSubmitting(true); setEditError('');
+      await updateClasse(editClasse.id,
+        { nom: editNom.trim(), capacite: editCapacite, salle: salle.nom, salle_type: editSalleType },
+        () => { setEditClasse(null); setEditSubmitting(false); },
+        (err) => { setEditError(err); setEditSubmitting(false); },
+      );
+    } else {
+      // Variable → pas de salle
+      setEditSubmitting(true); setEditError('');
+      await updateClasse(editClasse.id,
+        { nom: editNom.trim(), capacite: editCapacite, salle: '', salle_type: editSalleType },
+        () => { setEditClasse(null); setEditSubmitting(false); },
+        (err) => { setEditError(err); setEditSubmitting(false); },
+      );
     }
-
-    setEditSubmitting(true); setEditError('');
-    await updateClasse(
-      editClasse.id,
-      { nom: editNom.trim(), capacite: editCapacite, salle: salle.nom, salle_type: editSalleType },
-      () => { setEditClasse(null); setEditSubmitting(false); },
-      (err) => { setEditError(err); setEditSubmitting(false); },
-    );
   };
 
   return (
@@ -156,33 +165,35 @@ export function ClassesList() {
               <form onSubmit={handleEditSubmit}>
                 <Input label="Nom de la classe *" value={editNom} onChange={e => setEditNom(e.target.value)} required />
 
-                <FormGrid>
-                  <Select label="Mode de salle *" value={editSalleType} onChange={e => setEditSalleType(e.target.value as SalleType)} options={SALLE_TYPES} />
-                  <Select label="Salle *" value={editSalleId} onChange={e => setEditSalleId(e.target.value)} options={salleOptions} placeholder="Choisir une salle" />
-                </FormGrid>
+                <Select label="Mode de salle *" value={editSalleType} onChange={e => setEditSalleType(e.target.value as SalleType)} options={SALLE_TYPES} />
 
-                <Input label="Capacité maximale *" type="number" value={editCapacite} onChange={e => setEditCapacite(Number(e.target.value))} min={1} max={200} />
-
-                {/* Indicateur de capacité salle */}
-                {selectedSalle && (
+                {editIsFixe ? (
+                  <>
+                    <Select label="Salle assignée *" value={editSalleId} onChange={e => setEditSalleId(e.target.value)} options={salleOptions} placeholder="Choisir une salle" />
+                    {selectedSalle && (
+                      <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
+                        background: editCapacite > selectedSalle.capacite ? 'var(--warning-light)' : 'var(--success-light)',
+                        border: `1px solid ${editCapacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
+                        color: editCapacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
+                      }}>
+                        <strong>{selectedSalle.nom}</strong> — {selectedSalle.capacite} places
+                        {editCapacite > selectedSalle.capacite && <span> · ⚠ +{editCapacite - selectedSalle.capacite}</span>}
+                      </div>
+                    )}
+                  </>
+                ) : (
                   <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
-                    background: editCapacite > selectedSalle.capacite ? 'var(--warning-light)' : 'var(--success-light)',
-                    border: `1px solid ${editCapacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
-                    color: editCapacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
+                    background: 'var(--info-light)', border: '1px solid #a5f3fc', color: 'var(--info)',
                   }}>
-                    <strong>{selectedSalle.nom}</strong> — capacité : {selectedSalle.capacite} places
-                    {editCapacite > selectedSalle.capacite && (
-                      <> · <Badge label={`+${editCapacite - selectedSalle.capacite} dépassement`} variant="warning" /></>
-                    )}
-                    {editCapacite > selectedSalle.capacite && (
-                      <p style={{ marginTop: '0.35rem', fontSize: '0.8rem' }}>Un avertissement sera affiché à la validation.</p>
-                    )}
+                    La salle sera déterminée dynamiquement selon le planning.
                   </div>
                 )}
 
+                <Input label="Capacité maximale *" type="number" value={editCapacite} onChange={e => setEditCapacite(Number(e.target.value))} min={1} max={200} />
+
                 <FormActions>
                   <Button type="button" variant="secondary" onClick={() => setEditClasse(null)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={editSubmitting || !editNom.trim() || !editSalleId} loading={editSubmitting}>
+                  <Button type="submit" variant="primary" disabled={editSubmitting || !editNom.trim() || (editIsFixe && !editSalleId)} loading={editSubmitting}>
                     Enregistrer
                   </Button>
                 </FormActions>

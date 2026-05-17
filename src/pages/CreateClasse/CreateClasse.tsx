@@ -15,18 +15,12 @@ import { SalleType } from '../../types';
 import { generateSchoolYears, getTypeLabel } from '../../utils/helpers';
 
 const NIVEAUX: SelectOption[] = [
-  { value: '6ème', label: '6ème' },
-  { value: '5ème', label: '5ème' },
-  { value: '4ème', label: '4ème' },
-  { value: '3ème', label: '3ème' },
-  { value: '2nde', label: '2nde' },
-  { value: '1ère', label: '1ère' },
-  { value: 'Terminale', label: 'Terminale' },
-  { value: 'CP', label: 'CP' },
-  { value: 'CE1', label: 'CE1' },
-  { value: 'CE2', label: 'CE2' },
-  { value: 'CM1', label: 'CM1' },
-  { value: 'CM2', label: 'CM2' },
+  { value: '6ème', label: '6ème' }, { value: '5ème', label: '5ème' },
+  { value: '4ème', label: '4ème' }, { value: '3ème', label: '3ème' },
+  { value: '2nde', label: '2nde' }, { value: '1ère', label: '1ère' },
+  { value: 'Terminale', label: 'Terminale' }, { value: 'CP', label: 'CP' },
+  { value: 'CE1', label: 'CE1' }, { value: 'CE2', label: 'CE2' },
+  { value: 'CM1', label: 'CM1' }, { value: 'CM2', label: 'CM2' },
 ];
 
 const SALLE_TYPES: SelectOption[] = [
@@ -53,7 +47,6 @@ export function CreateClasse() {
   const [error, setError] = useState('');
 
   const schoolYearOptions: SelectOption[] = generateSchoolYears().map(y => ({ value: y, label: y }));
-
   const salleOptions: SelectOption[] = salles.map(s => ({
     value: s.id,
     label: `${s.nom} — ${s.capacite} places (${getTypeLabel(s.type)})`,
@@ -63,191 +56,102 @@ export function CreateClasse() {
   useEffect(() => { if (fetchedRef.current) return; fetchedRef.current = true; fetchSalles(); }, [fetchSalles]);
 
   useEffect(() => {
-    if (salles.length > 0 && !salleId) {
-      setSalleId(salles[0].id);
-    }
+    if (salles.length > 0 && !salleId) setSalleId(salles[0].id);
   }, [salles, salleId]);
 
-  // Guard archive — APRÈS tous les hooks
   if (isViewingArchive) return <Navigate to="/classes" replace />;
+
+  const isFixe = salleType === 'fixe';
+  const selectedSalle = salles.find(s => s.id === salleId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!nom.trim() || !salleId) {
-      setError('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
+    if (!nom.trim()) { setError('Le nom est obligatoire.'); return; }
 
-    const selectedSalle = salles.find(s => s.id === salleId);
-    if (!selectedSalle) {
-      setError('Veuillez sélectionner une salle valide');
-      return;
-    }
-
-    // Avertissement si capacité dépasse la salle (ne bloque pas)
-    if (capacite > selectedSalle.capacite) {
-      const ok = await confirm({
-        title: 'Capacité supérieure à la salle',
-        message: `La salle « ${selectedSalle.nom} » a une capacité de ${selectedSalle.capacite} places, mais vous définissez ${capacite} élèves pour cette classe.\n\nVoulez-vous continuer malgré ce dépassement ?`,
-        confirmText: 'Confirmer la création',
-        variant: 'warning',
-      });
-      if (!ok) return;
-    }
-
-    setSubmitting(true);
-    setError('');
-
-    await create(
-      {
-        nom: nom.trim(),
-        niveau,
-        annee_scolaire: anneeScolaire,
-        capacite,
-        salle: selectedSalle.nom,
-        salle_type: salleType,
-      },
-      () => {
-        setSuccess(true);
-        setTimeout(() => navigate('/classes'), 1500);
-      },
-      (err) => {
-        setError(err);
-        setSubmitting(false);
+    if (isFixe) {
+      if (!salleId || !selectedSalle) { setError('Sélectionnez une salle.'); return; }
+      if (capacite > selectedSalle.capacite) {
+        const ok = await confirm({
+          title: 'Capacité supérieure à la salle',
+          message: `La salle « ${selectedSalle.nom} » a ${selectedSalle.capacite} places mais vous définissez ${capacite} élèves.\n\nContinuer ?`,
+          confirmText: 'Confirmer', variant: 'warning',
+        });
+        if (!ok) return;
       }
+    }
+
+    setSubmitting(true); setError('');
+    await create(
+      { nom: nom.trim(), niveau, annee_scolaire: anneeScolaire, capacite, salle: isFixe ? selectedSalle!.nom : '', salle_type: salleType },
+      () => { setSuccess(true); setTimeout(() => navigate('/classes'), 1500); },
+      (err) => { setError(err); setSubmitting(false); },
     );
   };
 
-  const salleLabel = salleType === 'fixe' ? 'Salle assignée *' : 'Salle par défaut *';
-
   return (
     <div>
-      <PageHeader
-        title="Nouvelle classe"
-        subtitle="Créer une nouvelle classe"
-      >
-        <Button as="link" to="/classes" variant="secondary">
-          ← Retour
-        </Button>
+      <PageHeader title="Nouvelle classe" subtitle="Créer une nouvelle classe">
+        <Button as="link" to="/classes" variant="secondary">← Retour</Button>
       </PageHeader>
 
-      <Card className="" style={{ maxWidth: '600px' }}>
-        {success && (
-          <Alert variant="success">
-            Classe créée avec succès ! Redirection en cours…
-          </Alert>
-        )}
-
-        {error && (
-          <Alert variant="error">
-            {error}
-          </Alert>
-        )}
+      <Card style={{ maxWidth: '600px' }}>
+        {success && <Alert variant="success">Classe créée avec succès ! Redirection…</Alert>}
+        {error && <Alert variant="error">{error}</Alert>}
 
         <form onSubmit={handleSubmit}>
-          <Input
-            label="Nom de la classe *"
-            value={nom}
-            onChange={(e) => setNom(e.target.value)}
-            placeholder="Ex : 6ème A"
-            required
-          />
+          <Input label="Nom de la classe *" value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex : 6ème A" required />
 
           <FormGrid>
-            <Select
-              label="Niveau *"
-              value={niveau}
-              onChange={(e) => setNiveau(e.target.value)}
-              options={NIVEAUX}
-            />
-
-            <Select
-              label="Année scolaire *"
-              value={anneeScolaire}
-              onChange={(e) => setAnneeScolaire(e.target.value)}
-              options={schoolYearOptions}
-            />
+            <Select label="Niveau *" value={niveau} onChange={e => setNiveau(e.target.value)} options={NIVEAUX} />
+            <Select label="Année scolaire *" value={anneeScolaire} onChange={e => setAnneeScolaire(e.target.value)} options={schoolYearOptions} />
           </FormGrid>
 
-          <Input
-            label="Capacité maximale *"
-            type="number"
-            value={capacite}
-            onChange={(e) => setCapacite(Number(e.target.value))}
-            min={10}
-            max={50}
-          />
+          <Input label="Capacité maximale *" type="number" value={capacite} onChange={e => setCapacite(Number(e.target.value))} min={1} max={200} />
 
-          <Select
-            label="Mode de salle *"
-            value={salleType}
-            onChange={(e) => setSalleType(e.target.value as SalleType)}
-            options={SALLE_TYPES}
-          />
+          <Select label="Mode de salle *" value={salleType} onChange={e => setSalleType(e.target.value as SalleType)} options={SALLE_TYPES} />
 
-          {sallesLoading ? (
-            <Select
-              label={salleLabel}
-              value=""
-              options={[]}
-              placeholder="Chargement des salles…"
-              disabled
-              hint="Récupération en cours…"
-            />
-          ) : salles.length === 0 ? (
-            <div className="form-group">
-              <label className="form-label">{salleLabel}</label>
-              <select disabled className={error && !salleId ? 'input-error' : ''}>
-                <option>Aucune salle disponible</option>
-              </select>
-              <p className="form-hint">
-                Aucune salle n'est enregistrée.{' '}
-                <Link to="/salles" style={{ color: 'var(--primary)' }}>
-                  Créer une salle
-                </Link>
-              </p>
-            </div>
-          ) : (
-            <Select
-              label={salleLabel}
-              value={salleId}
-              onChange={(e) => setSalleId(e.target.value)}
-              options={salleOptions}
-              error={error && !salleId ? 'Sélectionnez une salle' : undefined}
-            />
+          {/* Salle visible UNIQUEMENT en mode fixe */}
+          {isFixe && (
+            <>
+              {sallesLoading ? (
+                <Select label="Salle assignée *" value="" options={[]} placeholder="Chargement…" disabled hint="Récupération en cours…" />
+              ) : salles.length === 0 ? (
+                <div className="form-group">
+                  <label className="form-label">Salle assignée *</label>
+                  <select disabled><option>Aucune salle disponible</option></select>
+                  <p className="form-hint">
+                    Aucune salle enregistrée.{' '}
+                    <Link to="/salles" style={{ color: 'var(--primary)' }}>Créer une salle</Link>
+                  </p>
+                </div>
+              ) : (
+                <Select label="Salle assignée *" value={salleId} onChange={e => setSalleId(e.target.value)} options={salleOptions} />
+              )}
+
+              {selectedSalle && (
+                <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
+                  background: capacite > selectedSalle.capacite ? 'var(--warning-light)' : 'var(--success-light)',
+                  border: `1px solid ${capacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
+                  color: capacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
+                }}>
+                  <strong>{selectedSalle.nom}</strong> — {selectedSalle.capacite} places
+                  {capacite > selectedSalle.capacite && <span> · ⚠ Dépassement de {capacite - selectedSalle.capacite}</span>}
+                </div>
+              )}
+            </>
           )}
 
-          {/* Indicateur capacité vs salle */}
-          {salleId && salles.length > 0 && (() => {
-            const s = salles.find(x => x.id === salleId);
-            if (!s) return null;
-            const over = capacite > s.capacite;
-            return (
-              <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
-                background: over ? 'var(--warning-light)' : 'var(--success-light)',
-                border: `1px solid ${over ? '#fde68a' : '#bbf7d0'}`,
-                color: over ? 'var(--warning)' : 'var(--success)',
-              }}>
-                <strong>{s.nom}</strong> — capacité : {s.capacite} places
-                {over && <span> · ⚠ Dépassement de {capacite - s.capacite} place(s)</span>}
-                {over && (
-                  <p style={{ marginTop: '0.3rem', fontSize: '0.8rem' }}>Un avertissement sera affiché à la validation.</p>
-                )}
-              </div>
-            );
-          })()}
+          {!isFixe && (
+            <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
+              background: 'var(--info-light)', border: '1px solid #a5f3fc', color: 'var(--info)',
+            }}>
+              En mode variable, la salle sera déterminée dynamiquement selon le planning.
+            </div>
+          )}
 
           <FormActions>
-            <Button as="link" to="/classes" variant="secondary">
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={submitting || success || salles.length === 0}
-              loading={submitting}
-            >
+            <Button as="link" to="/classes" variant="secondary">Annuler</Button>
+            <Button type="submit" variant="primary" disabled={submitting || success || (isFixe && salles.length === 0)} loading={submitting}>
               Créer la classe
             </Button>
           </FormActions>
