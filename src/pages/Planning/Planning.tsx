@@ -30,7 +30,6 @@ const isBreakSlot = (h: string) => h === '12:00' || h === '12:30';
 const breaksOverlap = (start: string, end: string) => { const s = toMin(start), e = toMin(end); return s < toMin('12:30') && e > toMin('12:00'); };
 function toMin(t: string) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 function nextSlot(h: string) { const i = HEURES.indexOf(h); return i < HEURES.length - 1 ? HEURES[i + 1] : h; }
-function slotSpan(start: string, end: string) { return HEURES.indexOf(end) > 0 ? HEURES.indexOf(end) - HEURES.indexOf(start) : 1; }
 function isOccupied(jour: JourSemaine, heure: string, creneaux: any[]) {
   const m = toMin(heure);
   return creneaux.some((c: any) => c.jour === jour && toMin(c.heure_debut) <= m && toMin(c.heure_fin) > m);
@@ -99,22 +98,24 @@ export function Planning() {
   const matiereOptions: SelectOption[] = allMatieres.map((m: any) => ({ value: m.id, label: m.nom }));
   const selectedNiveau = selectedClasse?.niveau || null;
 
-  const coveredCells = useMemo(() => {
-    const set = new Set<string>();
+  // Map chaque cellule couverte vers le créneau qui l'occupe
+  const cellCreneauMap = useMemo(() => {
+    const map = new Map<string, any>();
     for (const cr of classeCreneaux) {
       const si = HEURES.indexOf(cr.heure_debut);
       const ei = HEURES.findIndex(h => h === cr.heure_fin);
       const end = ei > si ? ei : si + 1;
-      for (let i = si + 1; i < end; i++) set.add(`${cr.jour}-${HEURES[i]}`);
+      for (let i = si; i < end; i++) {
+        map.set(`${cr.jour}-${HEURES[i]}`, { ...cr, _isStart: i === si });
+      }
     }
-    return set;
+    return map;
   }, [classeCreneaux]);
 
   // Guards APRÈS tous les hooks
   if (classesLoading) return <PageLoader />;
   if (!classesData) return <Alert variant="error">Problème de chargement.</Alert>;
 
-  const getCreneauAt = (jour: JourSemaine, heure: string) => classeCreneaux.find((c: any) => c.jour === jour && c.heure_debut === heure);
   const handleSelectClasse = (cid: string) => { setSelectedClasseId(cid); setOpenNiveau(null); setError(''); setInlineSlot(null); };
 
   // ===== SELECTION =====
@@ -315,43 +316,49 @@ export function Planning() {
                               {h}{isBreak && <span className="planning-break-label">pause</span>}
                             </td>
                             {JOURS.map(j => {
-                              // Skip cells covered by a multi-slot creneau
-                              if (coveredCells.has(`${j}-${h}`)) return null;
-
-                              const cr = getCreneauAt(j, h);
+                              const cellKey = `${j}-${h}`;
+                              const cellCr = cellCreneauMap.get(cellKey);
                               const inSel = isInSelection(j, h);
                               const isInline = inlineSlot?.jour === j && inlineSlot?.heure === h;
-                              const occupied = isOccupied(j, h, classeCreneaux);
+                              const occupied = !!cellCr;
                               const isEmpty = !occupied && !isBreak;
-                              const span = cr ? slotSpan(cr.heure_debut, cr.heure_fin) : 1;
+                              const isStart = cellCr?._isStart;
 
                               return (
                                 <td
-                                  key={`${j}-${h}`}
-                                  rowSpan={cr ? Math.max(span, 1) : 1}
-                                  className={`${isBreak ? 'planning-break-cell' : ''} ${inSel ? 'planning-cell-selected' : ''} ${isEmpty && !readOnly ? 'planning-cell-empty' : ''} ${cr ? 'planning-cell-creneau' : ''}`}
+                                  key={cellKey}
+                                  className={`${isBreak ? 'planning-break-cell' : ''} ${inSel ? 'planning-cell-selected' : ''} ${isEmpty && !readOnly ? 'planning-cell-empty' : ''} ${occupied ? 'planning-cell-occupied' : ''}`}
+                                  style={occupied ? { backgroundColor: cellCr.matiere_couleur + '25', borderLeft: `3px solid ${cellCr.matiere_couleur}` } : undefined}
                                   onMouseDown={() => isEmpty && handleCellMouseDown(j, h)}
                                   onMouseEnter={() => { if (selecting) handleCellMouseEnter(j, h); if (resizing) handleResizeEnter(h); }}
                                   onMouseUp={() => { handleCellMouseUp(); if (resizing) handleResizeEnd(); }}
                                   onDragOver={e => handleDragOver(e, j, h)}
                                   onDrop={e => handleDrop(e, j, h)}
                                 >
-                                  {isBreak && !cr && <div className="planning-break-indicator">🍽</div>}
+                                  {isBreak && !occupied && <div className="planning-break-indicator">🍽</div>}
 
-                                  {cr && (
-                                    <div className="creneau-block creneau-block-span" style={{ backgroundColor: cr.matiere_couleur }} draggable={!readOnly} onDragStart={e => handleDragStart(e, cr)}>
-                                      {!readOnly && <div className="creneau-resize-handle creneau-resize-top" onMouseDown={e => handleResizeStart(e, cr, 'top')} />}
-                                      <div className="creneau-block-title">{cr.matiere_nom}</div>
-                                      <div className="creneau-block-time">{cr.heure_debut}–{cr.heure_fin}</div>
-                                      <div className="creneau-block-salle">{cr.salle}</div>
-                                      {cr.enseignant && <div className="creneau-block-salle">{cr.enseignant}</div>}
-                                      {!readOnly && <button type="button" className="creneau-block-delete" onClick={e => { e.stopPropagation(); handleDeleteCreneau(cr); }}>✕</button>}
-                                      {!readOnly && <div className="creneau-resize-handle creneau-resize-bottom" onMouseDown={e => handleResizeStart(e, cr, 'bottom')} />}
+                                  {/* Première cellule du créneau : affiche le bloc complet */}
+                                  {isStart && cellCr && (
+                                    <div className="creneau-block" style={{ backgroundColor: cellCr.matiere_couleur }} draggable={!readOnly} onDragStart={e => handleDragStart(e, cellCr)}>
+                                      {!readOnly && <div className="creneau-resize-handle creneau-resize-top" onMouseDown={e => handleResizeStart(e, cellCr, 'top')} />}
+                                      <div className="creneau-block-title">{cellCr.matiere_nom}</div>
+                                      <div className="creneau-block-time">{cellCr.heure_debut}–{cellCr.heure_fin}</div>
+                                      <div className="creneau-block-salle">{cellCr.salle}</div>
+                                      {!readOnly && <button type="button" className="creneau-block-delete" onClick={e => { e.stopPropagation(); handleDeleteCreneau(cellCr); }}>✕</button>}
+                                    </div>
+                                  )}
+
+                                  {/* Cellules suivantes du créneau : juste la couleur, pas de contenu dupliqué */}
+                                  {occupied && !isStart && (
+                                    <div className="creneau-continuation" style={{ backgroundColor: cellCr.matiere_couleur }}>
+                                      {!readOnly && h === HEURES[HEURES.indexOf(cellCr.heure_fin) - 1] && (
+                                        <div className="creneau-resize-handle creneau-resize-bottom" onMouseDown={e => handleResizeStart(e, cellCr, 'bottom')} />
+                                      )}
                                     </div>
                                   )}
 
                                   {/* Inline single-slot create */}
-                                  {isInline && !cr && (
+                                  {isInline && !occupied && (
                                     <div className="inline-create">
                                       <select className="inline-create-select" value={formMatiereId} onChange={e => setFormMatiereId(e.target.value)} autoFocus>
                                         <option value="">Matière…</option>
