@@ -3,6 +3,7 @@ import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useClasses } from '../../contexts/ClasseContext';
 import { useSalles } from '../../contexts/SalleContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/shared/Card';
 import { Input } from '../../components/shared/Input';
@@ -38,6 +39,7 @@ export function CreateClasse() {
   const { isViewingArchive } = useViewing();
   const { create } = useClasses();
   const { salles, loading: sallesLoading, getAll: fetchSalles } = useSalles();
+  const confirm = useConfirm();
 
   const [nom, setNom] = useState('');
   const [niveau, setNiveau] = useState(NIVEAUX[0].value as string);
@@ -81,6 +83,21 @@ export function CreateClasse() {
     if (!selectedSalle) {
       setError('Veuillez sélectionner une salle valide');
       return;
+    }
+
+    // Validation capacité vs salle
+    if (capacite > selectedSalle.capacite) {
+      if (salleType === 'fixe') {
+        setError(`En mode salle fixe, la capacité (${capacite}) ne peut pas dépasser celle de la salle « ${selectedSalle.nom} » (${selectedSalle.capacite} places).`);
+        return;
+      }
+      const ok = await confirm({
+        title: 'Capacité supérieure à la salle',
+        message: `La salle « ${selectedSalle.nom} » a une capacité de ${selectedSalle.capacite} places, mais vous définissez ${capacite} élèves.\n\nVoulez-vous continuer ?`,
+        confirmText: 'Confirmer',
+        variant: 'warning',
+      });
+      if (!ok) return;
     }
 
     setSubmitting(true);
@@ -204,6 +221,26 @@ export function CreateClasse() {
               error={error && !salleId ? 'Sélectionnez une salle' : undefined}
             />
           )}
+
+          {/* Indicateur capacité vs salle */}
+          {salleId && salles.length > 0 && (() => {
+            const s = salles.find(x => x.id === salleId);
+            if (!s) return null;
+            const over = capacite > s.capacite;
+            return (
+              <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
+                background: over ? 'var(--warning-light)' : 'var(--success-light)',
+                border: `1px solid ${over ? '#fde68a' : '#bbf7d0'}`,
+                color: over ? 'var(--warning)' : 'var(--success)',
+              }}>
+                <strong>{s.nom}</strong> — capacité : {s.capacite} places
+                {over && <span> · ⚠ Dépassement de {capacite - s.capacite} place(s)</span>}
+                {salleType === 'fixe' && over && (
+                  <p style={{ marginTop: '0.3rem', fontSize: '0.8rem' }}>En mode fixe, la capacité ne peut pas dépasser celle de la salle.</p>
+                )}
+              </div>
+            );
+          })()}
 
           <FormActions>
             <Button as="link" to="/classes" variant="secondary">

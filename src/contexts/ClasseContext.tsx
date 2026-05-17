@@ -5,7 +5,7 @@ import { onEvent, notifyDataChange } from '../services/socketService';
 
 interface ClasseContextType {
   create: (data: Omit<Classe, 'id'>, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
-  update: (id: string, data: Partial<Classe>) => Promise<void>;
+  update: (id: string, data: Partial<Classe>, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
   delete: (id: string) => Promise<void>;
 }
 
@@ -20,8 +20,11 @@ export function ClasseProvider({ children }: { children: ReactNode }) {
     } catch { onError?.('Erreur de connexion'); }
   }, []);
 
-  const update = useCallback(async (id: string, data: Partial<Classe>) => {
-    try { await fetch(`${API_BASE_URL}/classes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch {}
+  const update = useCallback(async (id: string, data: Partial<Classe>, onSuccess?: () => void, onError?: (error: string) => void) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/classes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (res.ok) { onSuccess?.(); } else { const e = await res.json(); onError?.(e.message || 'Erreur'); }
+    } catch { onError?.('Erreur de connexion'); }
   }, []);
 
   const del = useCallback(async (id: string) => {

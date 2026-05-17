@@ -9,16 +9,17 @@ import { useConfirm } from '../../components/shared/ConfirmDialog';
 interface ClasseCardProps {
   classe: Classe & { nb_eleves: number; taux: number };
   onDelete: (id: string) => void;
+  onEdit?: (classe: any) => void;
   readOnly?: boolean;
 }
 
-export function ClasseCard({ classe, onDelete, readOnly }: ClasseCardProps) {
+export function ClasseCard({ classe, onDelete, onEdit, readOnly }: ClasseCardProps) {
   const confirm = useConfirm();
 
   const handleDelete = async () => {
     const ok = await confirm({
       title: 'Supprimer la classe',
-      message: `Êtes-vous sûr de vouloir supprimer la classe « ${classe.nom} » ? Cette action est irréversible.`,
+      message: `Êtes-vous sûr de vouloir supprimer la classe « ${classe.nom} » ?`,
       confirmText: 'Supprimer',
       variant: 'danger',
     });
@@ -39,7 +40,7 @@ export function ClasseCard({ classe, onDelete, readOnly }: ClasseCardProps) {
             <span>{classe.salle}</span>
           </div>
           <div className="classe-card-meta-item">
-            <span>{classe.annee_scolaire}</span>
+            <Badge label={classe.salle_type === 'fixe' ? 'Fixe' : 'Variable'} variant={classe.salle_type === 'fixe' ? 'info' : 'warning'} />
           </div>
         </div>
 
@@ -52,16 +53,13 @@ export function ClasseCard({ classe, onDelete, readOnly }: ClasseCardProps) {
         </div>
 
         <div className="classe-card-actions">
-          <Button as="link" to={`/classes/${classe.id}/eleves`} variant="primary" size="sm">
-            Élèves
-          </Button>
-          <Button as="link" to={`/classes/${classe.id}/planning`} variant="outline" size="sm">
-            Planning
-          </Button>
+          <Button as="link" to={`/classes/${classe.id}/eleves`} variant="primary" size="sm">Élèves</Button>
+          <Button as="link" to={`/classes/${classe.id}/planning`} variant="outline" size="sm">Planning</Button>
+          {!readOnly && onEdit && (
+            <Button variant="secondary" size="sm" onClick={() => onEdit(classe)}>✎</Button>
+          )}
           {!readOnly && (
-            <Button variant="danger" size="sm" onClick={handleDelete}>
-              ✕
-            </Button>
+            <Button variant="danger" size="sm" onClick={handleDelete}>✕</Button>
           )}
         </div>
       </div>
