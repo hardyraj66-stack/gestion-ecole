@@ -89,10 +89,9 @@ export function Planning() {
       .map(([niveau, classes]) => ({ niveau, classes }));
   }, [classesData]);
 
-  if (classesLoading) return <PageLoader />;
-  if (!classesData) return <Alert variant="error">Problème de chargement.</Alert>;
-
-  const selectedClasseFromList = classesData.classes.find((c: any) => c.id === selectedClasseId) || null;
+  // Extraire les données AVANT tout return conditionnel (Rules of Hooks)
+  const allClasses = classesData?.classes || [];
+  const selectedClasseFromList = allClasses.find((c: any) => c.id === selectedClasseId) || null;
   const selectedClasse = classeData?.classe || selectedClasseFromList || null;
   const classeCreneaux: any[] = classeData?.creneaux || [];
   const allMatieres: any[] = classeData?.matieres || [];
@@ -100,7 +99,6 @@ export function Planning() {
   const matiereOptions: SelectOption[] = allMatieres.map((m: any) => ({ value: m.id, label: m.nom }));
   const selectedNiveau = selectedClasse?.niveau || null;
 
-  // Which cells to hide (covered by a multi-slot creneau)
   const coveredCells = useMemo(() => {
     const set = new Set<string>();
     for (const cr of classeCreneaux) {
@@ -111,6 +109,10 @@ export function Planning() {
     }
     return set;
   }, [classeCreneaux]);
+
+  // Guards APRÈS tous les hooks
+  if (classesLoading) return <PageLoader />;
+  if (!classesData) return <Alert variant="error">Problème de chargement.</Alert>;
 
   const getCreneauAt = (jour: JourSemaine, heure: string) => classeCreneaux.find((c: any) => c.jour === jour && c.heure_debut === heure);
   const handleSelectClasse = (cid: string) => { setSelectedClasseId(cid); setOpenNiveau(null); setError(''); setInlineSlot(null); };
