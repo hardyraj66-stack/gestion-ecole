@@ -9,6 +9,8 @@ import { SallesModule } from './salles/salles.module';
 import { AnneesModule } from './annees/annees.module';
 import { ReadModule } from './read/read.module';
 import { SuiviModule } from './suivi/suivi.module';
+import { ExclusionsModule } from './exclusions/exclusions.module';
+import { DepartsModule } from './departs/departs.module';
 import { EventsModule } from './events/events.module';
 import { SeederModule } from './data/seeder.module';
 import { ApiLoggerMiddleware } from './common/api-logger.middleware';
@@ -29,6 +31,8 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ec
     PlanningModule,
     SallesModule,
     SuiviModule,
+    ExclusionsModule,
+    DepartsModule,
   ],
 })
 export class AppModule implements NestModule {

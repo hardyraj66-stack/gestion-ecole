@@ -162,6 +162,7 @@ export class ViewBuilderService implements OnModuleInit {
         genre: e.genre, classe_id: e.classe_id, email: e.email || '', telephone: e.telephone || '', adresse: e.adresse || '',
         classe_nom: cl?.nom || '', classe_niveau: cl?.niveau || '',
         pere: (e as any).pere || null, mere: (e as any).mere || null, tuteur: (e as any).tuteur || null,
+        statut: (e as any).statut || 'actif',
       }}, upsert: true }};
     });
     const ids = eleves.map(e => e._id.toString());

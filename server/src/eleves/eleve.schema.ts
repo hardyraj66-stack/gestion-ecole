@@ -43,6 +43,10 @@ export class Eleve extends Document {
 
   @Prop({ type: { nom: String, prenom: String, telephone: String, email: String, lien: String }, default: null })
   tuteur: { nom: string; prenom: string; telephone: string; email: string; lien: string } | null;
+
+  // Statut de l'élève dans l'établissement
+  @Prop({ required: true, enum: ['actif', 'exclu', 'parti'], default: 'actif' })
+  statut: 'actif' | 'exclu' | 'parti';
 }
 
 export const EleveSchema = SchemaFactory.createForClass(Eleve);

@@ -3430,6 +3430,7 @@ tr:hover .eleve-name-link {
 .suivi-item-icon-warning { background: #fef9c3; color: #ca8a04; }
 .suivi-item-icon-danger  { background: #fee2e2; color: #dc2626; }
 .suivi-item-icon-info    { background: #dbeafe; color: #2563eb; }
+.suivi-item-icon-success { background: #dcfce7; color: #16a34a; }
 
 .suivi-item-title {
   display: flex;
@@ -3487,6 +3488,183 @@ tr:hover .eleve-name-link {
   background: var(--primary-light);
   border-color: var(--primary);
 }
+
+/* Bouton toggle convocation (marquer effectuée) */
+.suivi-toggle-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s;
+}
+
+.suivi-toggle-btn:hover {
+  background: #dcfce7;
+  color: var(--success);
+}
+
+/* Bannière d'escalade */
+.escalade-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.escalade-banner-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: var(--danger);
+  flex: 1;
+}
+
+.escalade-banner-left svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.escalade-banner-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.escalade-banner-sub {
+  font-size: 0.78rem;
+  color: #b91c1c;
+  margin-top: 0.1rem;
+}
+
+/* Section statut élève */
+.statut-current {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.statut-current-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.statut-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.statut-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fafafa;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s, border-color 0.12s;
+  font-family: inherit;
+}
+
+.statut-action-btn svg {
+  flex-shrink: 0;
+}
+
+.statut-action-btn-danger { color: var(--danger); }
+.statut-action-btn-danger:hover { background: #fef2f2; border-color: #fca5a5; }
+
+.statut-action-btn-warning { color: var(--warning); }
+.statut-action-btn-warning:hover { background: #fffbeb; border-color: #fcd34d; }
+
+.statut-action-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.statut-action-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.statut-form {
+  margin-top: 0.75rem;
+}
+
+.statut-form-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  color: #92400e;
+  margin-bottom: 0.75rem;
+}
+
+.statut-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.5rem;
+}
+
+.statut-info-danger { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); }
+.statut-info-warning { background: #fffbeb; border: 1px solid #fcd34d; color: var(--warning); }
+
+.statut-info svg { flex-shrink: 0; margin-top: 2px; }
+
+.statut-info-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.statut-info-sub {
+  font-size: 0.78rem;
+  opacity: 0.8;
+  margin-top: 0.15rem;
+}
+
+.statut-annuler-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+
+.statut-annuler-btn:hover { opacity: 0.7; }
 
 /* Assiduité */
 .assiduite-container {

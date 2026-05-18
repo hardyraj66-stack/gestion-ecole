@@ -26,6 +26,8 @@ export interface TuteurInfo {
   lien?: string;
 }
 
+export type EleveStatut = 'actif' | 'exclu' | 'parti';
+
 export interface Eleve {
   id: string;
   nom: string;
@@ -39,6 +41,7 @@ export interface Eleve {
   pere?: ParentInfo | null;
   mere?: ParentInfo | null;
   tuteur?: TuteurInfo | null;
+  statut?: EleveStatut;
 }
 
 export interface Avertissement {
@@ -49,6 +52,44 @@ export interface Avertissement {
   date: string;
   commentaire?: string;
   type: 'comportement' | 'degats' | 'absence' | 'autre';
+}
+
+export interface Convocation {
+  id: string;
+  eleve_id: string;
+  date: string;
+  raison: string;
+  commentaire?: string;
+  effectuee: boolean;
+  nb_avertissements: number;
+}
+
+export interface EleveExclu {
+  id: string;
+  eleve_id: string;
+  nom: string;
+  prenom: string;
+  classe_id: string;
+  classe_nom: string;
+  date_exclusion: string;
+  raison: string;
+  commentaire?: string;
+  nb_avertissements_au_moment: number;
+  annee_scolaire: string;
+}
+
+export interface EleveQuitte {
+  id: string;
+  eleve_id: string;
+  nom: string;
+  prenom: string;
+  classe_id: string;
+  classe_nom: string;
+  date_depart: string;
+  raison: string;
+  commentaire?: string;
+  motif: 'changement_ecole' | 'demenagement' | 'raison_familiale' | 'autre';
+  annee_scolaire: string;
 }
 
 export interface Absence {

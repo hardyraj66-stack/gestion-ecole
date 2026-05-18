@@ -23,6 +23,7 @@ export class ReadEleve extends Document {
   @Prop({ type: Object, default: null }) pere: any;
   @Prop({ type: Object, default: null }) mere: any;
   @Prop({ type: Object, default: null }) tuteur: any;
+  @Prop({ default: 'actif' }) statut: string;
 }
 
 export const ReadEleveSchema = SchemaFactory.createForClass(ReadEleve);
