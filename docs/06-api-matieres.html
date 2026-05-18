@@ -3,24 +3,52 @@
 <div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
 <div class="doc">
 <h1>📚 Module Matières</h1>
-<p class="subtitle">Programme de matières avec coefficients et couleurs</p>
+<p class="subtitle">Matières avec coefficients par niveau scolaire, couleurs et protection à la suppression</p>
+
 <h2>Schéma MongoDB</h2>
 <pre><code>{
-  nom:         String  (requis)           // "Mathématiques"
-  code:        String  (requis)           // "MATH" (max 6 car.)
-  coefficient: Number  (requis, défaut 1) // 1 à 10
-  description: String  (optionnel)
-  couleur:     String  (optionnel)        // "#2563eb"
+  nom:          String  (requis)           // "Mathématiques"
+  code:         String  (requis)           // "MATH" (max 6 car.)
+  coefficient:  Number  (défaut 1)         // héritage — ignoré si coefficients[] présent
+  coefficients: [{ niveau: String, coefficient: Number }]  // par niveau scolaire
+  description:  String  (optionnel)
+  couleur:      String  (optionnel)        // "#2563eb"
 }</code></pre>
-<h2>Endpoints API</h2>
+
+<div class="callout callout-info"><p><strong>Coefficients par niveau</strong> : chaque matière peut définir un coefficient différent selon le niveau scolaire. Exemple : Mathématiques → 6ème × 4, Terminale × 5. Le champ <code>coefficient</code> global est conservé pour rétrocompatibilité.</p></div>
+
+<h2>Endpoints API — Write</h2>
 <table>
 <tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
 <tr><td><span class="badge b-get">GET</span></td><td><code>/matieres</code></td><td>Toutes les matières</td></tr>
 <tr><td><span class="badge b-get">GET</span></td><td><code>/matieres/:id</code></td><td>Une matière</td></tr>
-<tr><td><span class="badge b-post">POST</span></td><td><code>/matieres</code></td><td>Créer</td></tr>
-<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/matieres/:id</code></td><td>Modifier</td></tr>
-<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/matieres/:id</code></td><td>Supprimer</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/matieres</code></td><td>Créer (corps : <code>nom, code, coefficients[], description?, couleur?</code>)</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/matieres/:id</code></td><td>Modifier (nom, description, coefficients[])</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/matieres/:id</code></td><td>Supprimer — refusé si matière utilisée dans des notes ou des créneaux</td></tr>
 </table>
+
+<h2>Endpoint Read</h2>
+<table>
+<tr><th>Route</th><th>Params</th><th>Retour</th></tr>
+<tr><td><code>GET /read/matieres</code></td><td><code>page</code>, <code>limit</code>, <code>niveau</code> (optionnel)</td><td><code>{ items, total, page, limit, totalPages }</code></td></tr>
+</table>
+<p>Le paramètre <code>niveau</code> filtre via <code>coefficients.niveau</code> en MongoDB — retourne uniquement les matières définissant un coefficient pour ce niveau.</p>
+
+<h2>Règles métier</h2>
+<ul>
+<li>Chaque entrée de <code>coefficients[]</code> doit avoir un <code>niveau</code> non vide et un <code>coefficient &gt; 0</code></li>
+<li>Un même niveau ne peut apparaître qu'une seule fois dans <code>coefficients[]</code></li>
+<li><strong>Protection suppression</strong> : si la matière est référencée dans au moins une note (<code>notes</code>) ou un créneau (<code>creneaux</code>), le DELETE retourne <code>400 Bad Request</code> avec un message indiquant le nombre de dépendances</li>
+</ul>
+
+<h2>Résolution du coefficient dans le bulletin</h2>
+<p>Le <code>ReadService.getBulletin()</code> résout le coefficient de la matière pour l'élève via la logique suivante :</p>
+<pre><code>const niveau = classe.niveau;  // niveau de la classe de l'élève
+const found = matiere.coefficients.find(c => c.niveau === niveau);
+const coeff = found ? found.coefficient
+            : coefficients.length === 1 ? coefficients[0].coefficient
+            : matiere.coefficient ?? 1;  // fallback héritage</code></pre>
+
 <h2>Palette de couleurs proposée</h2>
 <table>
 <tr><th>Couleur</th><th>Hex</th><th>Matière seed</th></tr>
@@ -30,10 +58,11 @@
 <tr><td style="color:#dc2626">■ Rouge</td><td>#dc2626</td><td>Anglais</td></tr>
 <tr><td style="color:#0891b2">■ Cyan</td><td>#0891b2</td><td>Physique-Chimie</td></tr>
 <tr><td style="color:#16a34a">■ Vert</td><td>#16a34a</td><td>SVT</td></tr>
-<tr><td style="color:#ea580c">■ Vermillon</td><td>#ea580c</td><td>EPS</td></tr>
+<tr><td style="color:#db2777">■ Rose</td><td>#db2777</td><td>Arts plastiques</td></tr>
 <tr><td style="color:#475569">■ Ardoise</td><td>#475569</td><td>Technologie</td></tr>
 </table>
-<p>La couleur est utilisée pour : bordure supérieure des cartes, blocs du planning, pastille code dans les bulletins.</p>
+<p>La couleur est utilisée pour : bordure supérieure des cartes matières, blocs du planning, pastille code dans les bulletins.</p>
+
 <div class="doc-footer">
 <a href="05-api-eleves.html">← Module Élèves</a>
 <a href="07-api-notes.html">Module Notes →</a>

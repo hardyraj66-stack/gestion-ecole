@@ -6,36 +6,72 @@
 <p class="subtitle">Page <code>/notes</code></p>
 
 <h2>Source des données</h2>
-<p>La page charge sa configuration via <code>GET /read/notes</code> :</p>
+<p>La page charge sa configuration initiale via <code>GET /read/notes</code> (hook <code>useNotesPageData</code>, channel socket <code>'notes'</code>) :</p>
 <ul>
-<li>classes</li>
-<li>matières</li>
-<li>élèves</li>
-<li>notes existantes</li>
+<li>Toutes les matières (<code>matieres[]</code>)</li>
+<li>Tous les élèves (<code>eleves[]</code>)</li>
+<li>Toutes les notes existantes (<code>notes[]</code>)</li>
 </ul>
-<p>La page de saisie ne pagine plus côté front. Le backend fournit les données et le frontend les regroupe pour la saisie.</p>
+<p>Les élèves et notes sont ensuite filtrés côté frontend selon la classe et la matière sélectionnées.</p>
 
 <h2>Composants</h2>
 <table>
 <tr><th>Composant</th><th>Rôle</th></tr>
-<tr><td>NotesFilters</td><td>Card de sélection (classe, matière, trimestre, date)</td></tr>
-<tr><td>NotesStatsBar</td><td>Bande : « X / Y saisies » + moyenne</td></tr>
-<tr><td>NotesTable</td><td>Tableau de saisie avec composants stylés pour note et commentaire</td></tr>
+<tr><td><code>NotesFilters</code></td><td>Barre de sélection structurée : niveau → classe (popover) + matière (autocomplete) + trimestre</td></tr>
+<tr><td><code>NotesStatsBar</code></td><td>Bande : « X / Y saisies » + moyenne de classe</td></tr>
+<tr><td><code>NotesTable</code></td><td>Tableau de saisie avec inputs stylés par valeur et colonne statut</td></tr>
 </table>
 
-<h2>Inputs stylés</h2>
+<h2>NotesFilters — Navigation structurée</h2>
+<p>Le flux de sélection suit le parcours : <strong>niveau → classe → matière → trimestre → Charger</strong>.</p>
+
+<h3>Sélection de classe — popover niveau + modal classes</h3>
+<p>Même pattern que <code>ElevesFiltersBar</code> :</p>
 <ul>
-<li><strong>note-field</strong> : champ numérique stylé, couleurs par valeur, indicateur visuel</li>
-<li><strong>comment-field</strong> : champ texte uniforme avec focus et mode lecture seule</li>
+<li>Un bouton <em>Niveau / Classe</em> ouvre un <strong>Popover</strong> listant les niveaux (<code>GET /read/niveaux</code>, chargé une seule fois via <code>useRef</code>)</li>
+<li>La sélection d'un niveau ferme le Popover et ouvre un <strong>modal overlay</strong> listant les classes de ce niveau (<code>GET /read/niveaux/:niveau/classes</code>)</li>
+<li>La sélection d'une classe ferme le modal et affiche le label <code>Niveau · Nom classe</code> sur le bouton</li>
+<li>Changer de classe réinitialise les lignes de saisie</li>
+</ul>
+
+<h3>Sélection de matière — autocomplete</h3>
+<ul>
+<li>Composant <code>SearchInputSuggestions</code> avec filtre client-side sur les matières déjà chargées</li>
+<li>Recherche sur le <code>nom</code> et le <code>code</code> de la matière, debounce 150ms</li>
+<li>Chaque suggestion affiche le nom + le code (<code>sublabel</code>)</li>
+<li>Changer de matière réinitialise les lignes de saisie</li>
+</ul>
+
+<h3>Date d'évaluation</h3>
+<p>Le champ date n'est plus exposé dans l'interface. La date est générée automatiquement à <code>today</code> (<code>new Date().toISOString().split('T')[0]</code>) au moment de l'enregistrement.</p>
+
+<h2>NotesTable — Saisie en lot</h2>
+<p>Affiche une ligne par élève de la classe sélectionnée :</p>
+<ul>
+<li><strong>note-field</strong> : input numérique, min 0, max 20, step 0.5. La valeur est clampée à <code>[0, 20]</code> dès la saisie. Couleur dynamique : vert ≥ 10, rouge &lt; 10</li>
+<li><strong>comment-field</strong> : champ texte libre</li>
+<li><strong>Statut</strong> : badge <em>Existante</em> (update), <em>Nouvelle</em> (create) ou <em>—</em> (pas de note)</li>
+</ul>
+
+<h2>Enregistrement</h2>
+<ul>
+<li>Validation côté frontend avant envoi : toute valeur hors de <code>[0, 20]</code> bloque le save avec un message d'erreur</li>
+<li>Pour chaque ligne avec une note : <code>POST /notes</code> (création) ou <code>PATCH /notes/:id</code> (mise à jour)</li>
+<li>Après le save, les lignes sont mis à jour localement — les valeurs saisies restent affichées sans rechargement</li>
+<li>Les notes nouvellement créées passent au statut <em>Existante</em> immédiatement</li>
+<li>Le re-fetch complet depuis l'API se fait en arrière-plan via le socket (<code>channel: 'notes'</code>)</li>
 </ul>
 
 <h2>Lecture seule archive</h2>
-<p>En mode archive :</p>
+<p>En mode archive (<code>ViewingContext.isViewingArchive</code>) :</p>
 <ul>
-<li>les champs sont <code>disabled</code></li>
-<li>le bouton d'enregistrement est masqué</li>
-<li>une alerte orange indique le mode consultation</li>
+<li>Tous les champs sont <code>disabled</code></li>
+<li>Le bouton d'enregistrement est masqué</li>
+<li>Une alerte orange indique le mode consultation</li>
 </ul>
+
+<h2>Sous-titre dynamique</h2>
+<p>Le <code>PageHeader</code> affiche : <code>NomClasse · NomMatière — Trimestre X</code> une fois la classe et la matière sélectionnées, ou le texte par défaut <em>Sélectionnez niveau, classe et matière</em>.</p>
 
 <div class="doc-footer">
 <a href="14-front-matieres.html">← Gestion des Matières</a>

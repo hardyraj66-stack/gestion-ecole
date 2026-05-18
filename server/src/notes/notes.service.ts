@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Note } from './note.schema';
@@ -23,9 +23,15 @@ export class NotesService {
   findAll() { return this.noteModel.find().exec(); }
   findById(id: string) { return this.noteModel.findById(id).exec(); }
   findByEleveId(eleveId: string) { return this.noteModel.find({ eleve_id: eleveId }).exec(); }
-  create(data: any) { return new this.noteModel(data).save(); }
+  create(data: any) {
+    if (data.valeur !== undefined && (data.valeur < 0 || data.valeur > 20))
+      throw new BadRequestException('La note doit être comprise entre 0 et 20.');
+    return new this.noteModel(data).save();
+  }
 
   async update(id: string, data: any) {
+    if (data.valeur !== undefined && (data.valeur < 0 || data.valeur > 20))
+      throw new BadRequestException('La note doit être comprise entre 0 et 20.');
     return this.noteModel.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 

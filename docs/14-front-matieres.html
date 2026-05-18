@@ -6,15 +6,60 @@
 <p class="subtitle">Pages <code>/matieres</code>, <code>/matieres/nouvelle</code></p>
 
 <h2>Liste — <code>/matieres</code></h2>
-<p>La page appelle <code>GET /read/matieres?page=X&limit=8</code>. La pagination est côté serveur, le frontend reçoit déjà la page demandée.</p>
+<p>La page appelle <code>GET /read/matieres?page=X&amp;limit=8&amp;niveau=...</code>. La pagination est côté serveur.</p>
 <ul>
 <li><strong>Réponse</strong> : <code>{ items, total, page, limit, totalPages }</code></li>
-<li>La grille affiche seulement <code>items</code></li>
 <li>La carte « + Nouvelle matière » n'apparaît que sur la dernière page</li>
+<li>Un <strong>Select de niveau</strong> dans le PageHeader filtre les matières : seules celles ayant un coefficient défini pour ce niveau sont retournées</li>
+<li>Changer le niveau remet la pagination à 1</li>
+</ul>
+
+<h2>Composant MatiereCard</h2>
+<p>Chaque carte affiche le code coloré, le nom, la description et les coefficients par niveau sous forme de badges.</p>
+
+<h3>Mode affichage</h3>
+<ul>
+<li>Badges <code>niveau × coeff</code> pour chaque entrée de <code>coefficients[]</code></li>
+<li>Si <code>coefficients[]</code> est vide, affiche le coefficient global héritage (<code>matiere.coefficient</code>)</li>
+<li>Bouton crayon pour passer en mode édition (masqué en lecture seule archive)</li>
+<li>Bouton <strong>Supprimer</strong> avec <code>useConfirm()</code> — si le backend renvoie une erreur <code>400</code>, un second dialog affiche le message de blocage</li>
+</ul>
+
+<h3>Mode édition inline</h3>
+<p>Le clic sur le crayon bascule la carte en mode formulaire sans navigation :</p>
+<ul>
+<li>Champs éditables : <strong>nom</strong> (requis), <strong>description</strong>, <strong>coefficients par niveau</strong></li>
+<li>Tableau de coefficients : chaque ligne affiche le niveau + un input numérique (min 0.5, max 20, step 0.5) + bouton ✕ pour retirer le niveau</li>
+<li>Un select « + Ajouter un niveau » liste les niveaux non encore assignés (chargés via <code>GET /read/niveaux</code> au montage)</li>
+<li>Enregistrement via <code>PATCH /matieres/:id</code> avec <code>{ nom, description, coefficients[] }</code></li>
+<li>Mise à jour locale optimiste via le callback <code>onUpdated(updatedMatiere)</code> — pas de rechargement complet</li>
+<li>Annuler restaure les valeurs initiales</li>
 </ul>
 
 <h2>Création — <code>/matieres/nouvelle</code></h2>
-<p>Layout 2 colonnes : formulaire + aperçu temps réel. En mode archive, redirection automatique vers la liste.</p>
+<p>Layout 2 colonnes : formulaire à gauche (max 900px) + aperçu temps réel à droite (300px fixe).</p>
+<p>En mode archive, redirection automatique vers la liste.</p>
+
+<h3>Formulaire</h3>
+<ul>
+<li><strong>Nom</strong> et <strong>Code</strong> (obligatoires, code forcé en majuscules, max 6 caractères)</li>
+<li><strong>Description</strong> (optionnelle)</li>
+<li><strong>Couleur</strong> via <code>ColorPicker</code> (8 couleurs prédéfinies)</li>
+<li><strong>Coefficients par niveau</strong> : pré-remplis avec tous les niveaux (coefficient 1 par défaut), possibilité de retirer ou d'ajouter des niveaux</li>
+</ul>
+
+<h3>Validation</h3>
+<ul>
+<li>Au moins un niveau avec coefficient défini</li>
+<li>Tous les coefficients doivent être &gt; 0</li>
+</ul>
+
+<h3>Aperçu — <code>MatierePreview</code></h3>
+<p>Reflète en temps réel : bloc code coloré, nom, description, badges coefficients par niveau.</p>
+
+<h2>Mises à jour temps réel</h2>
+<p>Le hook <code>useMatieresListData(page, niveau)</code> est abonné au channel <code>'matieres'</code>. Toute mutation (création, édition, suppression) déclenche un re-fetch silencieux depuis le socket.</p>
+<p>L'édition inline et la suppression utilisent également un état local <code>localItems</code> pour une mise à jour optimiste instantanée avant que le socket ne confirme.</p>
 
 <div class="doc-footer">
 <a href="13-front-eleves.html">← Gestion des Élèves</a>

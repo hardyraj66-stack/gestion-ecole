@@ -9,7 +9,7 @@
 <h2>Stack technique</h2>
 <table>
 <tr><th>Couche</th><th>Technologie</th><th>Rôle</th></tr>
-<tr><td>Frontend</td><td>React 18 + TypeScript + Vite</td><td>SPA avec routing client-side</td></tr>
+<tr><td>Frontend</td><td>React 19 + TypeScript + Vite</td><td>SPA avec routing client-side</td></tr>
 <tr><td>Styling</td><td>Variables CSS + composants partagés</td><td>Design system cohérent</td></tr>
 <tr><td>Backend</td><td>NestJS 10 + TypeScript</td><td>API REST séparée read/write + WebSocket</td></tr>
 <tr><td>Base de données</td><td>MongoDB + Mongoose 8</td><td>Stockage persistant + projections read</td></tr>
@@ -93,7 +93,10 @@ Backend (NestJS)
 ├── matieres/
 ├── notes/
 ├── planning/
-└── salles/</code></pre>
+├── salles/
+├── suivi/          avertissements, absences, retards, convocations
+├── exclusions/     gestion des exclusions d'élèves
+└── departs/        gestion des départs d'élèves</code></pre>
 
 <h2>Flux de données</h2>
 <ol>
@@ -126,6 +129,16 @@ Backend (NestJS)
 <tr><td><code>read_notes</code></td><td>note</td><td><code>eleve_nom</code>, <code>matiere_nom</code>, <code>matiere_code</code></td></tr>
 <tr><td><code>read_creneaux</code></td><td>créneau</td><td><code>classe_nom</code></td></tr>
 <tr><td><code>read_salles</code></td><td>salle</td><td>miroir dénormalisé</td></tr>
+</table>
+
+<h3>Collections write supplémentaires</h3>
+<table>
+<tr><th>Collection</th><th>Module</th><th>Description</th></tr>
+<tr><td><code>avertissements</code></td><td>suivi</td><td>Avertissements disciplinaires par élève</td></tr>
+<tr><td><code>absences</code></td><td>suivi</td><td>Absences et retards par élève</td></tr>
+<tr><td><code>convocations</code></td><td>suivi</td><td>Convocations générées après seuil d'avertissements</td></tr>
+<tr><td><code>exclusions</code></td><td>exclusions</td><td>Exclusions d'élèves</td></tr>
+<tr><td><code>departs</code></td><td>departs</td><td>Départs d'élèves</td></tr>
 </table>
 
 <div class="doc-footer">

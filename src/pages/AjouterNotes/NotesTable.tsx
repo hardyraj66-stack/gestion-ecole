@@ -54,7 +54,7 @@ export function NotesTable({ rows, onNoteChange, onCommentChange, readOnly }: No
                   <div className="note-input-wrapper">
                     <input type="number"
                       className={`note-field ${hasNote ? (row.note! >= 10 ? 'note-field-good' : 'note-field-bad') : ''} ${readOnly ? 'note-field-readonly' : ''}`}
-                      value={row.note ?? ''} onChange={e => { if (readOnly) return; onNoteChange(row.eleve.id, e.target.value === '' ? null : Number(e.target.value)); }}
+                      value={row.note ?? ''} onChange={e => { if (readOnly) return; const v = e.target.value === '' ? null : Math.min(20, Math.max(0, Number(e.target.value))); onNoteChange(row.eleve.id, v); }}
                       min={0} max={20} step={0.5} placeholder="—" disabled={readOnly} />
                     {hasNote && <span className="note-field-indicator" style={{ background: noteColor }} />}
                   </div>

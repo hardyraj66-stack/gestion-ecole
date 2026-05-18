@@ -4,39 +4,56 @@
 <div class="doc">
 <h1>📝 Module Notes & Bulletin</h1>
 <p class="subtitle">Notes par élève/matière/trimestre, calcul du bulletin et des moyennes</p>
+
 <h2>Schéma Note</h2>
 <pre><code>{
   eleve_id:    String  (requis) // référence Eleve._id
   matiere_id:  String  (requis) // référence Matiere._id
   valeur:      Number  (requis) // 0 à 20, step 0.5
   trimestre:   Enum    [1, 2, 3]
-  date:        String  (requis) // "2024-10-15"
+  date:        String  (requis) // "2024-10-15" — date de saisie (today au moment de l'enregistrement)
   commentaire: String  (optionnel)
 }</code></pre>
-<h2>Endpoints API</h2>
+
+<h2>Validation</h2>
+<ul>
+<li><code>valeur</code> doit être comprise entre <strong>0 et 20</strong> inclus</li>
+<li>Le backend (<code>NotesService</code>) rejette avec <code>400 Bad Request</code> toute valeur hors de cette plage</li>
+<li>Le frontend clamp la valeur à <code>[0, 20]</code> dès la saisie, et re-valide avant l'envoi</li>
+</ul>
+
+<h2>Endpoints API — Write</h2>
 <table>
 <tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
 <tr><td><span class="badge b-get">GET</span></td><td><code>/notes</code></td><td>Toutes les notes</td></tr>
 <tr><td><span class="badge b-get">GET</span></td><td><code>/notes/:id</code></td><td>Une note</td></tr>
-<tr><td><span class="badge b-get">GET</span></td><td><code>/notes/bulletin/:eleveId?trimestre=1</code></td><td>Bulletin d'un élève</td></tr>
 <tr><td><span class="badge b-post">POST</span></td><td><code>/notes</code></td><td>Créer une note</td></tr>
 <tr><td><span class="badge b-patch">PATCH</span></td><td><code>/notes/:id</code></td><td>Modifier</td></tr>
 <tr><td><span class="badge b-delete">DELETE</span></td><td><code>/notes/:id</code></td><td>Supprimer</td></tr>
 </table>
-<h2>Endpoint Bulletin — Détail</h2>
-<p><code>GET /notes/bulletin/:eleveId?trimestre=1</code> retourne un tableau de <code>BulletinMatiere</code> :</p>
-<pre><code>[{
-  matiere_id:  "...",
-  matiere_nom: "Mathématiques",
-  code:        "MATH",
-  coefficient: 4,
-  notes:       [15, 12.5, 14],       // toutes les notes du trimestre
-  moyenne:     13.8                   // moyenne arithmétique arrondie 1 décimale
-}]</code></pre>
+
+<h2>Endpoint Read — Bulletin</h2>
+<p><code>GET /read/bulletin/:eleveId?trimestre=1</code> retourne un objet complet :</p>
+<pre><code>{
+  eleve: { ... },
+  classe: { ... },
+  bulletin: [{
+    matiere_id:  "...",
+    matiere_nom: "Mathématiques",
+    code:        "MATH",
+    coefficient: 4,          // résolu selon le niveau de la classe de l'élève
+    notes:       [15, 12.5, 14],
+    moyenne:     13.8        // moyenne arithmétique arrondie 1 décimale
+  }]
+}</code></pre>
+
+<div class="callout callout-info"><p><strong>Résolution du coefficient</strong> : le <code>ReadService</code> cherche dans <code>matiere.coefficients[]</code> l'entrée dont le <code>niveau</code> correspond à la classe de l'élève. Si non trouvé, il utilise le coefficient global héritage (<code>matiere.coefficient</code>).</p></div>
+
 <h3>Calcul de la moyenne générale (frontend)</h3>
 <pre><code>totalCoef = Σ coefficient (matières avec notes)
 somme     = Σ (moyenne_matière × coefficient)
 générale  = Math.round((somme / totalCoef) * 10) / 10</code></pre>
+
 <h2>Système de mentions</h2>
 <table>
 <tr><th>Moyenne</th><th>Mention</th><th>Badge</th></tr>
@@ -46,15 +63,15 @@ générale  = Math.round((somme / totalCoef) * 10) / 10</code></pre>
 <tr><td>≥ 10</td><td>Passable</td><td><span class="badge b-patch">warning</span></td></tr>
 <tr><td>&lt; 10</td><td>Insuffisant</td><td><span class="badge b-delete">danger</span></td></tr>
 </table>
+
 <h2>Couleurs des notes</h2>
 <table>
-<tr><th>Plage</th><th>Couleur</th></tr>
-<tr><td>≥ 16</td><td style="color:#16a34a">■ #16a34a (vert)</td></tr>
-<tr><td>≥ 14</td><td style="color:#65a30d">■ #65a30d (vert-jaune)</td></tr>
-<tr><td>≥ 10</td><td style="color:#d97706">■ #d97706 (orange)</td></tr>
-<tr><td>≥ 8</td><td style="color:#ea580c">■ #ea580c (vermillon)</td></tr>
-<tr><td>&lt; 8</td><td style="color:#dc2626">■ #dc2626 (rouge)</td></tr>
+<tr><th>Plage</th><th>Couleur</th><th>CSS var</th></tr>
+<tr><td>≥ 16</td><td style="color:#16a34a">■ vert</td><td><code>var(--success)</code></td></tr>
+<tr><td>≥ 10</td><td style="color:#d97706">■ orange</td><td><code>var(--warning)</code></td></tr>
+<tr><td>&lt; 10</td><td style="color:#dc2626">■ rouge</td><td><code>var(--danger)</code></td></tr>
 </table>
+
 <div class="doc-footer">
 <a href="06-api-matieres.html">← Module Matières</a>
 <a href="08-api-planning.html">Module Planning →</a>

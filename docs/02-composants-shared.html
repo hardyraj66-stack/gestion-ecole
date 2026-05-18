@@ -4,7 +4,7 @@
 <div class="doc">
 
 <h1>🧩 Composants partagés</h1>
-<p class="subtitle">18 composants réutilisables dans <code>src/components/shared/</code></p>
+<p class="subtitle">20 composants réutilisables dans <code>src/components/shared/</code></p>
 
 <h2>Catalogue</h2>
 <table>
@@ -27,6 +27,7 @@
 <tr><td><strong>ColorPicker</strong></td><td>ColorPicker.tsx</td><td><code>colors: ColorOption[]</code>, <code>value</code>, <code>onChange</code></td></tr>
 <tr><td><strong>FormGrid</strong></td><td>FormGrid.tsx</td><td><code>columns</code> (1-4), + <code>FormSection</code> (titre), + <code>FormActions</code></td></tr>
 <tr><td><strong>InfoBar / FilterBar</strong></td><td>InfoBar.tsx / FilterBar.tsx</td><td>Barres contextuelles avec <code>items</code> ou <code>children</code> + <code>count</code></td></tr>
+<tr><td><strong>Popover</strong></td><td>Popover.tsx</td><td><code>trigger</code>, <code>open</code>, <code>onClose</code>, <code>align</code> (left/right) — fermeture clic extérieur + Échap</td></tr>
 <tr><td><strong>ConfirmDialog</strong></td><td>ConfirmDialog.tsx</td><td>Provider global + hook <code>useConfirm()</code> → <code>Promise&lt;boolean&gt;</code></td></tr>
 </table>
 
@@ -87,6 +88,22 @@ const paged = paginate(items, page, PAGE_SIZE);
 <li>Bouton ✕ pour effacer la saisie</li>
 <li>Fermeture automatique au clic extérieur</li>
 </ul>
+
+<h2>Popover — Détails</h2>
+<p>Conteneur positionné relatif au trigger, avec gestion du clic extérieur et de la touche Échap.</p>
+<pre><code>const [open, setOpen] = useState(false);
+
+&lt;Popover
+  open={open}
+  onClose={() => setOpen(false)}
+  align="left"
+  trigger={
+    &lt;button onClick={() => setOpen(true)}&gt;Ouvrir&lt;/button&gt;
+  }
+&gt;
+  &lt;div&gt;Contenu du popover&lt;/div&gt;
+&lt;/Popover&gt;</code></pre>
+<p>Utilisé notamment dans <code>ElevesFiltersBar</code> et <code>NotesFilters</code> pour la sélection niveau→classe en deux étapes.</p>
 
 <h2>Button — Détails</h2>
 <p>Le composant <code>Button</code> peut rendre un <code>&lt;button&gt;</code> ou un <code>&lt;Link&gt;</code> React Router :</p>
