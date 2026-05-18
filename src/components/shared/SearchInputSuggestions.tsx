@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Icon, Icons } from './Icon';
 
+function getInitial(label: string): string {
+  const parts = label.trim().split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return label.slice(0, 2).toUpperCase();
+}
+
 export interface Suggestion {
   id: string;
   label: string;
@@ -105,7 +111,7 @@ export function SearchInputSuggestions({
               className={`search-suggestion-item${idx === activeIdx ? ' search-suggestion-item-active' : ''}`}
               onMouseDown={() => handleSelect(s)}
             >
-              <Icon path={Icons.search} size={14} />
+              <div className="search-suggestion-avatar">{getInitial(s.label)}</div>
               <div className="search-suggestion-text">
                 <span className="search-suggestion-label">{s.label}</span>
                 {s.sublabel && <span className="search-suggestion-sub">{s.sublabel}</span>}
