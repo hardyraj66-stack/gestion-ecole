@@ -23,8 +23,8 @@ export const readApi = {
   classeEleves: (id: string, page?: number, limit?: number, search?: string) =>
     get<any>(`/classes/${id}/eleves${qs({ page, limit, search })}`),
 
-  elevesList: (page?: number, limit?: number, search?: string, classeId?: string) =>
-    get<any>(`/eleves${qs({ page, limit, search, classeId })}`),
+  elevesList: (page?: number, limit?: number, search?: string, classeId?: string, eleveId?: string) =>
+    get<any>(`/eleves${qs({ page, limit, search, classeId, eleveId })}`),
 
   matieresList: (page?: number, limit?: number) =>
     get<any>(`/matieres${qs({ page, limit })}`),

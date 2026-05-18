@@ -28,9 +28,9 @@ export class ReadController {
   @Get('eleves')
   getElevesList(
     @Query('page') p?: string, @Query('limit') l?: string,
-    @Query('search') s?: string, @Query('classeId') cid?: string,
+    @Query('search') s?: string, @Query('classeId') cid?: string, @Query('eleveId') eid?: string,
   ) {
-    return this.service.getElevesList(parseInt(p!) || 1, parseInt(l!) || 12, s || '', cid || '');
+    return this.service.getElevesList(parseInt(p!) || 1, parseInt(l!) || 12, s || '', cid || '', eid || '');
   }
 
   @Get('matieres')

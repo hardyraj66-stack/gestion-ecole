@@ -12,23 +12,27 @@ interface ClasseItem { id: string; nom: string; nb_eleves: number; capacite: num
 interface ElevesFiltersBarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  onSuggestionSelect: (eleveId: string) => void;
   selectedClasseId: string;
   selectedClasseNom: string;
   selectedNiveau: string;
   onNiveauClasseChange: (niveauLabel: string, classeId: string, classeNom: string) => void;
   onReset: () => void;
   count: number;
+  hasEleveFilter: boolean;
 }
 
 export function ElevesFiltersBar({
   searchTerm,
   onSearchChange,
+  onSuggestionSelect,
   selectedClasseId,
   selectedClasseNom,
   selectedNiveau,
   onNiveauClasseChange,
   onReset,
   count,
+  hasEleveFilter,
 }: ElevesFiltersBarProps) {
   const [niveaux, setNiveaux] = useState<NiveauItem[]>([]);
   const [classes, setClasses] = useState<ClasseItem[]>([]);
@@ -76,10 +80,10 @@ export function ElevesFiltersBar({
   }, []);
 
   const handleSuggestionSelect = (s: Suggestion) => {
-    onSearchChange(s.label);
+    onSuggestionSelect(s.id);
   };
 
-  const hasFilter = !!selectedClasseId || !!searchTerm;
+  const hasFilter = !!selectedClasseId || !!searchTerm || hasEleveFilter;
 
   // Fermer popover classes si clic extérieur (géré par Popover, mais on le ferme aussi au reset)
   useEffect(() => {

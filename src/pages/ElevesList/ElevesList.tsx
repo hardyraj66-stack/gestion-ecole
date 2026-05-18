@@ -21,8 +21,9 @@ export function ElevesList() {
   const [classeId, setClasseId] = useState('');
   const [classeNom, setClasseNom] = useState('');
   const [niveau, setNiveau] = useState('');
+  const [eleveId, setEleveId] = useState('');
 
-  const { data, loading, error } = useElevesListData(page, search, classeId);
+  const { data, loading, error } = useElevesListData(page, search, classeId, eleveId);
 
   const eleves = data?.eleves || [];
   const classes = data?.classes || [];
@@ -32,7 +33,8 @@ export function ElevesList() {
   if (loading && !data) return <PageLoader />;
   if (error) return <Alert variant="error">Problème de chargement des élèves.</Alert>;
 
-  const handleSearch = (s: string) => { setSearch(s); setPage(1); };
+  const handleSearch = (s: string) => { setSearch(s); setEleveId(''); setPage(1); };
+  const handleSuggestionSelect = (id: string) => { setEleveId(id); setSearch(''); setPage(1); };
 
   const handleNiveauClasseChange = (niveauLabel: string, cid: string, nom: string) => {
     setNiveau(niveauLabel);
@@ -46,6 +48,7 @@ export function ElevesList() {
     setClasseId('');
     setClasseNom('');
     setNiveau('');
+    setEleveId('');
     setPage(1);
   };
 
@@ -58,12 +61,14 @@ export function ElevesList() {
       <ElevesFiltersBar
         searchTerm={search}
         onSearchChange={handleSearch}
+        onSuggestionSelect={handleSuggestionSelect}
         selectedClasseId={classeId}
         selectedClasseNom={classeNom}
         selectedNiveau={niveau}
         onNiveauClasseChange={handleNiveauClasseChange}
         onReset={handleReset}
         count={total}
+        hasEleveFilter={!!eleveId}
       />
 
       {totalAll === 0 ? (

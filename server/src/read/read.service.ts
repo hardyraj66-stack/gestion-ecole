@@ -100,14 +100,29 @@ export class ReadService {
   }
 
   // ============ ELEVES LIST ============
-  async getElevesList(page = 1, limit = 12, search = '', classeId = '') {
+  async getElevesList(page = 1, limit = 12, search = '', classeId = '', eleveId = '') {
     const filter: any = {};
-    if (classeId) filter.classe_id = classeId;
-    if (search) {
-      filter.$or = [
-        { nom: { $regex: search, $options: 'i' } },
-        { prenom: { $regex: search, $options: 'i' } },
-      ];
+    if (eleveId) {
+      filter.source_id = eleveId;
+    } else {
+      if (classeId) filter.classe_id = classeId;
+      if (search) {
+        const tokens = search.trim().split(/\s+/);
+        if (tokens.length >= 2) {
+          // "Julien Bertrand" → matche prénom OU nom sur chaque token
+          filter.$and = tokens.map(t => ({
+            $or: [
+              { nom: { $regex: t, $options: 'i' } },
+              { prenom: { $regex: t, $options: 'i' } },
+            ],
+          }));
+        } else {
+          filter.$or = [
+            { nom: { $regex: search, $options: 'i' } },
+            { prenom: { $regex: search, $options: 'i' } },
+          ];
+        }
+      }
     }
 
     const [items, total, classes] = await Promise.all([
