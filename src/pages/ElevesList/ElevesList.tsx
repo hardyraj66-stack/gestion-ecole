@@ -15,9 +15,12 @@ import { ElevesListTable } from './ElevesListTable';
 export function ElevesList() {
   const { delete: deleteEleve } = useEleves();
   const { isViewingArchive: readOnly } = useViewing();
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [classeId, setClasseId] = useState('');
+  const [classeNom, setClasseNom] = useState('');
+  const [niveau, setNiveau] = useState('');
 
   const { data, loading, error } = useElevesListData(page, search, classeId);
 
@@ -30,7 +33,21 @@ export function ElevesList() {
   if (error) return <Alert variant="error">Problème de chargement des élèves.</Alert>;
 
   const handleSearch = (s: string) => { setSearch(s); setPage(1); };
-  const handleClasseFilter = (cid: string) => { setClasseId(cid); setPage(1); };
+
+  const handleNiveauClasseChange = (niveauLabel: string, cid: string, nom: string) => {
+    setNiveau(niveauLabel);
+    setClasseId(cid);
+    setClasseNom(nom);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearch('');
+    setClasseId('');
+    setClasseNom('');
+    setNiveau('');
+    setPage(1);
+  };
 
   return (
     <div>
@@ -38,12 +55,23 @@ export function ElevesList() {
         {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">+ Nouvel élève</Button>}
       </PageHeader>
 
-      <ElevesFiltersBar searchTerm={search} onSearchChange={handleSearch} selectedClasseId={classeId}
-        onClasseChange={handleClasseFilter} classes={classes} count={total} />
+      <ElevesFiltersBar
+        searchTerm={search}
+        onSearchChange={handleSearch}
+        selectedClasseId={classeId}
+        selectedClasseNom={classeNom}
+        selectedNiveau={niveau}
+        onNiveauClasseChange={handleNiveauClasseChange}
+        onReset={handleReset}
+        count={total}
+      />
 
       {totalAll === 0 ? (
-        <EmptyState icon={<Icon path={Icons.users} size={28} />} message="Aucun élève inscrit"
-          action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">Inscrire</Button> : undefined} />
+        <EmptyState
+          icon={<Icon path={Icons.users} size={28} />}
+          message="Aucun élève inscrit"
+          action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">Inscrire</Button> : undefined}
+        />
       ) : total === 0 ? (
         <EmptyState icon={<Icon path={Icons.search} size={28} />} message="Aucun élève ne correspond" />
       ) : (

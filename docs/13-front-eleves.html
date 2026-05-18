@@ -6,7 +6,7 @@
 <p class="subtitle">Pages <code>/eleves</code>, <code>/eleves/nouveau</code>, <code>/eleves/:id/bulletin</code></p>
 
 <h2>Liste — <code>/eleves</code></h2>
-<p>La page appelle <code>GET /read/eleves?page=X&limit=12&search=...&classeId=...</code>.</p>
+<p>La page appelle <code>GET /read/eleves?page=X&amp;limit=12&amp;search=...&amp;classeId=...</code>.</p>
 <ul>
 <li><strong>Pagination backend</strong> : le frontend ne stocke que la page courante</li>
 <li><strong>Recherche backend</strong> : MongoDB filtre via <code>$or</code> sur <code>nom</code> et <code>prenom</code></li>
@@ -15,11 +15,45 @@
 </ul>
 <p><strong>Important</strong> : les données proviennent de la collection <code>read_eleves</code>, qui contient déjà <code>classe_nom</code> et <code>classe_niveau</code>.</p>
 
+<h2>Barre de filtres — <code>ElevesFiltersBar</code></h2>
+<p>La barre de filtres propose une navigation progressive en deux étapes : <strong>niveau → classe</strong>.</p>
+
+<h3>Recherche avec auto-complétion — <code>SearchInputSuggestions</code></h3>
+<p>Composant réutilisable (<code>src/components/shared/SearchInputSuggestions.tsx</code>) qui remplace le <code>SearchInput</code> basique.</p>
+<ul>
+<li>Debounce de 250 ms avant chaque appel de suggestions</li>
+<li>Suggestions à partir de 2 caractères saisis, via <code>fetchSuggestions(query)</code> passé en prop</li>
+<li>Sur la page élèves, appelle <code>GET /read/eleves?page=1&amp;limit=8&amp;search=...</code> pour produire les suggestions</li>
+<li>Chaque suggestion affiche le nom complet + la classe de l'élève (<code>sublabel</code>)</li>
+<li>Navigation clavier : <kbd>↑</kbd> / <kbd>↓</kbd> pour parcourir, <kbd>Entrée</kbd> pour sélectionner, <kbd>Échap</kbd> pour fermer</li>
+<li>Bouton ✕ pour effacer la saisie</li>
+</ul>
+
+<h3>Filtre niveau → popover niveaux</h3>
+<ul>
+<li>Un bouton <em>Niveau / Classe</em> ouvre un <strong>Popover</strong> (<code>src/components/shared/Popover.tsx</code>) listant les niveaux disponibles</li>
+<li>Les niveaux sont chargés via <code>GET /read/niveaux</code> une seule fois (mémoïsé via <code>useRef</code>)</li>
+<li>Chaque entrée affiche le niveau + le nombre de classes (<code>Badge</code>)</li>
+</ul>
+
+<h3>Sélection de classe → modal classes</h3>
+<ul>
+<li>La sélection d'un niveau ferme le popover et ouvre un <strong>modal overlay</strong> listant les classes de ce niveau</li>
+<li>Les classes sont chargées via <code>GET /read/niveaux/:niveau/classes</code> à chaque sélection de niveau</li>
+<li>Chaque classe affiche : nom, badge <em>Complète</em> si <code>pleine</code>, compteur élèves/capacité, barre de progression</li>
+<li>Un bouton ← <em>Niveaux</em> permet de revenir au popover précédent</li>
+<li>La sélection d'une classe déclenche l'appel <code>GET /read/eleves?classeId=...</code> et ferme le modal</li>
+</ul>
+
+<h3>Réinitialisation</h3>
+<p>Un bouton <em>Réinitialiser</em> apparaît dès qu'un filtre ou une recherche est actif. Il vide tous les états (search, classeId, niveau) et remet la pagination à 1.</p>
+
 <h2>Inscription — <code>/eleves/nouveau</code></h2>
-<p>Le formulaire charge la liste des classes via <code>GET /read/create-eleve</code> au montage, une seule fois. En mode archive, la page redirige automatiquement.</p>
+<p>Le formulaire charge les niveaux disponibles via <code>GET /read/create-eleve</code> (alias de <code>GET /read/niveaux</code>) au montage, une seule fois. En mode archive, la page redirige automatiquement.</p>
+<p>La sélection d'une classe suit le même parcours niveau → popover classes que dans la liste, via <code>GET /read/niveaux/:niveau/classes</code>.</p>
 
 <h2>Bulletin — <code>/eleves/:id/bulletin</code></h2>
-<p>Le bulletin est chargé via <code>GET /read/bulletin/:eleveId?trimestre=X</code>. Chaque changement d’onglet trimestre déclenche un nouvel appel API ciblé.</p>
+<p>Le bulletin est chargé via <code>GET /read/bulletin/:eleveId?trimestre=X</code>. Chaque changement d'onglet trimestre déclenche un nouvel appel API ciblé.</p>
 <ul>
 <li>Données renvoyées : <code>{ eleve, classe, bulletin[] }</code></li>
 <li>Le frontend calcule la moyenne générale pondérée à partir de <code>bulletin[]</code></li>

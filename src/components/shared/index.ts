@@ -22,3 +22,4 @@ export { AuditEntry } from './AuditEntry';
 export { MiniPagination } from './MiniPagination';
 export { PipelineStep, PipelineArrow } from './PipelineStep';
 export { Popover } from './Popover';
+export { SearchInputSuggestions, type Suggestion } from './SearchInputSuggestions';

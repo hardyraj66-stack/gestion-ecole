@@ -4,7 +4,7 @@
 <div class="doc">
 
 <h1>🧩 Composants partagés</h1>
-<p class="subtitle">17 composants réutilisables dans <code>src/components/shared/</code></p>
+<p class="subtitle">18 composants réutilisables dans <code>src/components/shared/</code></p>
 
 <h2>Catalogue</h2>
 <table>
@@ -23,6 +23,7 @@
 <tr><td><strong>ProgressBar</strong></td><td>ProgressBar.tsx</td><td><code>value</code>, <code>max</code>, <code>showLabel</code>, <code>variant</code> — rouge auto si ≥ 90%</td></tr>
 <tr><td><strong>Icon</strong></td><td>Icon.tsx</td><td><code>path</code> (SVG d), <code>size</code>, <code>strokeWidth</code> + dictionnaire <code>Icons</code></td></tr>
 <tr><td><strong>SearchInput</strong></td><td>SearchInput.tsx</td><td><code>onSearch</code>, icône loupe intégrée</td></tr>
+<tr><td><strong>SearchInputSuggestions</strong></td><td>SearchInputSuggestions.tsx</td><td><code>value</code>, <code>onChange</code>, <code>fetchSuggestions</code> (async → <code>Suggestion[]</code>), <code>onSelect</code>, <code>debounceMs</code> — auto-complétion avec navigation clavier</td></tr>
 <tr><td><strong>ColorPicker</strong></td><td>ColorPicker.tsx</td><td><code>colors: ColorOption[]</code>, <code>value</code>, <code>onChange</code></td></tr>
 <tr><td><strong>FormGrid</strong></td><td>FormGrid.tsx</td><td><code>columns</code> (1-4), + <code>FormSection</code> (titre), + <code>FormActions</code></td></tr>
 <tr><td><strong>InfoBar / FilterBar</strong></td><td>InfoBar.tsx / FilterBar.tsx</td><td>Barres contextuelles avec <code>items</code> ou <code>children</code> + <code>count</code></td></tr>
@@ -60,6 +61,32 @@ const paged = paginate(items, page, PAGE_SIZE);
   onPageChange={setPage}
 /&gt;</code></pre>
 <p>La pagination affiche des ellipses intelligentes quand il y a plus de 7 pages. Elle se masque automatiquement pour 1 seule page.</p>
+
+<h2>SearchInputSuggestions — Détails</h2>
+<p>Version enrichie de <code>SearchInput</code> avec auto-complétion dynamique et navigation clavier.</p>
+<pre><code>const fetchSuggestions = useCallback(async (query: string): Promise&lt;Suggestion[]&gt; =&gt; {
+  const data = await readApi.elevesList(1, 8, query, '');
+  return (data?.eleves ?? []).map(e =&gt; ({
+    id: e.id,
+    label: `${e.prenom} ${e.nom}`,
+    sublabel: e.classe_nom,
+  }));
+}, []);
+
+&lt;SearchInputSuggestions
+  placeholder="Rechercher par nom ou prénom…"
+  value={search}
+  onChange={setSearch}
+  onSelect={s =&gt; setSearch(s.label)}
+  fetchSuggestions={fetchSuggestions}
+  debounceMs={250}
+/&gt;</code></pre>
+<ul>
+<li>Suggestions à partir de 2 caractères, debounce configurable</li>
+<li>Navigation : <kbd>↑</kbd> / <kbd>↓</kbd>, <kbd>Entrée</kbd> pour sélectionner, <kbd>Échap</kbd> pour fermer</li>
+<li>Bouton ✕ pour effacer la saisie</li>
+<li>Fermeture automatique au clic extérieur</li>
+</ul>
 
 <h2>Button — Détails</h2>
 <p>Le composant <code>Button</code> peut rendre un <code>&lt;button&gt;</code> ou un <code>&lt;Link&gt;</code> React Router :</p>

@@ -2636,3 +2636,322 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* ========== SEARCH INPUT WITH SUGGESTIONS ========== */
+.search-suggestions-container {
+  position: relative;
+  display: inline-block;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 50%;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.search-clear-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.search-suggestions-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: 260px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  z-index: 200;
+  animation: popoverIn 0.15s ease;
+}
+
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.1s;
+}
+
+.search-suggestion-item:hover,
+.search-suggestion-item-active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.search-suggestion-item svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.search-suggestion-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.search-suggestion-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.search-suggestion-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ========== NIVEAU FILTER BUTTON ========== */
+.niveau-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.niveau-filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.niveau-filter-btn-active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.niveau-filter-btn-active:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+/* ========== NIVEAU POPOVER ========== */
+.niveau-popover-header {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.niveau-popover-loading {
+  padding: 1rem 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.niveau-popover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+}
+
+.niveau-popover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  transition: background 0.12s;
+  gap: 0.75rem;
+}
+
+.niveau-popover-item:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.niveau-popover-item-active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.niveau-popover-label {
+  flex: 1;
+  text-align: left;
+}
+
+/* ========== CLASSES POPOVER (overlay modal) ========== */
+.classes-popover-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.classes-popover {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.18s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.classes-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.classes-popover-back {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 0.25rem 0.4rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s;
+}
+
+.classes-popover-back:hover {
+  background: var(--primary-light);
+}
+
+.classes-popover-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.classes-popover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.classes-popover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+  gap: 0.75rem;
+}
+
+.classes-popover-item:hover {
+  background: var(--primary-light);
+}
+
+.classes-popover-item-active {
+  background: var(--primary-light);
+}
+
+.classes-popover-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.classes-popover-item-nom {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.classes-popover-item-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.classes-popover-item-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ========== FILTER RESET BUTTON ========== */
+.filter-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.filter-reset-btn:hover {
+  background: #fef2f2;
+}
