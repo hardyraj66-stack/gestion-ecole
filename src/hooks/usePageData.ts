@@ -61,9 +61,11 @@ export function usePageFetch<T>(
     isFetchingRef.current = false;
   }, [fetcher, isViewingArchive, snapshot]);
 
-  // Re-fetch quand page/search etc. change
+  // Re-fetch quand page/search etc. change — silencieux si on a déjà des données
+  const dataRef = useRef<T | null>(null);
+  dataRef.current = data;
   useEffect(() => {
-    runFetch(false);
+    runFetch(dataRef.current !== null);
   }, [runFetch]);
 
   // Re-fetch quand un socket notifie un changement ciblé
@@ -95,8 +97,8 @@ export function useClassesListData(page = 1, search = '', niveau = '') {
   return usePageFetch(useCallback(() => readApi.classesList(page, 8, search, niveau), [page, search, niveau]), undefined, 'classes');
 }
 
-export function useClasseElevesData(classeId: string, page = 1, search = '') {
-  return usePageFetch(useCallback(() => readApi.classeEleves(classeId, page, 10, search), [classeId, page, search]), undefined, 'eleves');
+export function useClasseElevesData(classeId: string, page = 1, search = '', eleveId = '') {
+  return usePageFetch(useCallback(() => readApi.classeEleves(classeId, page, 10, search, eleveId), [classeId, page, search, eleveId]), undefined, 'eleves');
 }
 
 export function useElevesListData(page = 1, search = '', classeId = '', eleveId = '') {

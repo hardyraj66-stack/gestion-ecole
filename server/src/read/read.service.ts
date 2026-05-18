@@ -74,16 +74,28 @@ export class ReadService {
   }
 
   // ============ CLASSE ELEVES ============
-  async getClasseEleves(classeId: string, page = 1, limit = 10, search = '') {
+  async getClasseEleves(classeId: string, page = 1, limit = 10, search = '', eleveId = '') {
     const classe = await this.readClasseModel.findOne({ source_id: classeId }).exec();
     if (!classe) return null;
 
     const filter: any = { classe_id: classeId };
-    if (search) {
-      filter.$or = [
-        { nom: { $regex: search, $options: 'i' } },
-        { prenom: { $regex: search, $options: 'i' } },
-      ];
+    if (eleveId) {
+      filter.source_id = eleveId;
+    } else if (search) {
+      const tokens = search.trim().split(/\s+/);
+      if (tokens.length >= 2) {
+        filter.$and = tokens.map(t => ({
+          $or: [
+            { nom: { $regex: t, $options: 'i' } },
+            { prenom: { $regex: t, $options: 'i' } },
+          ],
+        }));
+      } else {
+        filter.$or = [
+          { nom: { $regex: search, $options: 'i' } },
+          { prenom: { $regex: search, $options: 'i' } },
+        ];
+      }
     }
 
     const [items, total] = await Promise.all([

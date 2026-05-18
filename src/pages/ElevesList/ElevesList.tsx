@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useEleves } from '../../contexts/EleveContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useElevesListData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -13,7 +12,6 @@ import { ElevesFiltersBar } from './ElevesFiltersBar';
 import { ElevesListTable } from './ElevesListTable';
 
 export function ElevesList() {
-  const { delete: deleteEleve } = useEleves();
   const { isViewingArchive: readOnly } = useViewing();
 
   const [page, setPage] = useState(1);
@@ -81,7 +79,7 @@ export function ElevesList() {
         <EmptyState icon={<Icon path={Icons.search} size={28} />} message="Aucun élève ne correspond" />
       ) : (
         <>
-          <ElevesListTable eleves={eleves} classes={classes} onDelete={readOnly ? () => {} : deleteEleve} readOnly={readOnly} />
+          <ElevesListTable eleves={eleves} classes={classes} />
           <Pagination currentPage={page} totalItems={total} pageSize={12} onPageChange={setPage} />
         </>
       )}

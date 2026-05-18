@@ -36,11 +36,11 @@ export function EleveFiche() {
         <div className="fiche-col-left">
           <FicheIdentite eleve={eleve} classe={classe} salleActuelle={salleActuelle} creneaux={creneaux} />
           <FicheFamille eleve={eleve} readOnly={readOnly} eleveId={id!} />
-          <FicheShortcuts eleveId={id!} classeId={eleve.classe_id} />
         </div>
 
         {/* Colonne droite */}
         <div className="fiche-col-right">
+          <FicheShortcuts eleveId={id!} classeId={eleve.classe_id} />
           <FicheAvertissements eleveId={id!} anneeActive={anneeActive} readOnly={readOnly} />
           <FicheAssiduité eleveId={id!} readOnly={readOnly} />
         </div>

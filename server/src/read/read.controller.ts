@@ -18,9 +18,9 @@ export class ReadController {
   @Get('classes/:id/eleves')
   async getClasseEleves(
     @Param('id') id: string,
-    @Query('page') p?: string, @Query('limit') l?: string, @Query('search') s?: string,
+    @Query('page') p?: string, @Query('limit') l?: string, @Query('search') s?: string, @Query('eleveId') eleveId?: string,
   ) {
-    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '');
+    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '', eleveId || '');
     if (!data) throw new NotFoundException();
     return data;
   }

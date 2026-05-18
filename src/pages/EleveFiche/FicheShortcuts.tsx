@@ -52,7 +52,6 @@ export function FicheShortcuts({ eleveId, classeId }: Props) {
               <span className="fiche-shortcut-label">{s.label}</span>
               <span className="fiche-shortcut-sub">{s.sublabel}</span>
             </div>
-            <Icon path="M9 5l7 7-7 7" size={14} />
           </Link>
         ))}
       </div>

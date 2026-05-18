@@ -18,6 +18,7 @@ interface SearchInputSuggestionsProps {
   value: string;
   onChange: (value: string) => void;
   onSelect?: (suggestion: Suggestion) => void;
+  onCommit?: (value: string) => void;
   fetchSuggestions: (query: string) => Promise<Suggestion[]>;
   debounceMs?: number;
 }
@@ -27,6 +28,7 @@ export function SearchInputSuggestions({
   value,
   onChange,
   onSelect,
+  onCommit,
   fetchSuggestions,
   debounceMs = 250,
 }: SearchInputSuggestionsProps) {
@@ -58,11 +60,14 @@ export function SearchInputSuggestions({
     onSelect?.(s);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!open) return;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, suggestions.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, -1)); }
-    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); handleSelect(suggestions[activeIdx]); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (open && activeIdx >= 0) { handleSelect(suggestions[activeIdx]); }
+      else { setOpen(false); onCommit?.(e.currentTarget.value); }
+    }
     else if (e.key === 'Escape') { setOpen(false); setActiveIdx(-1); }
   };
 

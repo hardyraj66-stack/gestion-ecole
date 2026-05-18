@@ -5,27 +5,17 @@ import { Avatar } from '../../components/shared/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/shared/Button';
 import { Table, TableHead, TableBody, TableRow, TableCell } from '../../components/shared/Table';
-import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { getInitials } from '../../utils/helpers';
 
 interface ElevesListTableProps {
   eleves: Eleve[];
   classes: any[];
-  onDelete: (id: string) => void;
-  readOnly?: boolean;
 }
 
-export function ElevesListTable({ eleves, classes, onDelete, readOnly }: ElevesListTableProps) {
-  const confirm = useConfirm();
+export function ElevesListTable({ eleves, classes }: ElevesListTableProps) {
   const navigate = useNavigate();
 
   const getClasseName = (cid: string) => classes.find((c: any) => c.id === cid)?.nom || '—';
-
-  const handleDelete = async (e: Eleve) => {
-    if (readOnly) return;
-    const ok = await confirm({ title: 'Supprimer', message: `Supprimer « ${e.prenom} ${e.nom} » ?`, confirmText: 'Supprimer', variant: 'danger' });
-    if (ok) onDelete(e.id);
-  };
 
   return (
     <Card padding="none">
@@ -49,7 +39,6 @@ export function ElevesListTable({ eleves, classes, onDelete, readOnly }: ElevesL
               <TableCell>
                 <div style={{ display: 'flex', gap: '0.5rem' }} onClick={ev => ev.stopPropagation()}>
                   <Button as="link" to={`/eleves/${e.id}/bulletin`} variant="outline" size="sm">Bulletin</Button>
-                  {!readOnly && <Button variant="danger" size="sm" onClick={() => handleDelete(e)}>✕</Button>}
                 </div>
               </TableCell>
             </TableRow>

@@ -52,13 +52,23 @@
 <p>Page de détail chargée via <code>GET /read/eleves/:id/fiche</code>. Réponse : <code>{ eleve, classe, salleActuelle, creneaux, anneeActive }</code>.</p>
 <p>La page est en lecture seule (<code>readOnly</code>) lorsque l'utilisateur consulte une archive via <code>ViewingContext</code>.</p>
 
+<h3>Mise en page — grille 2 colonnes</h3>
+<p>La page utilise une grille CSS (<code>.fiche-layout</code>) à 2 colonnes : colonne gauche fixe à 340 px, colonne droite flexible.</p>
+<table>
+<thead><tr><th>Colonne</th><th>Composants (ordre)</th></tr></thead>
+<tbody>
+<tr><td>Gauche</td><td><code>FicheIdentite</code> → <code>FicheFamille</code></td></tr>
+<tr><td>Droite</td><td><code>FicheShortcuts</code> → <code>FicheAvertissements</code> → <code>FicheAssiduité</code></td></tr>
+</tbody>
+</table>
+
 <h3>Composants de la fiche</h3>
 <table>
 <thead><tr><th>Composant</th><th>Description</th></tr></thead>
 <tbody>
 <tr><td><code>FicheIdentite</code></td><td>Avatar, nom, genre, date de naissance + âge, classe, salle actuelle. Pour les classes à salle variable, calcule la salle du créneau en cours ou du prochain créneau du jour.</td></tr>
 <tr><td><code>FicheFamille</code></td><td>Père, mère (formulaire inline avec statut vivant/décédé), tuteur légal. Enregistrement via <code>PATCH /eleves/:id</code> (contexte <code>useEleves</code>).</td></tr>
-<tr><td><code>FicheShortcuts</code></td><td>4 raccourcis : Notes, Bulletin, Classe, Emploi du temps.</td></tr>
+<tr><td><code>FicheShortcuts</code></td><td>4 raccourcis en grille 2×2 (Notes, Bulletin, Classe, Emploi du temps). Placé en haut de la colonne droite. Chaque carte a bordure, fond grisé et hover bleu.</td></tr>
 <tr><td><code>FicheAvertissements</code></td><td>Liste + formulaire d'ajout (type, date, année scolaire, motif, commentaire). Appels directs à <code>/suivi/:eleveId/avertissements</code>.</td></tr>
 <tr><td><code>FicheAssiduité</code></td><td>Deux sections (absences, retards), chacune avec liste + formulaire. Appels directs à <code>/suivi/:eleveId/absences</code> et <code>/suivi/:eleveId/retards</code>.</td></tr>
 </tbody>
