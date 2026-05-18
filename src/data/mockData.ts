@@ -186,7 +186,8 @@ function generateCreneaux(): Creneau[] {
 
     matieresClasse.forEach(matiere => {
       // 2 à 4 créneaux par matière selon le coefficient
-      const nbCreneaux = Math.min(4, Math.max(1, Math.floor(matiere.coefficient / 1.5)));
+      const coef = matiere.coefficient ?? (matiere.coefficients?.[0]?.coefficient ?? 2);
+      const nbCreneaux = Math.min(4, Math.max(1, Math.floor(coef / 1.5)));
       
       for (let i = 0; i < nbCreneaux; i++) {
         // Trouver un créneau libre

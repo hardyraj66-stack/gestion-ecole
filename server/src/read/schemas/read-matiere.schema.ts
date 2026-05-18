@@ -13,6 +13,8 @@ export class ReadMatiere extends Document {
   @Prop() nom: string;
   @Prop() code: string;
   @Prop() coefficient: number;
+  @Prop({ type: [{ niveau: String, coefficient: Number }], default: [] })
+  coefficients: Array<{ niveau: string; coefficient: number }>;
   @Prop() description: string;
   @Prop() couleur: string;
 }

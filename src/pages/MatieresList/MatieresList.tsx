@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useMatieres } from '../../contexts/MatiereContext';
+import { useState, useEffect } from 'react';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useMatieresListData } from '../../hooks/usePageData';
+import { readApi } from '../../services/readApi';
+import { Matiere } from '../../types';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -10,33 +11,88 @@ import { AddCard } from '../../components/shared/Card';
 import { Icon, Icons } from '../../components/shared/Icon';
 import { Pagination } from '../../components/shared/Pagination';
 import { Alert } from '../../components/shared/Alert';
+import { Select, SelectOption } from '../../components/shared/Select';
 import { MatiereCard } from './MatiereCard';
 
 export function MatieresList() {
-  const { delete: deleteMatiere } = useMatieres();
   const { isViewingArchive: readOnly } = useViewing();
   const [page, setPage] = useState(1);
+  const [niveau, setNiveau] = useState('');
+  const [niveaux, setNiveaux] = useState<string[]>([]);
+  const [localItems, setLocalItems] = useState<Matiere[] | null>(null);
 
-  const { data, loading, error } = useMatieresListData(page);
+  const { data, loading, error } = useMatieresListData(page, niveau);
+
+  useEffect(() => {
+    readApi.niveaux().then((res: any) => {
+      if (res) setNiveaux((res as any[]).map((n: any) => n.niveau));
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (data) setLocalItems(data.items);
+  }, [data]);
+
+  const handleNiveauChange = (n: string) => {
+    setNiveau(n);
+    setPage(1);
+  };
+
+  const handleUpdated = (updated: Matiere) => {
+    setLocalItems(prev => prev ? prev.map(m => m.id === updated.id ? { ...m, ...updated } : m) : prev);
+  };
+
+  const handleDelete = (id: string) => {
+    setLocalItems(prev => prev ? prev.filter(m => m.id !== id) : prev);
+  };
 
   if (loading || !data) return <PageLoader />;
   if (error) return <Alert variant="error">Problème de chargement des matières.</Alert>;
 
-  const { items, total, totalPages } = data;
+  const { total, totalPages } = data;
+  const items = localItems ?? data.items;
+
+  const niveauxOptions: SelectOption[] = [
+    { value: '', label: 'Tous les niveaux' },
+    ...niveaux.map(n => ({ value: n, label: n })),
+  ];
 
   return (
     <div>
       <PageHeader title="Matières" subtitle={`${total} matière(s)`}>
-        {!readOnly && <Button as="link" to="/matieres/nouvelle" variant="primary">+ Nouvelle matière</Button>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ minWidth: 180 }}>
+            <Select
+              options={niveauxOptions}
+              value={niveau}
+              onChange={e => handleNiveauChange(e.target.value)}
+              label=""
+              fullWidth={false}
+            />
+          </div>
+          {!readOnly && <Button as="link" to="/matieres/nouvelle" variant="primary">+ Nouvelle matière</Button>}
+        </div>
       </PageHeader>
 
       {total === 0 ? (
-        <EmptyState icon={<Icon path={Icons.book} size={28} />} message="Aucune matière"
-          action={!readOnly ? <Button as="link" to="/matieres/nouvelle" variant="primary">Créer</Button> : undefined} />
+        <EmptyState
+          icon={<Icon path={Icons.book} size={28} />}
+          message={niveau ? `Aucune matière pour le niveau ${niveau}` : 'Aucune matière'}
+          action={!readOnly ? <Button as="link" to="/matieres/nouvelle" variant="primary">Créer</Button> : undefined}
+        />
       ) : (
         <>
           <div className="matieres-grid">
-            {items.map((m: any) => <MatiereCard key={m.id} matiere={m} onDelete={readOnly ? () => {} : deleteMatiere} readOnly={readOnly} />)}
+            {items.map((m: Matiere) => (
+              <MatiereCard
+                key={m.id}
+                matiere={m}
+                niveaux={niveaux}
+                onDelete={handleDelete}
+                onUpdated={handleUpdated}
+                readOnly={readOnly}
+              />
+            ))}
             {!readOnly && page === totalPages && <AddCard to="/matieres/nouvelle" label="Nouvelle matière" />}
           </div>
           <Pagination currentPage={page} totalItems={total} pageSize={8} onPageChange={setPage} />

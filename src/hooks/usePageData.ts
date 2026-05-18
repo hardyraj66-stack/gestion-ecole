@@ -105,8 +105,8 @@ export function useElevesListData(page = 1, search = '', classeId = '', eleveId 
   return usePageFetch(useCallback(() => readApi.elevesList(page, 12, search, classeId, eleveId), [page, search, classeId, eleveId]), undefined, 'eleves');
 }
 
-export function useMatieresListData(page = 1) {
-  return usePageFetch(useCallback(() => readApi.matieresList(page, 8), [page]), undefined, 'matieres');
+export function useMatieresListData(page = 1, niveau = '') {
+  return usePageFetch(useCallback(() => readApi.matieresList(page, 8, niveau || undefined), [page, niveau]), undefined, 'matieres');
 }
 
 export function useSallesListData(page = 1) {

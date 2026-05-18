@@ -102,11 +102,18 @@ export interface Absence {
   justifiee?: boolean;
 }
 
+export interface CoefficientNiveau {
+  niveau: string;
+  coefficient: number;
+}
+
 export interface Matiere {
   id: string;
   nom: string;
   code: string;
-  coefficient: number;
+  /** Legacy global coefficient — use coefficients[] when available */
+  coefficient?: number;
+  coefficients?: CoefficientNiveau[];
   description?: string;
   couleur?: string;
 }

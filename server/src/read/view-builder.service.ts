@@ -173,8 +173,9 @@ export class ViewBuilderService implements OnModuleInit {
   private async rebuildMatieres() {
     const matieres = await this.matiereModel.find().lean().exec();
     const ops = matieres.map(m => ({ updateOne: { filter: { source_id: m._id.toString() }, update: { $set: {
-      source_id: m._id.toString(), nom: m.nom, code: m.code, coefficient: m.coefficient,
-      description: m.description || '', couleur: m.couleur || '',
+      source_id: m._id.toString(), nom: m.nom, code: m.code, coefficient: (m as any).coefficient ?? 1,
+      coefficients: (m as any).coefficients || [],
+      description: (m as any).description || '', couleur: (m as any).couleur || '',
     }}, upsert: true }}));
     const ids = matieres.map(m => m._id.toString());
     await this.readMatiereModel.deleteMany({ source_id: { $nin: ids } }).exec();

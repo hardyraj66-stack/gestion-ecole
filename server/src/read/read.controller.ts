@@ -34,8 +34,8 @@ export class ReadController {
   }
 
   @Get('matieres')
-  getMatieresList(@Query('page') p?: string, @Query('limit') l?: string) {
-    return this.service.getMatieresList(parseInt(p!) || 1, parseInt(l!) || 8);
+  getMatieresList(@Query('page') p?: string, @Query('limit') l?: string, @Query('niveau') niveau?: string) {
+    return this.service.getMatieresList(parseInt(p!) || 1, parseInt(l!) || 8, niveau || '');
   }
 
   @Get('salles')

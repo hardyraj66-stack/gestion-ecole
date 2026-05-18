@@ -179,10 +179,12 @@ export class ReadService {
   }
 
   // ============ MATIERES LIST ============
-  async getMatieresList(page = 1, limit = 8) {
+  async getMatieresList(page = 1, limit = 8, niveau = '') {
+    const filter: any = {};
+    if (niveau) filter['coefficients.niveau'] = niveau;
     const [items, total] = await Promise.all([
-      this.readMatiereModel.find().skip((page - 1) * limit).limit(limit).exec(),
-      this.readMatiereModel.countDocuments().exec(),
+      this.readMatiereModel.find(filter).skip((page - 1) * limit).limit(limit).exec(),
+      this.readMatiereModel.countDocuments(filter).exec(),
     ]);
     return {
       items: items.map(m => m.toJSON()),
@@ -264,11 +266,21 @@ export class ReadService {
     const map = new Map<string, number[]>();
     for (const n of eleveNotes) { if (!map.has(n.matiere_id)) map.set(n.matiere_id, []); map.get(n.matiere_id)!.push(n.valeur); }
 
+    const niveau = (classe?.toJSON() as any)?.niveau;
     const bulletin = Array.from(map).map(([mid, vals]) => {
       const mat = matieres.find(m => m.source_id === mid);
       if (!mat) return null;
       const moy = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
-      return { matiere_id: mid, matiere_nom: mat.nom, code: mat.code, coefficient: mat.coefficient, notes: vals, moyenne: moy };
+      const matJson = mat.toJSON() as any;
+      const coefficients: Array<{ niveau: string; coefficient: number }> = matJson.coefficients || [];
+      let coeff = matJson.coefficient ?? 1;
+      if (niveau && coefficients.length > 0) {
+        const found = coefficients.find((c: any) => c.niveau === niveau);
+        if (found) coeff = found.coefficient;
+      } else if (coefficients.length === 1) {
+        coeff = coefficients[0].coefficient;
+      }
+      return { matiere_id: mid, matiere_nom: mat.nom, code: mat.code, coefficient: coeff, notes: vals, moyenne: moy };
     }).filter(Boolean);
 
     return { eleve: eleve.toJSON(), classe: classe?.toJSON() || null, bulletin };

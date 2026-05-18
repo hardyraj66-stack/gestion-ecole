@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Patch, Delete, Param, Body, NotFoundException, HttpCode } from '@nestjs/common';
 import { MatieresService } from './matieres.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
@@ -29,6 +29,7 @@ export class MatieresController {
   }
 
   @Delete(':id')
+  @HttpCode(200)
   async delete(@Param('id') id: string) {
     const ok = await this.service.delete(id);
     if (!ok) throw new NotFoundException();

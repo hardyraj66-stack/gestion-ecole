@@ -61,22 +61,38 @@ const classesData = [
   { nom: 'Terminale ES', niveau: 'Terminale', annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 201', salle_type: 'variable' },
 ];
 
+const niveaux = ['6ème', '5ème', '4ème', '3ème', '2nde', '1ère', 'Terminale'];
 const matieresData = [
-  { nom: 'Mathématiques', code: 'MATH', coefficient: 4, description: 'Algèbre, géométrie, analyse', couleur: '#2563eb' },
-  { nom: 'Français', code: 'FR', coefficient: 4, description: 'Grammaire, littérature, expression écrite', couleur: '#7c3aed' },
-  { nom: 'Histoire-Géographie', code: 'HG', coefficient: 3, description: 'Histoire et géographie', couleur: '#d97706' },
-  { nom: 'Anglais', code: 'ANG', coefficient: 3, description: 'Langue vivante 1', couleur: '#dc2626' },
-  { nom: 'Espagnol', code: 'ESP', coefficient: 2, description: 'Langue vivante 2', couleur: '#db2777' },
-  { nom: 'Physique-Chimie', code: 'PC', coefficient: 3, description: 'Sciences physiques et chimiques', couleur: '#0891b2' },
-  { nom: 'SVT', code: 'SVT', coefficient: 2, description: 'Sciences de la vie et de la terre', couleur: '#16a34a' },
-  { nom: 'Technologie', code: 'TECH', coefficient: 2, description: 'Technologie et informatique', couleur: '#475569' },
-  { nom: 'EPS', code: 'EPS', coefficient: 2, description: 'Éducation physique et sportive', couleur: '#ea580c' },
-  { nom: 'Arts Plastiques', code: 'ARTS', coefficient: 1, description: 'Arts visuels et plastiques', couleur: '#a855f7' },
-  { nom: 'Musique', code: 'MUS', coefficient: 1, description: 'Éducation musicale', couleur: '#ec4899' },
-  { nom: 'Allemand', code: 'ALL', coefficient: 2, description: 'Langue vivante 2', couleur: '#f59e0b' },
-  { nom: 'Latin', code: 'LAT', coefficient: 2, description: 'Langue ancienne', couleur: '#6366f1' },
-  { nom: 'Philosophie', code: 'PHILO', coefficient: 4, description: 'Philosophie (Terminale)', couleur: '#8b5cf6' },
-  { nom: 'SES', code: 'SES', coefficient: 3, description: 'Sciences économiques et sociales', couleur: '#14b8a6' },
+  { nom: 'Mathématiques', code: 'MATH', description: 'Algèbre, géométrie, analyse', couleur: '#2563eb',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: n === '2nde' || n === '1ère' || n === 'Terminale' ? 5 : 4 })) },
+  { nom: 'Français', code: 'FR', description: 'Grammaire, littérature, expression écrite', couleur: '#7c3aed',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: n === 'Terminale' ? 3 : 4 })) },
+  { nom: 'Histoire-Géographie', code: 'HG', description: 'Histoire et géographie', couleur: '#d97706',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: n === '2nde' || n === '1ère' || n === 'Terminale' ? 4 : 3 })) },
+  { nom: 'Anglais', code: 'ANG', description: 'Langue vivante 1', couleur: '#dc2626',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: 3 })) },
+  { nom: 'Espagnol', code: 'ESP', description: 'Langue vivante 2', couleur: '#db2777',
+    coefficients: ['4ème','3ème','2nde','1ère','Terminale'].map(n => ({ niveau: n, coefficient: 2 })) },
+  { nom: 'Physique-Chimie', code: 'PC', description: 'Sciences physiques et chimiques', couleur: '#0891b2',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: n === '2nde' || n === '1ère' || n === 'Terminale' ? 4 : 3 })) },
+  { nom: 'SVT', code: 'SVT', description: 'Sciences de la vie et de la terre', couleur: '#16a34a',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: n === 'Terminale' ? 3 : 2 })) },
+  { nom: 'Technologie', code: 'TECH', description: 'Technologie et informatique', couleur: '#475569',
+    coefficients: ['6ème','5ème','4ème','3ème'].map(n => ({ niveau: n, coefficient: 2 })) },
+  { nom: 'EPS', code: 'EPS', description: 'Éducation physique et sportive', couleur: '#ea580c',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: 2 })) },
+  { nom: 'Arts Plastiques', code: 'ARTS', description: 'Arts visuels et plastiques', couleur: '#a855f7',
+    coefficients: niveaux.map(n => ({ niveau: n, coefficient: 1 })) },
+  { nom: 'Musique', code: 'MUS', description: 'Éducation musicale', couleur: '#ec4899',
+    coefficients: ['6ème','5ème','4ème','3ème'].map(n => ({ niveau: n, coefficient: 1 })) },
+  { nom: 'Allemand', code: 'ALL', description: 'Langue vivante 2', couleur: '#f59e0b',
+    coefficients: ['4ème','3ème','2nde','1ère','Terminale'].map(n => ({ niveau: n, coefficient: 2 })) },
+  { nom: 'Latin', code: 'LAT', description: 'Langue ancienne', couleur: '#6366f1',
+    coefficients: ['5ème','4ème','3ème'].map(n => ({ niveau: n, coefficient: 2 })) },
+  { nom: 'Philosophie', code: 'PHILO', description: 'Philosophie (Terminale)', couleur: '#8b5cf6',
+    coefficients: [{ niveau: 'Terminale', coefficient: 7 }] },
+  { nom: 'SES', code: 'SES', description: 'Sciences économiques et sociales', couleur: '#14b8a6',
+    coefficients: ['2nde','1ère','Terminale'].map(n => ({ niveau: n, coefficient: 3 })) },
 ];
 
 function birthYear(niveau: string): number {
@@ -177,7 +193,8 @@ export class SeederService implements OnModuleInit {
       const mats = [...matieres].sort(()=>Math.random()-0.5).slice(0, randInt(8,11));
       const occ = new Set<string>();
       for (const m of mats) {
-        const nb = Math.min(4, Math.max(1, Math.floor(m.coefficient/1.5)));
+        const coef = (m as any).coefficients?.length > 0 ? (m as any).coefficients[0].coefficient : ((m as any).coefficient ?? 2);
+        const nb = Math.min(4, Math.max(1, Math.floor(coef/1.5)));
         for (let i = 0; i < nb; i++) {
           let att = 0, j: JourSemaine, hd: string, hf: string;
           do {

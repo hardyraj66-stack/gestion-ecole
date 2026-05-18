@@ -16,8 +16,13 @@ export class Matiere extends Document {
   @Prop({ required: true })
   code: string;
 
-  @Prop({ required: true, default: 1 })
+  /** Coefficient global (legacy — utilisé si coefficients est vide) */
+  @Prop({ default: 1 })
   coefficient: number;
+
+  /** Coefficients par niveau scolaire */
+  @Prop({ type: [{ niveau: String, coefficient: Number }], default: [] })
+  coefficients: Array<{ niveau: string; coefficient: number }>;
 
   @Prop()
   description: string;

@@ -1,45 +1,53 @@
 import { Badge } from '../../components/ui/Badge';
+import { CoefficientNiveau } from '../../types';
 
 interface MatierePreviewProps {
   nom: string;
   code: string;
-  coefficient: number;
+  coefficients: CoefficientNiveau[];
   description: string;
   couleur: string;
 }
 
-export function MatierePreview({ nom, code, coefficient, description, couleur }: MatierePreviewProps) {
+export function MatierePreview({ nom, code, coefficients, description, couleur }: MatierePreviewProps) {
   return (
     <div className="preview-card" style={{ borderTopColor: couleur }}>
       <div className="preview-title">Aperçu</div>
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
         <div
           style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '8px',
-            backgroundColor: `${couleur}20`,
-            color: couleur,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 600,
-            fontSize: '0.85rem',
+            width: '48px', height: '48px', borderRadius: '8px',
+            backgroundColor: `${couleur}20`, color: couleur,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 600, fontSize: '0.85rem', flexShrink: 0,
           }}
         >
           {code || 'CODE'}
         </div>
-        <Badge label={`Coef. ${coefficient}`} variant="default" />
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>
+          {nom || 'Nom de la matière'}
+        </h3>
       </div>
 
-      <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-        {nom || 'Nom de la matière'}
-      </h3>
+      {description && (
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+          {description}
+        </p>
+      )}
 
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-        {description || 'Description…'}
-      </p>
+      {coefficients.length > 0 ? (
+        <div className="matiere-coef-display" style={{ marginTop: '0.5rem' }}>
+          {coefficients.map(c => (
+            <div key={c.niveau} className="matiere-coef-badge">
+              <span className="matiere-coef-badge-niveau">{c.niveau}</span>
+              <Badge label={`×${c.coefficient}`} variant="default" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Aucun coefficient défini</p>
+      )}
     </div>
   );
 }
