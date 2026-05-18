@@ -40,6 +40,7 @@ export const readApi = {
     get<any>(`/bulletin/${eleveId}?trimestre=${trimestre}`),
 
   anneeSnapshot: (id: string) => get<any>(`/annees/${id}/snapshot`),
+  eleveFiche: (id: string) => get<any>(`/eleves/${id}/fiche`),
   createClasseData: () => get<any>('/create-classe'),
   createEleveData: () => get<any>('/create-eleve'),
   niveaux: () => get<any>('/niveaux'),

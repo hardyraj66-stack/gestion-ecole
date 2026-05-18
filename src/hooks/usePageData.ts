@@ -128,3 +128,7 @@ export function useNotesPageData() {
 export function useBulletinData(eleveId: string, trimestre: number) {
   return usePageFetch(useCallback(() => readApi.bulletin(eleveId, trimestre), [eleveId, trimestre]), undefined, 'notes');
 }
+
+export function useEleveFicheData(eleveId: string) {
+  return usePageFetch(useCallback(() => readApi.eleveFiche(eleveId), [eleveId]), undefined, 'eleves');
+}

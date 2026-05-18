@@ -76,6 +76,13 @@ export class ReadController {
   @Get('create-eleve')
   getCreateEleveData() { return this.service.getCreateEleveData(); }
 
+  @Get('eleves/:id/fiche')
+  async getEleveFiche(@Param('id') id: string) {
+    const data = await this.service.getEleveFiche(id);
+    if (!data) throw new NotFoundException();
+    return data;
+  }
+
   @Get('niveaux')
   getNiveaux() { return this.service.getNiveaux(); }
 

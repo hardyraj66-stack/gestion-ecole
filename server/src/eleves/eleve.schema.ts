@@ -33,6 +33,16 @@ export class Eleve extends Document {
 
   @Prop()
   adresse: string;
+
+  // Famille
+  @Prop({ type: { nom: String, prenom: String, telephone: String, email: String, statut: { type: String, enum: ['vivant', 'decede'], default: 'vivant' } }, default: null })
+  pere: { nom: string; prenom: string; telephone: string; email: string; statut: 'vivant' | 'decede' } | null;
+
+  @Prop({ type: { nom: String, prenom: String, telephone: String, email: String, statut: { type: String, enum: ['vivant', 'decede'], default: 'vivant' } }, default: null })
+  mere: { nom: string; prenom: string; telephone: string; email: string; statut: 'vivant' | 'decede' } | null;
+
+  @Prop({ type: { nom: String, prenom: String, telephone: String, email: String, lien: String }, default: null })
+  tuteur: { nom: string; prenom: string; telephone: string; email: string; lien: string } | null;
 }
 
 export const EleveSchema = SchemaFactory.createForClass(Eleve);

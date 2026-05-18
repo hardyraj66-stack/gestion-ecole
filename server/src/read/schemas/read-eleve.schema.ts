@@ -20,6 +20,9 @@ export class ReadEleve extends Document {
   @Prop() adresse: string;
   @Prop({ default: '' }) classe_nom: string;
   @Prop({ default: '' }) classe_niveau: string;
+  @Prop({ type: Object, default: null }) pere: any;
+  @Prop({ type: Object, default: null }) mere: any;
+  @Prop({ type: Object, default: null }) tuteur: any;
 }
 
 export const ReadEleveSchema = SchemaFactory.createForClass(ReadEleve);

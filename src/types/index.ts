@@ -10,6 +10,22 @@ export interface Classe {
   salle_type: SalleType;
 }
 
+export interface ParentInfo {
+  nom: string;
+  prenom: string;
+  telephone?: string;
+  email?: string;
+  statut: 'vivant' | 'decede';
+}
+
+export interface TuteurInfo {
+  nom: string;
+  prenom: string;
+  telephone?: string;
+  email?: string;
+  lien?: string;
+}
+
 export interface Eleve {
   id: string;
   nom: string;
@@ -20,6 +36,29 @@ export interface Eleve {
   email?: string;
   telephone?: string;
   adresse?: string;
+  pere?: ParentInfo | null;
+  mere?: ParentInfo | null;
+  tuteur?: TuteurInfo | null;
+}
+
+export interface Avertissement {
+  id: string;
+  eleve_id: string;
+  motif: string;
+  annee_scolaire: string;
+  date: string;
+  commentaire?: string;
+  type: 'comportement' | 'degats' | 'absence' | 'autre';
+}
+
+export interface Absence {
+  id: string;
+  eleve_id: string;
+  date: string;
+  motif?: string;
+  type: 'absence' | 'retard';
+  duree?: string;
+  justifiee?: boolean;
 }
 
 export interface Matiere {

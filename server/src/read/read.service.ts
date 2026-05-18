@@ -323,4 +323,27 @@ export class ReadService {
   async getCreateEleveData() {
     return this.getNiveaux();
   }
+
+  // ============ FICHE ÉLÈVE ============
+  async getEleveFiche(eleveId: string) {
+    const eleve = await this.readEleveModel.findOne({ source_id: eleveId }).exec();
+    if (!eleve) return null;
+
+    const [classe, creneauxClasse, anneeActive] = await Promise.all([
+      this.readClasseModel.findOne({ source_id: eleve.classe_id }).exec(),
+      this.readCreneauModel.find({ classe_id: eleve.classe_id }).exec(),
+      this.anneeModel.findOne({ statut: 'active' }).exec(),
+    ]);
+
+    // Salle actuelle : fixe → salle de la classe, variable → laisser vide (résolu côté front via planning)
+    const salleActuelle = classe?.salle_type === 'fixe' ? classe.salle : null;
+
+    return {
+      eleve: eleve.toJSON(),
+      classe: classe?.toJSON() || null,
+      salleActuelle,
+      creneaux: creneauxClasse.map(c => c.toJSON()),
+      anneeActive: anneeActive?.label || null,
+    };
+  }
 }

@@ -3,7 +3,7 @@
 <div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
 <div class="doc">
 <h1>👥 Gestion des Élèves</h1>
-<p class="subtitle">Pages <code>/eleves</code>, <code>/eleves/nouveau</code>, <code>/eleves/:id/bulletin</code></p>
+<p class="subtitle">Pages <code>/eleves</code>, <code>/eleves/nouveau</code>, <code>/eleves/:id</code>, <code>/eleves/:id/bulletin</code></p>
 
 <h2>Liste — <code>/eleves</code></h2>
 <p>La page appelle <code>GET /read/eleves?page=X&amp;limit=12&amp;search=...&amp;classeId=...</code>.</p>
@@ -47,6 +47,45 @@
 
 <h3>Réinitialisation</h3>
 <p>Un bouton <em>Réinitialiser</em> apparaît dès qu'un filtre ou une recherche est actif. Il vide tous les états (search, classeId, niveau) et remet la pagination à 1.</p>
+
+<h2>Fiche élève — <code>/eleves/:id</code></h2>
+<p>Page de détail chargée via <code>GET /read/eleves/:id/fiche</code>. Réponse : <code>{ eleve, classe, salleActuelle, creneaux, anneeActive }</code>.</p>
+<p>La page est en lecture seule (<code>readOnly</code>) lorsque l'utilisateur consulte une archive via <code>ViewingContext</code>.</p>
+
+<h3>Composants de la fiche</h3>
+<table>
+<thead><tr><th>Composant</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>FicheIdentite</code></td><td>Avatar, nom, genre, date de naissance + âge, classe, salle actuelle. Pour les classes à salle variable, calcule la salle du créneau en cours ou du prochain créneau du jour.</td></tr>
+<tr><td><code>FicheFamille</code></td><td>Père, mère (formulaire inline avec statut vivant/décédé), tuteur légal. Enregistrement via <code>PATCH /eleves/:id</code> (contexte <code>useEleves</code>).</td></tr>
+<tr><td><code>FicheShortcuts</code></td><td>4 raccourcis : Notes, Bulletin, Classe, Emploi du temps.</td></tr>
+<tr><td><code>FicheAvertissements</code></td><td>Liste + formulaire d'ajout (type, date, année scolaire, motif, commentaire). Appels directs à <code>/suivi/:eleveId/avertissements</code>.</td></tr>
+<tr><td><code>FicheAssiduité</code></td><td>Deux sections (absences, retards), chacune avec liste + formulaire. Appels directs à <code>/suivi/:eleveId/absences</code> et <code>/suivi/:eleveId/retards</code>.</td></tr>
+</tbody>
+</table>
+
+<h3>Module Suivi — endpoints</h3>
+<p>Le module <code>SuiviModule</code> (NestJS) gère avertissements et absences/retards indépendamment du flux CQRS.</p>
+<table>
+<thead><tr><th>Méthode</th><th>Route</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/suivi/:eleveId/avertissements</code></td><td>Liste des avertissements</td></tr>
+<tr><td>POST</td><td><code>/suivi/:eleveId/avertissements</code></td><td>Créer un avertissement</td></tr>
+<tr><td>DELETE</td><td><code>/suivi/avertissements/:id</code></td><td>Supprimer un avertissement</td></tr>
+<tr><td>GET</td><td><code>/suivi/:eleveId/absences</code></td><td>Liste des absences</td></tr>
+<tr><td>POST</td><td><code>/suivi/:eleveId/absences</code></td><td>Créer une absence</td></tr>
+<tr><td>GET</td><td><code>/suivi/:eleveId/retards</code></td><td>Liste des retards</td></tr>
+<tr><td>POST</td><td><code>/suivi/:eleveId/retards</code></td><td>Créer un retard</td></tr>
+<tr><td>DELETE</td><td><code>/suivi/absences/:id</code></td><td>Supprimer absence ou retard</td></tr>
+</tbody>
+</table>
+
+<h3>Données famille dans le schéma Eleve</h3>
+<p>Les champs <code>pere</code>, <code>mere</code>, <code>tuteur</code> sont stockés dans le schéma <code>Eleve</code> (MongoDB) et répliqués dans <code>read_eleves</code> via <code>ViewBuilder.rebuildEleves()</code>.</p>
+<ul>
+<li><code>pere / mere</code> : <code>{ nom, prenom, telephone, email, statut: 'vivant' | 'decede' }</code></li>
+<li><code>tuteur</code> : <code>{ nom, prenom, telephone, email, lien }</code></li>
+</ul>
 
 <h2>Inscription — <code>/eleves/nouveau</code></h2>
 <p>Le formulaire charge les niveaux disponibles via <code>GET /read/create-eleve</code> (alias de <code>GET /read/niveaux</code>) au montage, une seule fois. En mode archive, la page redirige automatiquement.</p>

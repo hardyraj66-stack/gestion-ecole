@@ -7,6 +7,7 @@ import { CreateClasse } from './pages/CreateClasse/CreateClasse';
 import { ClasseEleves } from './pages/ClasseEleves/ClasseEleves';
 import { ElevesList } from './pages/ElevesList/ElevesList';
 import { CreateEleve } from './pages/CreateEleve/CreateEleve';
+import { EleveFiche } from './pages/EleveFiche/EleveFiche';
 import { Bulletin } from './pages/Bulletin/Bulletin';
 import { MatieresList } from './pages/MatieresList/MatieresList';
 import { CreateMatiere } from './pages/CreateMatiere/CreateMatiere';
@@ -31,6 +32,7 @@ function App() {
 
             <Route path="eleves" element={<ElevesList />} />
             <Route path="eleves/nouveau" element={<CreateEleve />} />
+            <Route path="eleves/:id" element={<EleveFiche />} />
             <Route path="eleves/:id/bulletin" element={<Bulletin />} />
 
             <Route path="matieres" element={<MatieresList />} />
