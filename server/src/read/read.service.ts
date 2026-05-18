@@ -8,6 +8,7 @@ import { ReadNote } from './schemas/read-note.schema';
 import { ReadCreneau } from './schemas/read-creneau.schema';
 import { ReadSalle } from './schemas/read-salle.schema';
 import { AnneeScolaire } from '../annees/annee.schema';
+import { Convocation } from '../suivi/convocation.schema';
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -27,18 +28,41 @@ export class ReadService {
     @InjectModel(ReadCreneau.name) private readCreneauModel: Model<ReadCreneau>,
     @InjectModel(ReadSalle.name) private readSalleModel: Model<ReadSalle>,
     @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
+    @InjectModel(Convocation.name) private convocationModel: Model<Convocation>,
   ) {}
 
   // ============ DASHBOARD ============
   async getDashboard(classesPage = 1, classesLimit = 5) {
-    const [classesTotal, elevesCount, matieresCount, notesCount, anneeActive, recentEleves] = await Promise.all([
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+    const [classesTotal, elevesCount, matieresCount, notesCount, anneeActive, recentEleves, convocations] = await Promise.all([
       this.readClasseModel.countDocuments().exec(),
       this.readEleveModel.countDocuments().exec(),
       this.readMatiereModel.countDocuments().exec(),
       this.readNoteModel.countDocuments().exec(),
       this.anneeModel.findOne({ statut: 'active' }).exec(),
       this.readEleveModel.find().sort({ _id: -1 }).limit(5).exec(),
+      // Convocations : hier, aujourd'hui, et à venir (non effectuées)
+      this.convocationModel.find({
+        $or: [
+          { date: { $gte: yesterday }, effectuee: false },
+          { date: today },
+          { date: yesterday },
+        ],
+      }).sort({ date: 1 }).exec(),
     ]);
+
+    // Enrichir chaque convocation avec les infos de l'élève
+    const eleveIds = [...new Set(convocations.map(c => c.eleve_id))];
+    const eleves = await this.readEleveModel.find({ source_id: { $in: eleveIds } }).exec();
+    const eleveMap = new Map(eleves.map(e => [e.source_id, e.toJSON()]));
+
+    const convocationsEnrichies = convocations.map(c => ({
+      ...c.toJSON(),
+      eleve: eleveMap.get(c.eleve_id) || null,
+      periode: c.date === today ? 'today' : c.date === yesterday ? 'yesterday' : 'upcoming',
+    }));
 
     const classes = await this.readClasseModel.find()
       .skip((classesPage - 1) * classesLimit).limit(classesLimit).exec();
@@ -50,6 +74,7 @@ export class ReadService {
       classesPagination: { page: classesPage, limit: classesLimit, total: classesTotal, totalPages: Math.ceil(classesTotal / classesLimit) },
       recentEleves: recentEleves.map(e => e.toJSON()),
       anneeActive: anneeActive?.toJSON() || null,
+      convocationsRecentes: convocationsEnrichies,
     };
   }
 

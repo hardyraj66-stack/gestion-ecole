@@ -12,6 +12,7 @@ import { Alert } from '../../components/shared/Alert';
 import { ClassesTable } from './ClassesTable';
 import { RecentEleves } from './RecentEleves';
 import { QuickActions } from './QuickActions';
+import { ConvocationsWidget } from './ConvocationsWidget';
 
 export function Dashboard() {
   const { active, preparation } = useAnnees();
@@ -25,7 +26,7 @@ export function Dashboard() {
   if (loading || !data) return <PageLoader />;
   if (error) return <Alert variant="error">Problème de chargement du dashboard.</Alert>;
 
-  const { stats, classesWithCount, classesPagination, recentEleves } = data;
+  const { stats, classesWithCount, classesPagination, recentEleves, convocationsRecentes } = data;
 
   return (
     <div>
@@ -66,6 +67,9 @@ export function Dashboard() {
           <ClassesTable classes={classesWithCount} pagination={classesPagination} onPageChange={setClassesPage} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {!readOnly && convocationsRecentes?.length > 0 && (
+            <ConvocationsWidget convocations={convocationsRecentes} />
+          )}
           <RecentEleves eleves={recentEleves} />
           {!readOnly && <QuickActions />}
         </div>

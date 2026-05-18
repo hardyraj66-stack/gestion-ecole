@@ -7,6 +7,7 @@ import { Note, NoteSchema } from '../notes/note.schema';
 import { Creneau, CreneauSchema } from '../planning/creneau.schema';
 import { Salle, SalleSchema } from '../salles/salle.schema';
 import { AnneeScolaire, AnneeScolaireSchema } from '../annees/annee.schema';
+import { Convocation, ConvocationSchema } from '../suivi/convocation.schema';
 import { ReadClasse, ReadClasseSchema } from './schemas/read-classe.schema';
 import { ReadEleve, ReadEleveSchema } from './schemas/read-eleve.schema';
 import { ReadMatiere, ReadMatiereSchema } from './schemas/read-matiere.schema';
@@ -28,6 +29,7 @@ import { ViewBuilderService } from './view-builder.service';
       { name: Creneau.name, schema: CreneauSchema },
       { name: Salle.name, schema: SalleSchema },
       { name: AnneeScolaire.name, schema: AnneeScolaireSchema },
+      { name: Convocation.name, schema: ConvocationSchema },
       { name: ReadClasse.name, schema: ReadClasseSchema },
       { name: ReadEleve.name, schema: ReadEleveSchema },
       { name: ReadMatiere.name, schema: ReadMatiereSchema },
