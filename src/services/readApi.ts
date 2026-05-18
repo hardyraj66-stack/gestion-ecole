@@ -41,6 +41,7 @@ export const readApi = {
 
   anneeSnapshot: (id: string) => get<any>(`/annees/${id}/snapshot`),
   createClasseData: () => get<any>('/create-classe'),
+  createEleveData: () => get<any>('/create-eleve'),
   niveaux: () => get<any>('/niveaux'),
   classesParNiveau: (niveau: string, dateNaissance?: string) =>
     get<any>(`/niveaux/${encodeURIComponent(niveau)}/classes${dateNaissance ? `?dateNaissance=${dateNaissance}` : ''}`),

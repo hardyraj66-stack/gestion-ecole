@@ -73,6 +73,9 @@ export class ReadController {
   @Get('create-classe')
   getCreateClasseData() { return this.service.getCreateClasseData(); }
 
+  @Get('create-eleve')
+  getCreateEleveData() { return this.service.getCreateEleveData(); }
+
   @Get('niveaux')
   getNiveaux() { return this.service.getNiveaux(); }
 
