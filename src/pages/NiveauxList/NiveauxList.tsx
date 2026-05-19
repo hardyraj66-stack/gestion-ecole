@@ -46,9 +46,10 @@ export function NiveauxList() {
     if (data) setLocalNiveaux(Array.isArray(data) ? data : []);
   }, [data]);
 
-  const openEdit = (n: Niveau) => {
-    setEditNiveau(n);
-    setForm({ nom: n.nom, ordre: String(n.ordre ?? 0), description: n.description ?? '', matiere_ids: n.matiere_ids ?? [] });
+  const openEdit = (n: any) => {
+    const nom = n.nom ?? n.niveau ?? '';
+    setEditNiveau({ ...n, nom });
+    setForm({ nom, ordre: String(n.ordre ?? 0), description: n.description ?? '', matiere_ids: n.matiere_ids ?? [] });
     setFormError('');
   };
 
@@ -82,7 +83,8 @@ export function NiveauxList() {
   };
 
   const handleDelete = async (n: any) => {
-    const ok = await confirm({ title: 'Supprimer le niveau ?', message: `Le niveau « ${n.nom} » sera supprimé. Les classes existantes gardent leur valeur de niveau, mais celui-ci ne sera plus configurable.`, confirmText: 'Supprimer', variant: 'danger' });
+    const nomAffiche = n.nom ?? n.niveau ?? '';
+    const ok = await confirm({ title: 'Supprimer le niveau ?', message: `Le niveau « ${nomAffiche} » sera supprimé. Les classes existantes gardent leur valeur de niveau, mais celui-ci ne sera plus configurable.`, confirmText: 'Supprimer', variant: 'danger' });
     if (!ok) return;
     const success = await deleteNiveau(n.id);
     if (success) setLocalNiveaux(prev => prev ? prev.filter(x => x.id !== n.id) : prev);

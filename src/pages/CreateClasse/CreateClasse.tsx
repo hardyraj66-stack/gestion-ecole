@@ -51,14 +51,13 @@ export function CreateClasse() {
   useEffect(() => {
     readApi.niveaux().then((res: any) => {
       if (res && Array.isArray(res)) {
-        const opts: SelectOption[] = res
-          .filter((n: any) => n.id) // only configured niveaux
-          .map((n: any) => ({ value: n.nom ?? n.niveau, label: n.nom ?? n.niveau }));
+        // Niveaux configurés en priorité, sinon tous (orphelins depuis les classes)
+        const all = res.map((n: any) => n.nom ?? n.niveau).filter(Boolean);
+        const opts: SelectOption[] = all.map((n: string) => ({ value: n, label: n }));
         setNiveauxOptions(opts);
-        if (opts.length > 0 && !niveau) setNiveau(opts[0].value as string);
+        if (opts.length > 0) setNiveau(prev => prev || (opts[0].value as string));
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -108,7 +107,10 @@ export function CreateClasse() {
           <Input label="Nom de la classe *" value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex : 6ème A" required />
 
           <FormGrid>
-            <Select label="Niveau *" value={niveau} onChange={e => setNiveau(e.target.value)} options={niveauxOptions} placeholder={niveauxOptions.length === 0 ? 'Chargement…' : undefined} disabled={niveauxOptions.length === 0} />
+            {niveauxOptions.length === 0
+              ? <Select label="Niveau *" value="" options={[]} placeholder="Chargement…" disabled />
+              : <Select label="Niveau *" value={niveau} onChange={e => setNiveau(e.target.value)} options={niveauxOptions} />
+            }
             <Select label="Année scolaire *" value={anneeScolaire} onChange={e => setAnneeScolaire(e.target.value)} options={schoolYearOptions} />
           </FormGrid>
 
