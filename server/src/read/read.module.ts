@@ -14,6 +14,7 @@ import { ReadMatiere, ReadMatiereSchema } from './schemas/read-matiere.schema';
 import { ReadNote, ReadNoteSchema } from './schemas/read-note.schema';
 import { ReadCreneau, ReadCreneauSchema } from './schemas/read-creneau.schema';
 import { ReadSalle, ReadSalleSchema } from './schemas/read-salle.schema';
+import { Niveau, NiveauSchema } from '../niveaux/niveau.schema';
 import { ReadController } from './read.controller';
 import { ReadService } from './read.service';
 import { ViewBuilderService } from './view-builder.service';
@@ -36,6 +37,7 @@ import { ViewBuilderService } from './view-builder.service';
       { name: ReadNote.name, schema: ReadNoteSchema },
       { name: ReadCreneau.name, schema: ReadCreneauSchema },
       { name: ReadSalle.name, schema: ReadSalleSchema },
+      { name: Niveau.name, schema: NiveauSchema },
     ]),
   ],
   controllers: [ReadController],

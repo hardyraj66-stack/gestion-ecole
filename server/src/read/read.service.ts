@@ -9,6 +9,7 @@ import { ReadCreneau } from './schemas/read-creneau.schema';
 import { ReadSalle } from './schemas/read-salle.schema';
 import { AnneeScolaire } from '../annees/annee.schema';
 import { Convocation } from '../suivi/convocation.schema';
+import { Niveau } from '../niveaux/niveau.schema';
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -29,6 +30,7 @@ export class ReadService {
     @InjectModel(ReadSalle.name) private readSalleModel: Model<ReadSalle>,
     @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
     @InjectModel(Convocation.name) private convocationModel: Model<Convocation>,
+    @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
   ) {}
 
   // ============ DASHBOARD ============
@@ -318,21 +320,45 @@ export class ReadService {
   async getCreateClasseData() { return { salles: (await this.readSalleModel.find().exec()).map(s => s.toJSON()) }; }
   // ============ NIVEAUX (léger) ============
   async getNiveaux() {
-    const classes = await this.readClasseModel.find().exec();
-    const map = new Map<string, number>();
+    const [niveauxConfig, classes] = await Promise.all([
+      this.niveauModel.find().sort({ ordre: 1, nom: 1 }).lean().exec(),
+      this.readClasseModel.find().exec(),
+    ]);
+
+    // Comptage des classes par niveau
+    const countMap = new Map<string, number>();
     for (const c of classes) {
       const n = c.niveau || 'Autre';
-      map.set(n, (map.get(n) || 0) + 1);
+      countMap.set(n, (countMap.get(n) || 0) + 1);
     }
+
+    if (niveauxConfig.length > 0) {
+      // Retourner dans l'ordre défini par la config, puis les niveaux orphelins
+      const configured = niveauxConfig.map((n: any) => ({
+        niveau: n.nom,
+        count: countMap.get(n.nom) || 0,
+        ordre: n.ordre,
+        description: n.description || '',
+        matiere_ids: n.matiere_ids || [],
+        id: n._id.toString(),
+      }));
+      const configuredNoms = new Set(niveauxConfig.map((n: any) => n.nom));
+      const orphans = Array.from(countMap.entries())
+        .filter(([nom]) => !configuredNoms.has(nom))
+        .map(([nom, count]) => ({ niveau: nom, count, ordre: 999, description: '', matiere_ids: [], id: null }));
+      return [...configured, ...orphans];
+    }
+
+    // Fallback : agrégation depuis les classes si aucun niveau configuré
     const ordre = ['CP','CE1','CE2','CM1','CM2','6ème','5ème','4ème','3ème','2nde','1ère','Terminale'];
-    return Array.from(map.entries())
+    return Array.from(countMap.entries())
       .sort(([a], [b]) => {
         const ia = ordre.indexOf(a), ib = ordre.indexOf(b);
         if (ia === -1 && ib === -1) return a.localeCompare(b);
         if (ia === -1) return 1; if (ib === -1) return -1;
         return ia - ib;
       })
-      .map(([niveau, count]) => ({ niveau, count }));
+      .map(([niveau, count]) => ({ niveau, count, ordre: 0, description: '', matiere_ids: [], id: null }));
   }
 
   // ============ CLASSES D'UN NIVEAU + SUGGESTION ============
