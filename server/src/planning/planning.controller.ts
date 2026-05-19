@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Patch, Delete, Param, Body, NotFoundException, HttpCode } from '@nestjs/common';
 import { PlanningService } from './planning.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
@@ -35,5 +35,16 @@ export class PlanningController {
     this.events.emit('creneau:deleted', { id });
     this.viewBuilder.onCreneauWrite();
     return { id };
+  }
+
+  @Post('merge/:classeId')
+  @HttpCode(200)
+  async mergeAdjacent(@Param('classeId') classeId: string) {
+    const count = await this.service.mergeAdjacent(classeId);
+    if (count > 0) {
+      this.events.emit('creneau:updated', { classe_id: classeId });
+      this.viewBuilder.onCreneauWrite();
+    }
+    return { merged: count };
   }
 }

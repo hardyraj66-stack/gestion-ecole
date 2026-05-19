@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Creneau } from './creneau.schema';
+
+const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+function toMin(t: string) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 
 @Injectable()
 export class PlanningService {
@@ -10,14 +13,81 @@ export class PlanningService {
   findAll() { return this.model.find().exec(); }
   findById(id: string) { return this.model.findById(id).exec(); }
   findByClasseId(classeId: string) { return this.model.find({ classe_id: classeId }).exec(); }
-  create(data: any) { return new this.model(data).save(); }
+
+  private async checkSalleConflict(salle: string, jour: string, heureDebut: string, heureFin: string, excludeId?: string) {
+    if (!salle) return;
+    const hd = toMin(heureDebut);
+    const hf = toMin(heureFin);
+    const candidates = await this.model.find({ salle, jour }).lean().exec();
+    const conflict = candidates.find(c => {
+      if (excludeId && String(c._id) === excludeId) return false;
+      return toMin(c.heure_debut) < hf && toMin(c.heure_fin) > hd;
+    });
+    if (conflict) {
+      throw new ConflictException(
+        `La salle « ${salle} » est déjà occupée le ${jour} de ${conflict.heure_debut} à ${conflict.heure_fin} (${conflict.matiere_nom})`,
+      );
+    }
+  }
+
+  async create(data: any) {
+    await this.checkSalleConflict(data.salle, data.jour, data.heure_debut, data.heure_fin);
+    return new this.model(data).save();
+  }
 
   async update(id: string, data: any) {
+    const existing = await this.model.findById(id).lean().exec() as any;
+    const salle = data.salle ?? existing?.salle;
+    const jour = data.jour ?? existing?.jour;
+    const hd = data.heure_debut ?? existing?.heure_debut;
+    const hf = data.heure_fin ?? existing?.heure_fin;
+    if (salle && jour && hd && hf) {
+      await this.checkSalleConflict(salle, jour, hd, hf, id);
+    }
     return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
   async delete(id: string) {
     const result = await this.model.findByIdAndDelete(id).exec();
     return !!result;
+  }
+
+  // Fusionne tous les créneaux adjacents de même matière/salle/enseignant/jour pour une classe.
+  // Retourne le nombre de fusions effectuées.
+  async mergeAdjacent(classeId: string): Promise<number> {
+    const creneaux = await this.model.find({ classe_id: classeId }).lean().exec();
+
+    const sorted = [...creneaux].sort((a, b) => {
+      const jd = JOURS.indexOf(a.jour) - JOURS.indexOf(b.jour);
+      if (jd !== 0) return jd;
+      return toMin(a.heure_debut) - toMin(b.heure_debut);
+    });
+
+    let mergeCount = 0;
+    const deleted = new Set<string>();
+
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const a = sorted[i] as any;
+      if (deleted.has(String(a._id))) continue;
+      const b = sorted[i + 1] as any;
+      if (deleted.has(String(b._id))) continue;
+
+      if (
+        a.jour === b.jour &&
+        a.matiere_id === b.matiere_id &&
+        a.salle === b.salle &&
+        (a.enseignant || '') === (b.enseignant || '') &&
+        a.heure_fin === b.heure_debut
+      ) {
+        await this.model.findByIdAndUpdate(a._id, { heure_fin: b.heure_fin }).exec();
+        await this.model.findByIdAndDelete(b._id).exec();
+        deleted.add(String(b._id));
+        // Mettre à jour a dans le tableau trié pour permettre la fusion en cascade
+        sorted[i] = { ...a, heure_fin: b.heure_fin };
+        mergeCount++;
+      }
+    }
+
+    return mergeCount;
   }
 }

@@ -23,7 +23,11 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const update = useCallback(async (id: string, data: Partial<Creneau>) => {
-    try { await fetch(`${API_BASE_URL}/planning/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch {}
+    const r = await fetch(`${API_BASE_URL}/planning/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!r.ok) {
+      const body = await r.json().catch(() => ({}));
+      throw new Error(body.message || 'Erreur lors de la modification');
+    }
   }, []);
 
   const del = useCallback(async (id: string) => {
