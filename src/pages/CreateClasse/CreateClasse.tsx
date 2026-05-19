@@ -12,16 +12,8 @@ import { Button } from '../../components/shared/Button';
 import { Alert } from '../../components/shared/Alert';
 import { FormGrid, FormActions } from '../../components/shared/FormGrid';
 import { SalleType } from '../../types';
+import { readApi } from '../../services/readApi';
 import { generateSchoolYears, getTypeLabel } from '../../utils/helpers';
-
-const NIVEAUX: SelectOption[] = [
-  { value: '6ème', label: '6ème' }, { value: '5ème', label: '5ème' },
-  { value: '4ème', label: '4ème' }, { value: '3ème', label: '3ème' },
-  { value: '2nde', label: '2nde' }, { value: '1ère', label: '1ère' },
-  { value: 'Terminale', label: 'Terminale' }, { value: 'CP', label: 'CP' },
-  { value: 'CE1', label: 'CE1' }, { value: 'CE2', label: 'CE2' },
-  { value: 'CM1', label: 'CM1' }, { value: 'CM2', label: 'CM2' },
-];
 
 const SALLE_TYPES: SelectOption[] = [
   { value: 'fixe', label: 'Salle fixe (toujours la même)' },
@@ -35,8 +27,9 @@ export function CreateClasse() {
   const { salles, loading: sallesLoading, getAll: fetchSalles } = useSalles();
   const confirm = useConfirm();
 
+  const [niveauxOptions, setNiveauxOptions] = useState<SelectOption[]>([]);
   const [nom, setNom] = useState('');
-  const [niveau, setNiveau] = useState(NIVEAUX[0].value as string);
+  const [niveau, setNiveau] = useState('');
   const [anneeScolaire, setAnneeScolaire] = useState(generateSchoolYears()[0]);
   const [capacite, setCapacite] = useState(30);
   const [salleType, setSalleType] = useState<SalleType>('fixe');
@@ -54,6 +47,19 @@ export function CreateClasse() {
 
   const fetchedRef = useRef(false);
   useEffect(() => { if (fetchedRef.current) return; fetchedRef.current = true; fetchSalles(); }, [fetchSalles]);
+
+  useEffect(() => {
+    readApi.niveaux().then((res: any) => {
+      if (res && Array.isArray(res)) {
+        const opts: SelectOption[] = res
+          .filter((n: any) => n.id) // only configured niveaux
+          .map((n: any) => ({ value: n.nom ?? n.niveau, label: n.nom ?? n.niveau }));
+        setNiveauxOptions(opts);
+        if (opts.length > 0 && !niveau) setNiveau(opts[0].value as string);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (salles.length > 0 && !salleId) setSalleId(salles[0].id);
@@ -102,7 +108,7 @@ export function CreateClasse() {
           <Input label="Nom de la classe *" value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex : 6ème A" required />
 
           <FormGrid>
-            <Select label="Niveau *" value={niveau} onChange={e => setNiveau(e.target.value)} options={NIVEAUX} />
+            <Select label="Niveau *" value={niveau} onChange={e => setNiveau(e.target.value)} options={niveauxOptions} placeholder={niveauxOptions.length === 0 ? 'Chargement…' : undefined} disabled={niveauxOptions.length === 0} />
             <Select label="Année scolaire *" value={anneeScolaire} onChange={e => setAnneeScolaire(e.target.value)} options={schoolYearOptions} />
           </FormGrid>
 

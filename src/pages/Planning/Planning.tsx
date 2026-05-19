@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePlanningClasses, usePlanningClasse } from '../../hooks/usePageData';
+import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -26,6 +27,20 @@ export function Planning() {
 
   useEffect(() => { if (id) setSelectedClasseId(id); }, [id]);
 
+  const [niveauxOrdre, setNiveauxOrdre] = useState<string[]>(NIVEAUX_ORDRE);
+  const [niveauxConfig, setNiveauxConfig] = useState<any[]>([]);
+  useEffect(() => {
+    readApi.niveaux().then((res: any) => {
+      if (res && Array.isArray(res)) {
+        const configured = res.filter((n: any) => n.id);
+        if (configured.length > 0) {
+          setNiveauxOrdre(configured.map((n: any) => n.nom ?? n.niveau));
+          setNiveauxConfig(configured);
+        }
+      }
+    });
+  }, []);
+
   const { data: classesData, loading: classesLoading, readOnly } = usePlanningClasses();
   const { data: classeData, loading: classeLoading, refreshing: classeRefreshing } = usePlanningClasse(selectedClasseId);
 
@@ -34,7 +49,13 @@ export function Planning() {
   const classeCreneaux: any[] = classeData?.creneaux || [];
   const allMatieres: any[] = classeData?.matieres || [];
   const totalHeures = classeCreneaux.reduce((t: number, c: any) => t + calculateDuration(c.heure_debut, c.heure_fin), 0);
-  const matiereOptions: SelectOption[] = allMatieres.map((m: any) => ({ value: m.id, label: m.nom }));
+  const matiereOptions: SelectOption[] = useMemo(() => {
+    const niveauConfig = niveauxConfig.find((n: any) => (n.nom ?? n.niveau) === selectedClasse?.niveau);
+    const allowedIds: string[] | null = niveauConfig?.matiere_ids?.length > 0 ? niveauConfig.matiere_ids : null;
+    return allMatieres
+      .filter((m: any) => !allowedIds || allowedIds.includes(m.id))
+      .map((m: any) => ({ value: m.id, label: m.nom }));
+  }, [allMatieres, niveauxConfig, selectedClasse?.niveau]);
 
   const niveaux = useMemo(() => {
     if (!classesData?.classes) return [];
@@ -46,7 +67,7 @@ export function Planning() {
     }
     return Array.from(map.entries())
       .sort(([a], [b]) => {
-        const ia = NIVEAUX_ORDRE.indexOf(a), ib = NIVEAUX_ORDRE.indexOf(b);
+        const ia = niveauxOrdre.indexOf(a), ib = niveauxOrdre.indexOf(b);
         if (ia === -1 && ib === -1) return a.localeCompare(b);
         if (ia === -1) return 1; if (ib === -1) return -1;
         return ia - ib;

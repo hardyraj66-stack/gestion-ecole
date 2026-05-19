@@ -25,6 +25,7 @@ const navItems: NavItem[] = [
   { label: 'Notes', path: '/notes', iconMultiple: [{ type: 'path', d: 'M12 20h9' }, { type: 'path', d: 'M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z' }] },
   { label: 'Planning', path: '/planning', iconMultiple: [{ type: 'path', d: 'M8 2v4' }, { type: 'path', d: 'M16 2v4' }, { type: 'path', d: 'M3 10h18' }, { type: 'rect', x: 3, y: 4, width: 18, height: 18, rx: 2 }] },
   { label: 'Salles', path: '/salles', iconMultiple: [{ type: 'path', d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }, { type: 'path', d: 'M9 22V12h6v10' }] },
+  { label: 'Niveaux', path: '/niveaux', iconMultiple: [{ type: 'path', d: 'M12 2L2 7l10 5 10-5-10-5z' }, { type: 'path', d: 'M2 17l10 5 10-5' }, { type: 'path', d: 'M2 12l10 5 10-5' }] },
 ];
 
 function renderIconElement(el: IconElement, idx: number) {

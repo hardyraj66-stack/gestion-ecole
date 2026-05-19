@@ -134,3 +134,7 @@ export function useBulletinData(eleveId: string, trimestre: number) {
 export function useEleveFicheData(eleveId: string) {
   return usePageFetch(useCallback(() => readApi.eleveFiche(eleveId), [eleveId]), undefined, 'eleves');
 }
+
+export function useNiveauxListData() {
+  return usePageFetch(useCallback(() => readApi.niveaux(), []), undefined, 'niveaux');
+}

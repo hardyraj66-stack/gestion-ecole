@@ -15,6 +15,8 @@ import { AjouterNotes } from './pages/AjouterNotes/AjouterNotes';
 import { Planning } from './pages/Planning/Planning';
 import { SallesList } from './pages/SallesList/SallesList';
 import { CreateSalle } from './pages/CreateSalle/CreateSalle';
+import { NiveauxList } from './pages/NiveauxList/NiveauxList';
+import { CreateNiveau } from './pages/CreateNiveau/CreateNiveau';
 import { AnneeScolairePage } from './pages/AnneeScolaire/AnneeScolaire';
 
 function App() {
@@ -43,6 +45,9 @@ function App() {
             <Route path="planning" element={<Planning />} />
             <Route path="salles" element={<SallesList />} />
             <Route path="salles/nouvelle" element={<CreateSalle />} />
+
+            <Route path="niveaux" element={<NiveauxList />} />
+            <Route path="niveaux/nouveau" element={<CreateNiveau />} />
 
             <Route path="annee-scolaire" element={<AnneeScolairePage />} />
 
