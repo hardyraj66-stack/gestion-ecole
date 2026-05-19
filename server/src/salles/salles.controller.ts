@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, NotFoundException, BadRequestException } from '@nestjs/common';
 import { SallesService } from './salles.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
@@ -21,6 +21,18 @@ export class SallesController {
     return this.service.getDisponibles(jour, heureDebut, heureFin, excludeCreneauId);
   }
 
+  @Get(':id/stats')
+  async getStats(@Param('id') id: string) {
+    const result = await this.service.getSalleStats(id);
+    if (!result) throw new NotFoundException();
+    return result;
+  }
+
+  @Get(':id/usage')
+  async checkUsage(@Param('id') id: string) {
+    return this.service.checkUsage(id);
+  }
+
   @Post()
   async create(@Body() body: any) {
     const item = await this.service.create(body);
@@ -39,7 +51,18 @@ export class SallesController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
+  async delete(
+    @Param('id') id: string,
+    @Query('force') force?: string,
+  ) {
+    const usage = await this.service.checkUsage(id);
+    if (usage.utilisee && force !== 'true') {
+      throw new BadRequestException({
+        message: `Cette salle est utilisée dans ${usage.creneaux_actifs} cours`,
+        creneaux_actifs: usage.creneaux_actifs,
+        code: 'SALLE_EN_USAGE',
+      });
+    }
     const ok = await this.service.delete(id);
     if (!ok) throw new NotFoundException();
     this.events.emit('salle:deleted', { id });

@@ -8,6 +8,9 @@ const toJsonTransform = (_: any, ret: Record<string, any>) => {
   return ret;
 };
 
+export type TypeSalle = 'standard' | 'laboratoire' | 'informatique' | 'sport' | 'arts' | 'amphi' | 'autre';
+export type Equipement = 'projecteur' | 'ordinateurs' | 'tableau_interactif' | 'labo_scientifique' | 'sono' | 'climatisation';
+
 @Schema({ timestamps: true, toJSON: { virtuals: true, transform: toJsonTransform } })
 export class Salle extends Document {
   @Prop({ required: true })
@@ -19,8 +22,20 @@ export class Salle extends Document {
   @Prop({ default: '' })
   description: string;
 
-  @Prop({ required: true, enum: ['standard', 'laboratoire', 'informatique', 'sport', 'arts'], default: 'standard' })
+  @Prop({ required: true, enum: ['standard', 'laboratoire', 'informatique', 'sport', 'arts', 'amphi', 'autre'], default: 'standard' })
   type: string;
+
+  @Prop({ type: [String], default: [] })
+  equipements: string[];
+
+  @Prop({ default: false })
+  accessible_pmr: boolean;
+
+  @Prop({ default: '' })
+  batiment: string;
+
+  @Prop({ default: '' })
+  etage: string;
 }
 
 export const SalleSchema = SchemaFactory.createForClass(Salle);

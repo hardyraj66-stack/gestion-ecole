@@ -61,6 +61,10 @@ export function SalleForm({ editingSalle, onClose }: SalleFormProps) {
       type,
       capacite,
       description: description.trim(),
+      equipements: [] as any[],
+      accessible_pmr: false,
+      batiment: '',
+      etage: '',
     };
 
     if (isEditing && editingSalle) {

@@ -194,16 +194,26 @@ export class ReadService {
   }
 
   // ============ SALLES LIST ============
-  async getSallesList(page = 1, limit = 8) {
+  async getSallesList(page = 1, limit = 8, type = '', search = '') {
+    const filter: any = {};
+    if (type) filter.type = type;
+    if (search) filter.nom = { $regex: search, $options: 'i' };
+
     const [items, total] = await Promise.all([
-      this.readSalleModel.find().skip((page - 1) * limit).limit(limit).exec(),
-      this.readSalleModel.countDocuments().exec(),
+      this.readSalleModel.find(filter).skip((page - 1) * limit).limit(limit).exec(),
+      this.readSalleModel.countDocuments(filter).exec(),
     ]);
     return {
       items: items.map(s => s.toJSON()),
       total, page, limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async getSalleDetail(id: string) {
+    const salle = await this.readSalleModel.findOne({ source_id: id }).exec();
+    if (!salle) return null;
+    return salle.toJSON();
   }
 
   // ============ PLANNING — liste des niveaux/classes (léger) ============

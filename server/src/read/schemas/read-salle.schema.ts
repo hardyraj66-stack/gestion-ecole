@@ -14,6 +14,10 @@ export class ReadSalle extends Document {
   @Prop() capacite: number;
   @Prop() description: string;
   @Prop() type: string;
+  @Prop({ type: [String], default: [] }) equipements: string[];
+  @Prop({ default: false }) accessible_pmr: boolean;
+  @Prop({ default: '' }) batiment: string;
+  @Prop({ default: '' }) etage: string;
 }
 
 export const ReadSalleSchema = SchemaFactory.createForClass(ReadSalle);

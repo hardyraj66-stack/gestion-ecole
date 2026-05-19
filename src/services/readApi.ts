@@ -29,8 +29,10 @@ export const readApi = {
   matieresList: (page?: number, limit?: number, niveau?: string) =>
     get<any>(`/matieres${qs({ page, limit, niveau: niveau || undefined })}`),
 
-  sallesList: (page?: number, limit?: number) =>
-    get<any>(`/salles${qs({ page, limit })}`),
+  sallesList: (page?: number, limit?: number, type?: string, search?: string) =>
+    get<any>(`/salles${qs({ page, limit, type: type || undefined, search: search || undefined })}`),
+
+  salleDetail: (id: string) => get<any>(`/salles/${id}`),
 
   planningClasses: () => get<any>('/planning/classes'),
   planningClasse: (id: string) => get<any>(`/planning/classe/${id}`),

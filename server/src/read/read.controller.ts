@@ -39,8 +39,18 @@ export class ReadController {
   }
 
   @Get('salles')
-  getSallesList(@Query('page') p?: string, @Query('limit') l?: string) {
-    return this.service.getSallesList(parseInt(p!) || 1, parseInt(l!) || 8);
+  getSallesList(
+    @Query('page') p?: string, @Query('limit') l?: string,
+    @Query('type') type?: string, @Query('search') search?: string,
+  ) {
+    return this.service.getSallesList(parseInt(p!) || 1, parseInt(l!) || 8, type || '', search || '');
+  }
+
+  @Get('salles/:id')
+  async getSalleDetail(@Param('id') id: string) {
+    const data = await this.service.getSalleDetail(id);
+    if (!data) throw new NotFoundException();
+    return data;
   }
 
   @Get('planning/classes')

@@ -1,19 +1,21 @@
 import { Classe, Eleve, Matiere, Note, Creneau, Salle, JourSemaine, AnneeScolaire } from '../types';
 
 // ============ SALLES ============
+const defaultSalleFields = { equipements: [] as any[], accessible_pmr: false, batiment: '', etage: '' };
+
 export const mockSalles: Salle[] = [
-  { id: 'salle-1', nom: 'Salle 101', capacite: 30, description: 'Salle de cours standard', type: 'standard' },
-  { id: 'salle-2', nom: 'Salle 102', capacite: 30, description: 'Salle de cours standard', type: 'standard' },
-  { id: 'salle-3', nom: 'Salle 103', capacite: 25, description: 'Petite salle de cours', type: 'standard' },
-  { id: 'salle-4', nom: 'Salle 201', capacite: 35, description: 'Grande salle de cours', type: 'standard' },
-  { id: 'salle-5', nom: 'Salle 202', capacite: 30, description: 'Salle de cours standard', type: 'standard' },
-  { id: 'salle-6', nom: 'Labo Physique', capacite: 24, description: 'Laboratoire de physique-chimie', type: 'laboratoire' },
-  { id: 'salle-7', nom: 'Labo SVT', capacite: 24, description: 'Laboratoire de sciences de la vie', type: 'laboratoire' },
-  { id: 'salle-8', nom: 'Salle Info 1', capacite: 20, description: 'Salle informatique avec 20 postes', type: 'informatique' },
-  { id: 'salle-9', nom: 'Salle Info 2', capacite: 18, description: 'Salle informatique avec 18 postes', type: 'informatique' },
-  { id: 'salle-10', nom: 'Gymnase', capacite: 60, description: 'Gymnase principal', type: 'sport' },
-  { id: 'salle-11', nom: 'Salle Arts', capacite: 25, description: 'Salle d\'arts plastiques', type: 'arts' },
-  { id: 'salle-12', nom: 'Salle Musique', capacite: 30, description: 'Salle de musique', type: 'arts' },
+  { id: 'salle-1', nom: 'Salle 101', capacite: 30, description: 'Salle de cours standard', type: 'standard', ...defaultSalleFields },
+  { id: 'salle-2', nom: 'Salle 102', capacite: 30, description: 'Salle de cours standard', type: 'standard', ...defaultSalleFields },
+  { id: 'salle-3', nom: 'Salle 103', capacite: 25, description: 'Petite salle de cours', type: 'standard', ...defaultSalleFields },
+  { id: 'salle-4', nom: 'Salle 201', capacite: 35, description: 'Grande salle de cours', type: 'standard', ...defaultSalleFields },
+  { id: 'salle-5', nom: 'Salle 202', capacite: 30, description: 'Salle de cours standard', type: 'standard', ...defaultSalleFields },
+  { id: 'salle-6', nom: 'Labo Physique', capacite: 24, description: 'Laboratoire de physique-chimie', type: 'laboratoire', ...defaultSalleFields },
+  { id: 'salle-7', nom: 'Labo SVT', capacite: 24, description: 'Laboratoire de sciences de la vie', type: 'laboratoire', ...defaultSalleFields },
+  { id: 'salle-8', nom: 'Salle Info 1', capacite: 20, description: 'Salle informatique avec 20 postes', type: 'informatique', ...defaultSalleFields },
+  { id: 'salle-9', nom: 'Salle Info 2', capacite: 18, description: 'Salle informatique avec 18 postes', type: 'informatique', ...defaultSalleFields },
+  { id: 'salle-10', nom: 'Gymnase', capacite: 60, description: 'Gymnase principal', type: 'sport', ...defaultSalleFields },
+  { id: 'salle-11', nom: 'Salle Arts', capacite: 25, description: 'Salle d\'arts plastiques', type: 'arts', ...defaultSalleFields },
+  { id: 'salle-12', nom: 'Salle Musique', capacite: 30, description: 'Salle de musique', type: 'arts', ...defaultSalleFields },
 ];
 
 // ============ CLASSES ============

@@ -228,7 +228,15 @@ export class ViewBuilderService implements OnModuleInit {
   private async rebuildSalles() {
     const salles = await this.salleModel.find().lean().exec();
     const ops = salles.map(s => ({ updateOne: { filter: { source_id: s._id.toString() }, update: { $set: {
-      source_id: s._id.toString(), nom: s.nom, capacite: s.capacite, description: s.description || '', type: s.type,
+      source_id: s._id.toString(),
+      nom: s.nom,
+      capacite: s.capacite,
+      description: s.description || '',
+      type: s.type,
+      equipements: (s as any).equipements || [],
+      accessible_pmr: (s as any).accessible_pmr || false,
+      batiment: (s as any).batiment || '',
+      etage: (s as any).etage || '',
     }}, upsert: true }}));
     const ids = salles.map(s => s._id.toString());
     await this.readSalleModel.deleteMany({ source_id: { $nin: ids } }).exec();

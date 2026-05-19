@@ -109,8 +109,8 @@ export function useMatieresListData(page = 1, niveau = '') {
   return usePageFetch(useCallback(() => readApi.matieresList(page, 8, niveau || undefined), [page, niveau]), undefined, 'matieres');
 }
 
-export function useSallesListData(page = 1) {
-  return usePageFetch(useCallback(() => readApi.sallesList(page, 8), [page]), undefined, 'salles');
+export function useSallesListData(page = 1, type = '', search = '') {
+  return usePageFetch(useCallback(() => readApi.sallesList(page, 10, type || undefined, search || undefined), [page, type, search]), undefined, 'salles');
 }
 
 // Liste des niveaux/classes — ne rafraîchit pas sur move d'un créneau

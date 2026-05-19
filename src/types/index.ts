@@ -154,14 +154,26 @@ export interface Creneau {
   enseignant: string;
 }
 
-export type TypeSalle = 'standard' | 'laboratoire' | 'informatique' | 'sport' | 'arts';
+export type TypeSalle = 'standard' | 'laboratoire' | 'informatique' | 'sport' | 'arts' | 'amphi' | 'autre';
+export type Equipement = 'projecteur' | 'ordinateurs' | 'tableau_interactif' | 'labo_scientifique' | 'sono' | 'climatisation';
 
 export const TYPES_SALLE: { value: TypeSalle; label: string }[] = [
-  { value: 'standard', label: 'Salle standard' },
+  { value: 'standard', label: 'Salle de classe' },
   { value: 'laboratoire', label: 'Laboratoire' },
   { value: 'informatique', label: 'Salle informatique' },
   { value: 'sport', label: 'Salle de sport' },
   { value: 'arts', label: 'Salle arts' },
+  { value: 'amphi', label: 'Amphi' },
+  { value: 'autre', label: 'Autre' },
+];
+
+export const EQUIPEMENTS_SALLE: { value: Equipement; label: string }[] = [
+  { value: 'projecteur', label: 'Projecteur' },
+  { value: 'ordinateurs', label: 'Ordinateurs' },
+  { value: 'tableau_interactif', label: 'Tableau interactif' },
+  { value: 'labo_scientifique', label: 'Labo scientifique' },
+  { value: 'sono', label: 'Sono / Ampli' },
+  { value: 'climatisation', label: 'Climatisation' },
 ];
 
 export interface Salle {
@@ -170,16 +182,28 @@ export interface Salle {
   capacite: number;
   description: string;
   type: TypeSalle;
+  equipements: Equipement[];
+  accessible_pmr: boolean;
+  batiment: string;
+  etage: string;
 }
 
 export interface SalleDisponible extends Salle {
   disponible: boolean;
   occupant: {
     classe_id: string;
+    classe_nom: string;
     matiere_nom: string;
     heure_debut: string;
     heure_fin: string;
   } | null;
+}
+
+export interface SalleStats {
+  creneaux_par_semaine: number;
+  jours_utilises: number;
+  heures_par_semaine: number;
+  taux_occupation: number;
 }
 
 export type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'default' | 'primary';
