@@ -25,7 +25,7 @@ interface EditForm {
 
 export function NiveauxList() {
   const { isViewingArchive: readOnly } = useViewing();
-  const { update, delete: deleteNiveau } = useNiveauxCtx();
+  const { create, update, delete: deleteNiveau } = useNiveauxCtx();
   const confirm = useConfirm();
   const { data, loading, error } = useNiveauxListData();
 
@@ -67,6 +67,25 @@ export function NiveauxList() {
     if (!form.nom.trim()) { setFormError('Le nom est requis'); return; }
     setSubmitting(true);
     setFormError('');
+
+    // Niveau orphelin (pas encore en base) → créer d'abord
+    if (!editNiveau.id) {
+      const result = await create({
+        nom: form.nom.trim(),
+        ordre: parseInt(form.ordre) || 0,
+        description: form.description,
+        matiere_ids: form.matiere_ids,
+      });
+      setSubmitting(false);
+      if (result.ok) {
+        setLocalNiveaux(null); // force re-fetch via data
+        closeEdit();
+      } else {
+        setFormError(result.error || 'Erreur lors de la création');
+      }
+      return;
+    }
+
     const result = await update(editNiveau.id, {
       nom: form.nom.trim(),
       ordre: parseInt(form.ordre) || 0,
@@ -75,7 +94,11 @@ export function NiveauxList() {
     });
     setSubmitting(false);
     if (result.ok) {
-      setLocalNiveaux(prev => prev ? prev.map(n => n.id === editNiveau.id ? { ...n, nom: form.nom.trim(), ordre: parseInt(form.ordre) || 0, description: form.description, matiere_ids: form.matiere_ids } : n) : prev);
+      setLocalNiveaux(prev => prev ? prev.map(n =>
+        n.id === editNiveau.id
+          ? { ...n, nom: form.nom.trim(), niveau: form.nom.trim(), ordre: parseInt(form.ordre) || 0, description: form.description, matiere_ids: form.matiere_ids }
+          : n,
+      ) : prev);
       closeEdit();
     } else {
       setFormError(result.error || 'Erreur lors de la modification');
@@ -86,6 +109,11 @@ export function NiveauxList() {
     const nomAffiche = n.nom ?? n.niveau ?? '';
     const ok = await confirm({ title: 'Supprimer le niveau ?', message: `Le niveau « ${nomAffiche} » sera supprimé. Les classes existantes gardent leur valeur de niveau, mais celui-ci ne sera plus configurable.`, confirmText: 'Supprimer', variant: 'danger' });
     if (!ok) return;
+    // Niveau orphelin → rien à supprimer en base, juste retirer de la liste locale
+    if (!n.id) {
+      setLocalNiveaux(prev => prev ? prev.filter(x => (x.nom ?? x.niveau) !== nomAffiche) : prev);
+      return;
+    }
     const success = await deleteNiveau(n.id);
     if (success) setLocalNiveaux(prev => prev ? prev.filter(x => x.id !== n.id) : prev);
   };
@@ -194,7 +222,7 @@ function NiveauCard({
         </p>
       )}
 
-      {!readOnly && niveau.id && (
+      {!readOnly && (
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
           <Button variant="ghost" size="sm" onClick={onEdit} style={{ flex: 1 }}>Modifier</Button>
           <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}>Supprimer</Button>
