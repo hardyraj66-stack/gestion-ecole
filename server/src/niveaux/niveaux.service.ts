@@ -19,41 +19,44 @@ export class NiveauxService {
     return this.model.findOne({ nom }).exec();
   }
 
-  /**
-   * Si l'ordre demandé est déjà pris par un autre niveau, décale vers le haut
-   * (+1) tous les niveaux dont l'ordre >= ordreVoulu (sauf le niveau en cours d'édition).
-   */
-  private async shiftOrdreIfNeeded(ordreVoulu: number, excludeId?: string) {
-    const conflict = await this.model.findOne({
-      ordre: ordreVoulu,
-      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
-    }).exec();
+  /** Réassigne des ordres consécutifs (0, 1, 2…) en respectant l'ordre voulu pour excludeId. */
+  private async recompact(targetId?: string, targetOrdre?: number) {
+    const all = await this.model.find().sort({ ordre: 1, nom: 1 }).exec();
 
-    if (!conflict) return; // pas de conflit, rien à faire
+    // Construire la liste ordonnée : on place targetId à targetOrdre, les autres autour
+    type Item = { _id: any; ordre: number };
+    let items: Item[] = all.map(n => ({ _id: n._id, ordre: n.ordre }));
 
-    // Décaler tous les niveaux >= ordreVoulu (sauf celui qu'on est en train de modifier)
-    await this.model.updateMany(
-      {
-        ordre: { $gte: ordreVoulu },
-        ...(excludeId ? { _id: { $ne: excludeId } } : {}),
-      },
-      { $inc: { ordre: 1 } },
-    ).exec();
+    if (targetId !== undefined && targetOrdre !== undefined) {
+      // Retirer l'élément cible de la liste, insérer à la bonne position
+      items = items.filter(n => String(n._id) !== targetId);
+      const clampedOrdre = Math.max(0, Math.min(targetOrdre, items.length));
+      items.splice(clampedOrdre, 0, { _id: targetId, ordre: targetOrdre });
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].ordre !== i) {
+        await this.model.findByIdAndUpdate(items[i]._id, { ordre: i }).exec();
+      }
+    }
   }
 
   async create(data: { nom: string; ordre?: number; description?: string; matiere_ids?: string[] }) {
     const existing = await this.model.findOne({ nom: { $regex: `^${data.nom.trim()}$`, $options: 'i' } }).exec();
     if (existing) throw new BadRequestException(`Un niveau nommé « ${data.nom.trim()} » existe déjà`);
 
-    const ordre = data.ordre ?? 0;
-    await this.shiftOrdreIfNeeded(ordre);
+    const total = await this.model.countDocuments().exec();
+    const ordre = Math.max(0, Math.min(data.ordre ?? total, total));
 
-    return new this.model({
+    const saved = await new this.model({
       nom: data.nom.trim(),
       ordre,
       description: data.description ?? '',
       matiere_ids: data.matiere_ids ?? [],
     }).save();
+
+    await this.recompact(String(saved._id), ordre);
+    return this.model.findById(saved._id).exec();
   }
 
   async update(id: string, data: Partial<{ nom: string; ordre: number; description: string; matiere_ids: string[] }>) {
@@ -68,25 +71,27 @@ export class NiveauxService {
       if (duplicate) throw new BadRequestException(`Un niveau nommé « ${data.nom.trim()} » existe déjà`);
     }
 
-    if (data.ordre !== undefined && data.ordre !== existing.ordre) {
-      await this.shiftOrdreIfNeeded(data.ordre, id);
+    const updated = await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+
+    if (data.ordre !== undefined) {
+      await this.recompact(id, data.ordre);
+      return this.model.findById(id).exec();
     }
 
-    return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+    return updated;
   }
 
   async delete(id: string) {
     const deleted = await this.model.findByIdAndDelete(id).exec();
     if (!deleted) return false;
-
-    // Compacter les ordres après suppression pour éviter les trous
-    const all = await this.model.find().sort({ ordre: 1, nom: 1 }).exec();
-    for (let i = 0; i < all.length; i++) {
-      if (all[i].ordre !== i) {
-        await this.model.findByIdAndUpdate(all[i]._id, { ordre: i }).exec();
-      }
-    }
+    await this.recompact();
     return true;
+  }
+
+  /** Compacte publiquement les ordres (utile pour corriger des données existantes). */
+  async recompactPublic() {
+    await this.recompact();
+    return this.model.find().sort({ ordre: 1, nom: 1 }).exec();
   }
 
   /** Vérifie qu'une matière est autorisée pour un niveau donné (par nom de niveau) */

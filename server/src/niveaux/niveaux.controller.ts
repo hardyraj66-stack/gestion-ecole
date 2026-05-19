@@ -21,6 +21,13 @@ export class NiveauxController {
     return item;
   }
 
+  @Post('recompact')
+  async recompact() {
+    const items = await this.service.recompactPublic();
+    this.events.emit('niveau:updated', {});
+    return items;
+  }
+
   @Post()
   async create(@Body() body: any) {
     const item = await this.service.create(body);

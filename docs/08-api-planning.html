@@ -16,19 +16,43 @@
   salle:           String  (requis)  // "Salle 101"
   enseignant:      String  (défaut "")
 }</code></pre>
-<h2>Endpoints API</h2>
+<h2>Endpoints — Write</h2>
 <table>
 <tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
-<tr><td><span class="badge b-get">GET</span></td><td><code>/planning</code></td><td>Tous les créneaux</td></tr>
-<tr><td><span class="badge b-get">GET</span></td><td><code>/planning/:id</code></td><td>Un créneau</td></tr>
 <tr><td><span class="badge b-post">POST</span></td><td><code>/planning</code></td><td>Créer un créneau</td></tr>
-<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/planning/:id</code></td><td>Modifier</td></tr>
-<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/planning/:id</code></td><td>Supprimer</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/planning/:id</code></td><td>Modifier un créneau</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/planning/:id</code></td><td>Supprimer un créneau</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/planning/merge/:classeId</code></td><td>Fusionner les créneaux adjacents identiques d'une classe</td></tr>
 </table>
+
+<h2>Endpoints — Read</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/read/planning/classes</code></td><td>Toutes les classes avec leur nombre de créneaux</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/read/planning/classe/:id</code></td><td>Classe + ses créneaux + ses matières autorisées</td></tr>
+</table>
+
+<h2>Validation — Matière par niveau</h2>
+<p>À chaque création ou modification de créneau, le backend vérifie que la matière est autorisée pour le niveau de la classe :</p>
+<ul>
+<li>Si le niveau de la classe a des <code>matiere_ids</code> configurés → la matière doit figurer dans cette liste</li>
+<li>Si <code>matiere_ids</code> est vide → toutes les matières sont autorisées</li>
+<li>En cas de refus : <code>400 Bad Request</code> — <em>« Cette matière n'est pas autorisée pour le niveau X »</em></li>
+</ul>
+
 <h2>Grille horaire</h2>
 <p>Plage : <strong>07:00 → 18:00</strong> par pas de <strong>30 minutes</strong>.<br>Jours : Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi.</p>
+
 <h2>Dénormalisation</h2>
 <p><code>matiere_nom</code> et <code>matiere_couleur</code> sont stockés directement dans le créneau. Cela permet d'afficher le calendrier sans jointure.</p>
+
+<h2>Événements Socket.IO</h2>
+<table>
+<tr><th>Événement</th><th>Payload</th><th>Déclencheur</th></tr>
+<tr><td><span class="badge b-socket">creneau:created</span></td><td>Objet Creneau complet</td><td>POST /planning</td></tr>
+<tr><td><span class="badge b-socket">creneau:updated</span></td><td>Objet Creneau ou <code>{ classe_id }</code></td><td>PATCH /planning/:id · POST /planning/merge/:classeId</td></tr>
+<tr><td><span class="badge b-socket">creneau:deleted</span></td><td><code>{ id }</code></td><td>DELETE /planning/:id</td></tr>
+</table>
 <div class="doc-footer">
 <a href="07-api-notes.html">← Module Notes</a>
 <a href="09-api-salles.html">Module Salles →</a>

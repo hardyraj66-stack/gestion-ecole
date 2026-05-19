@@ -41,8 +41,9 @@
 <li><strong>variable</strong> : la salle change selon l'emploi du temps. Le formulaire de créneau affiche un sélecteur avec vérification de disponibilité en temps réel.</li>
 </ul>
 
-<h2>Niveaux disponibles</h2>
-<p><code>6ème, 5ème, 4ème, 3ème, 2nde, 1ère, Terminale, CP, CE1, CE2, CM1, CM2</code></p>
+<h2>Niveaux</h2>
+<p>Les niveaux ne sont <strong>pas codés en dur</strong>. Ils sont gérés dynamiquement via le module Niveaux et récupérés depuis <code>GET /read/niveaux</code>. Chaque niveau configure ses matières autorisées et son ordre d'affichage.</p>
+<p>→ Voir <a href="api-niveaux.html">Module Niveaux</a></p>
 
 <div class="doc-footer">
 <a href="03-backend-general.html">← Backend général</a>

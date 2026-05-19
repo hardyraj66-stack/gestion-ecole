@@ -30,9 +30,13 @@ AppModule
 ├── classes/                     Write side (POST/PATCH/DELETE)
 ├── eleves/                      Write side
 ├── matieres/                    Write side
+├── niveaux/                     Write side + GET /niveaux + POST /niveaux/recompact
 ├── notes/                       Write side
-├── planning/                    Write side
-├── salles/                      Write side + GET /disponibles
+├── planning/                    Write side + POST /planning/merge/:classeId
+├── salles/                      Write side + GET /disponibles + GET /:id/stats
+├── suivi/                       Avertissements, absences, retards, convocations
+├── exclusions/                  Exclusions d'élèves
+├── departs/                     Départs d'élèves
 └── annees/                      Gestion cycle scolaire
 </div>
 

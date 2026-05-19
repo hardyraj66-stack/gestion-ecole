@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Niveaux — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🎓 Module Niveaux</h1>
+<p class="subtitle">Niveaux scolaires configurables — ordre d'affichage et matières autorisées par niveau</p>
+
+<h2>Rôle</h2>
+<p>Le module Niveaux est une couche de configuration qui permet de :</p>
+<ul>
+  <li>Définir les niveaux scolaires de l'établissement (6ème, 5ème, Terminale, etc.) avec un ordre d'affichage</li>
+  <li>Restreindre les matières disponibles en planning pour chaque niveau</li>
+  <li>Alimenter dynamiquement les listes déroulantes de niveau (création de classe, planning)</li>
+</ul>
+
+<h2>Schéma MongoDB — Collection <code>niveaux</code></h2>
+<pre><code>{
+  nom:         String   (requis, unique)   // "6ème"
+  ordre:       Number   (requis, défaut 0) // position dans les listes
+  description: String   (défaut "")        // "Collège — 1ère année"
+  matiere_ids: [String] (défaut [])        // IDs des matières autorisées
+  createdAt, updatedAt                     // timestamps auto
+}</code></pre>
+
+<div class="callout callout-info">
+  <p><strong>matiere_ids vide = toutes les matières autorisées.</strong> Ce comportement est intentionnel : un niveau sans restriction laisse toute liberté dans le planning.</p>
+</div>
+
+<h2>Endpoints — Write</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Description</th><th>Body</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/niveaux</code></td><td>Tous les niveaux (triés par ordre)</td><td>—</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/niveaux/:id</code></td><td>Un niveau</td><td>—</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/niveaux</code></td><td>Créer un niveau</td><td><code>{ nom, ordre?, description?, matiere_ids? }</code></td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/niveaux/:id</code></td><td>Modifier un niveau</td><td>Champs partiels</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/niveaux/:id</code></td><td>Supprimer (refusé si des classes utilisent ce niveau)</td><td>—</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/niveaux/recompact</code></td><td>Réassigner les ordres consécutifs (0, 1, 2…)</td><td>—</td></tr>
+</table>
+
+<h2>Endpoint — Read</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Params</th><th>Retour</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/read/niveaux</code></td><td>—</td><td>Liste niveaux configurés + niveaux orphelins, avec <code>count</code></td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/read/niveaux/:niveau/classes</code></td><td><code>:niveau</code> = nom encodé</td><td>Classes du niveau + infos élèves</td></tr>
+</table>
+
+<h3>Format de réponse <code>/read/niveaux</code></h3>
+<pre><code>[
+  {
+    id:          "6a0c...",      // null si niveau orphelin (non configuré)
+    niveau:      "6ème",         // nom du niveau
+    ordre:       0,
+    description: "",
+    matiere_ids: ["abc", "def"],
+    count:       4               // nombre de classes ayant ce niveau
+  },
+  {
+    id: null,                    // présent dans des classes mais pas encore configuré
+    niveau: "CP",
+    ordre: null,
+    description: "",
+    matiere_ids: [],
+    count: 2
+  }
+]</code></pre>
+
+<div class="callout callout-warn">
+  <p><strong>Niveaux orphelins</strong> : si des classes référencent un niveau qui n'existe pas dans la collection <code>niveaux</code>, ce niveau apparaît quand même dans la liste avec <code>id: null</code>. Il peut être configuré (créé) via la modale d'édition dans la page Niveaux.</p>
+</div>
+
+<h2>Règles métier</h2>
+<table>
+<tr><th>Règle</th><th>Détail</th></tr>
+<tr><td>Unicité du nom</td><td>Deux niveaux ne peuvent pas avoir le même nom (insensible à la casse)</td></tr>
+<tr><td>Ordre consécutif</td><td>À chaque création, modification ou suppression, les ordres sont réassignés de manière consécutive (0, 1, 2…) sans trous</td></tr>
+<tr><td>Réorganisation automatique</td><td>Si un niveau est inséré à l'ordre <em>n</em>, tous les niveaux existants à partir de <em>n</em> sont décalés pour maintenir la consécutivité</td></tr>
+<tr><td>Suppression protégée</td><td>Un niveau qui a des classes associées (<code>count &gt; 0</code>) ne peut pas être supprimé. Le frontend masque le bouton Supprimer dans ce cas.</td></tr>
+<tr><td>Validation planning</td><td>À la création/modification d'un créneau, le backend vérifie que la matière est dans <code>matiere_ids</code> du niveau de la classe. Retourne <code>400</code> si refusé.</td></tr>
+</table>
+
+<h2>Gestion de l'ordre</h2>
+<p>L'algorithme <code>recompact(targetId, targetOrdre)</code> dans <code>NiveauxService</code> :</p>
+<ol>
+  <li>Récupère tous les niveaux triés par ordre</li>
+  <li>Retire <code>targetId</code> de la liste</li>
+  <li>L'insère à la position <code>targetOrdre</code> (clampé entre 0 et la longueur de la liste)</li>
+  <li>Réassigne les indices 0, 1, 2… à chaque élément dans l'ordre obtenu</li>
+</ol>
+<p>Ce même algorithme est appelé après chaque <strong>create</strong>, <strong>update</strong> et <strong>delete</strong>, garantissant que les ordres sont toujours consécutifs et sans trous.</p>
+
+<h2>Événements Socket.IO</h2>
+<table>
+<tr><th>Événement</th><th>Payload</th><th>Déclencheur</th></tr>
+<tr><td><span class="badge b-socket">niveau:created</span></td><td>Objet Niveau complet</td><td>POST /niveaux</td></tr>
+<tr><td><span class="badge b-socket">niveau:updated</span></td><td>Objet Niveau ou <code>{}</code> (après recompact)</td><td>PATCH /niveaux/:id · POST /niveaux/recompact</td></tr>
+<tr><td><span class="badge b-socket">niveau:deleted</span></td><td><code>{ id }</code></td><td>DELETE /niveaux/:id</td></tr>
+</table>
+
+<h2>Pages frontend associées</h2>
+<table>
+<tr><th>Page</th><th>Route</th><th>Fonctionnalités</th></tr>
+<tr><td>Liste des niveaux</td><td><code>/niveaux</code></td><td>Grille de cartes, modale d'édition inline, suppression avec confirmation</td></tr>
+<tr><td>Créer un niveau</td><td><code>/niveaux/nouveau</code></td><td>Formulaire complet avec sélecteur de matières autorisées</td></tr>
+</table>
+
+<h2>Comportement de la page <code>/niveaux</code></h2>
+<ul>
+  <li>Chaque niveau s'affiche en carte avec : nom, nombre de classes (badge), ordre, description, matières autorisées (badges)</li>
+  <li><strong>Modifier</strong> : ouvre une modale avec les champs nom, ordre, description et le sélecteur de matières</li>
+  <li><strong>Supprimer</strong> : disponible uniquement si <code>count === 0</code>. Demande confirmation avant suppression.</li>
+  <li>Les <strong>niveaux orphelins</strong> (<code>id: null</code>) peuvent être modifiés (→ crée le niveau en base) mais pas supprimés via l'API (le bouton retire l'entrée de la liste locale uniquement)</li>
+  <li>Carte « + Nouveau niveau » à la fin de la grille, lien vers <code>/niveaux/nouveau</code></li>
+</ul>
+
+<div class="doc-footer">
+<a href="10-api-annees.html">← Module Cycle Scolaire</a>
+<a href="11-front-dashboard.html">Frontend Dashboard →</a>
+</div>
+</div>
+</body></html>

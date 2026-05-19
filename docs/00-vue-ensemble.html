@@ -57,6 +57,7 @@ Backend (NestJS)
 │   ├── EleveContext.tsx       Write only + socket listen
 │   ├── MatiereContext.tsx     Write only + socket listen
 │   ├── NoteContext.tsx        Write only + bulletin helper
+│   ├── NiveauContext.tsx      Write only — CRUD niveaux
 │   ├── PlanningContext.tsx    Write only + socket listen
 │   ├── SalleContext.tsx       Write + lecture salles utilitaires
 │   ├── ViewingContext.tsx     Mode archive / snapshot
@@ -91,6 +92,7 @@ Backend (NestJS)
 ├── classes/
 ├── eleves/
 ├── matieres/
+├── niveaux/        niveaux scolaires — ordre, matières autorisées
 ├── notes/
 ├── planning/
 ├── salles/
@@ -118,6 +120,7 @@ Backend (NestJS)
 <tr><td><code>notes</code></td><td>1 doc / note</td><td>Source de vérité</td></tr>
 <tr><td><code>creneaux</code></td><td>1 doc / créneau</td><td>Source de vérité</td></tr>
 <tr><td><code>salles</code></td><td>1 doc / salle</td><td>Source de vérité</td></tr>
+<tr><td><code>niveaux</code></td><td>1 doc / niveau</td><td>Configuration des niveaux scolaires</td></tr>
 </table>
 
 <h3>Collections read</h3>

@@ -3,39 +3,92 @@
 <div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
 <div class="doc">
 <h1>📅 Planning</h1>
-<p class="subtitle">Pages <code>/planning</code> et <code>/classes/:id/planning</code></p>
-<h2>Layout</h2>
+<p class="subtitle">Emploi du temps hebdomadaire par classe — page <code>/planning</code> et <code>/planning/:id</code></p>
+
+<h2>Layout général</h2>
 <div class="schema">
-┌─ Liste classes (280px) ─┬─ Contenu ──────────────────────┐
-│                          │                                │
-│  ┌─ ClasseItem ────────┐ │  ┌─ Configuration ──────────┐  │
-│  │ 6ème A    [3]       │ │  │ Nom │ Niveau │ Salle │…  │  │
-│  └─────────────────────┘ │  └──────────────────────────┘  │
-│  ┌─ ClasseItem (actif) ┐ │                                │
-│  │ 5ème B    [8]       │ │  ┌─ CreneauForm ────────────┐  │
-│  └─────────────────────┘ │  │ (toggle) Matière, jour…  │  │
-│  …                       │  └──────────────────────────┘  │
-│                          │                                │
-│                          │  ┌─ Calendrier ─────────────┐  │
-│                          │  │ Lun │ Mar │ Mer │ Jeu │…  │  │
-│                          │  │ 08h │     │ [M] │     │   │  │
-│                          │  │ 09h │ [F] │     │ [E] │   │  │
-│                          │  └──────────────────────────┘  │
-└──────────────────────────┴────────────────────────────────┘
+┌─ Sidebar (240px) ──────────┬─ Zone principale ──────────────────┐
+│                             │                                    │
+│  Niveaux (accordéon)        │  Barre d'infos classe              │
+│  ▸ 6ème  [4]                │  Classe │ Créneaux │ H/sem │ Mode  │
+│  ▾ 5ème  [2]  ← popover     │                                    │
+│    ├ 5ème A  [8]  ●         │  ┌─ Grille horaire ──────────────┐ │
+│    └ 5ème B  [5]            │  │  07:00                        │ │
+│  ▸ 4ème  [3]                │  │  07:30  [Maths]               │ │
+│                             │  │  08:00  [Français] [Physique] │ │
+│  ─────────────────          │  │  …                            │ │
+│  Sélection : 5ème A         │  └───────────────────────────────┘ │
+│  5ème · Salle 101           │                                    │
+└─────────────────────────────┴────────────────────────────────────┘
 </div>
-<h2>Sélection de classe</h2>
-<p>Liste à gauche avec toutes les classes. Chaque item affiche le nom, le niveau, la salle et un badge avec le nombre de créneaux. La classe sélectionnée est surlignée.</p>
-<h2>Configuration</h2>
-<p>Barre d'informations : nom de classe, niveau, salle, mode (badge Fixe/Variable), nombre de créneaux, heures/semaine.</p>
-<h2>Formulaire de créneau</h2>
+
+<h2>Sidebar — Navigation par niveaux</h2>
+<p>Les niveaux sont chargés depuis <code>GET /read/niveaux</code> et triés selon leur <code>ordre</code>. Chaque niveau est un accordéon (popover) qui liste les classes qui lui appartiennent. Cliquer sur une classe la sélectionne et charge son planning.</p>
 <ul>
-<li>Grille 3 colonnes : matière*, jour*, enseignant</li>
-<li>Grille 3 colonnes : heure début*, heure fin*, salle*</li>
-<li>Salle en mode <strong>fixe</strong> : input readonly avec badge « Fixe »</li>
-<li>Salle en mode <strong>variable</strong> : select avec vérification de disponibilité en temps réel (re-fetch quand jour/heure changent), légende vert/rouge</li>
+  <li>Badge sur chaque niveau : nombre de classes</li>
+  <li>Badge sur chaque classe : nombre de créneaux (<code>_creneauxCount</code>)</li>
+  <li>Encart « Sélection » en bas de sidebar : nom, niveau, salle de la classe active</li>
 </ul>
-<h2>Calendrier hebdomadaire</h2>
-<p>Table <code>planning-table</code> : lignes = heures (07:00→18:00, pas 30min), colonnes = jours (Lun→Sam). Chaque créneau = bloc coloré (couleur matière) avec nom, horaires, salle, enseignant. Bouton ✕ au survol pour supprimer.</p>
+
+<h2>Barre d'outils (mode édition uniquement)</h2>
+<ul>
+  <li><strong>Annuler</strong> (Ctrl+Z) — revient en arrière sur la dernière action</li>
+  <li><strong>Rétablir</strong> (Ctrl+Y / Ctrl+Shift+Z) — refait l'action annulée</li>
+  <li>Pile undo/redo illimitée par session</li>
+  <li>Hint contextuel : <em>Clic → créer · Glisser → déplacer · Clic droit → options</em></li>
+</ul>
+
+<h2>Grille horaire</h2>
+<p>Plage <strong>07:00 → 18:00</strong> · pas de <strong>30 minutes</strong> · colonnes : Lundi → Samedi.</p>
+<ul>
+  <li>Chaque créneau est un bloc coloré (couleur de la matière) affichant : nom matière, horaires, salle, enseignant</li>
+  <li>Les créneaux s'étirent sur plusieurs lignes selon leur durée (CSS grid row-span)</li>
+</ul>
+
+<h2>Interactions sur la grille</h2>
+<table>
+<tr><th>Geste</th><th>Action</th></tr>
+<tr><td>Clic sur cellule vide</td><td>Ouvre la modale de création pré-remplie (jour + heure)</td></tr>
+<tr><td>Clic sur créneau</td><td>Ouvre la modale d'édition</td></tr>
+<tr><td>Glisser-déposer créneau</td><td>Déplace vers une nouvelle cellule — modale de confirmation avant sauvegarde</td></tr>
+<tr><td>Redimensionner (bas du bloc)</td><td>Étend ou réduit la durée par incrément de 30 min</td></tr>
+<tr><td>Clic droit créneau</td><td>Menu contextuel : Modifier · Dupliquer · Supprimer</td></tr>
+<tr><td>Survol créneau</td><td>Tooltip : matière, enseignant, salle, durée</td></tr>
+<tr><td>Sélection multi-cellules (drag)</td><td>Sélectionne un bloc de cellules → crée un créneau sur la plage</td></tr>
+</table>
+
+<h2>Modale de création / édition</h2>
+<ul>
+  <li><strong>Matière</strong> — liste filtrée par les matières autorisées du niveau (via config du niveau)</li>
+  <li><strong>Jour</strong>, <strong>heure début</strong>, <strong>heure fin</strong></li>
+  <li><strong>Salle</strong> :
+    <ul>
+      <li>Mode <em>fixe</em> : champ en lecture seule, salle imposée par la classe</li>
+      <li>Mode <em>variable</em> : sélecteur avec vérification de disponibilité en temps réel — légende verte/rouge selon conflit</li>
+    </ul>
+  </li>
+  <li><strong>Enseignant</strong> (optionnel)</li>
+</ul>
+
+<h2>Filtre matières par niveau</h2>
+<p>Les options de la liste matières sont filtrées en fonction de la configuration du niveau de la classe sélectionnée :</p>
+<ul>
+  <li>Si le niveau a des <code>matiere_ids</code> configurés → seules ces matières apparaissent dans le select</li>
+  <li>Si <code>matiere_ids</code> est vide → toutes les matières sont proposées</li>
+</ul>
+<div class="callout callout-info"><p>Le backend applique également cette règle de validation à la création/modification d'un créneau et renvoie <code>400 Bad Request</code> si la matière n'est pas autorisée.</p></div>
+
+<h2>État local et undo/redo</h2>
+<p>L'état du planning est géré par le hook <code>usePlanningState</code>. Chaque action (créer, modifier, déplacer, supprimer, dupliquer) est empilée dans <code>undoStack</code>. Annuler une action la bascule dans <code>redoStack</code>.</p>
+
+<h2>Données chargées</h2>
+<table>
+<tr><th>Source</th><th>Endpoint</th><th>Contenu</th></tr>
+<tr><td>Liste classes (sidebar)</td><td><code>GET /read/planning/classes</code></td><td>Toutes classes + <code>_creneauxCount</code></td></tr>
+<tr><td>Planning classe</td><td><code>GET /read/planning/classe/:id</code></td><td>Classe + créneaux + matières autorisées</td></tr>
+<tr><td>Config niveaux</td><td><code>GET /read/niveaux</code></td><td>Ordre + matière_ids par niveau</td></tr>
+</table>
+
 <div class="doc-footer">
 <a href="15-front-notes.html">← Saisie des Notes</a>
 <a href="17-front-salles.html">Gestion des Salles →</a>
