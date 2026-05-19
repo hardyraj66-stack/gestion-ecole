@@ -225,7 +225,10 @@ function NiveauCard({
       {!readOnly && (
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
           <Button variant="ghost" size="sm" onClick={onEdit} style={{ flex: 1 }}>Modifier</Button>
-          <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}>Supprimer</Button>
+          {(niveau.count ?? 0) === 0
+            ? <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}>Supprimer</Button>
+            : <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', alignSelf: 'center', paddingRight: '0.25rem' }}>Non supprimable</span>
+          }
         </div>
       )}
     </Card>
