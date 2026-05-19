@@ -65,6 +65,12 @@ export function NiveauxList() {
   const handleSave = async () => {
     if (!editNiveau) return;
     if (!form.nom.trim()) { setFormError('Le nom est requis'); return; }
+    const ordreVal = parseInt(form.ordre) || 0;
+    const maxOrdre = editNiveau.id ? niveaux.length - 1 : niveaux.length;
+    if (ordreVal < 0 || ordreVal > maxOrdre) {
+      setFormError(`L'ordre doit être entre 0 et ${maxOrdre}`);
+      return;
+    }
     setSubmitting(true);
     setFormError('');
 
@@ -168,6 +174,7 @@ export function NiveauxList() {
           form={form}
           setForm={setForm}
           allMatieres={allMatieres}
+          maxOrdre={editNiveau.id ? niveaux.length - 1 : niveaux.length}
           submitting={submitting}
           error={formError}
           onToggleMatiere={toggleMatiere}
@@ -236,13 +243,14 @@ function NiveauCard({
 }
 
 function EditNiveauModal({
-  niveau, form, setForm, allMatieres, submitting, error,
+  niveau, form, setForm, allMatieres, maxOrdre, submitting, error,
   onToggleMatiere, onSave, onClose,
 }: {
   niveau: Niveau;
   form: EditForm;
   setForm: React.Dispatch<React.SetStateAction<EditForm>>;
   allMatieres: { id: string; nom: string; code: string }[];
+  maxOrdre: number;
   submitting: boolean;
   error: string;
   onToggleMatiere: (id: string) => void;
@@ -266,11 +274,13 @@ function EditNiveauModal({
               placeholder="Ex: 6ème, CE1..."
             />
             <Input
-              label="Ordre d'affichage"
+              label={`Ordre (0–${maxOrdre})`}
               type="number"
               value={form.ordre}
               onChange={e => setForm(f => ({ ...f, ordre: e.target.value }))}
-              style={{ width: 80 }}
+              min={0}
+              max={maxOrdre}
+              style={{ width: 90 }}
             />
           </div>
 

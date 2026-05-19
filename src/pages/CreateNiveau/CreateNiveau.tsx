@@ -20,6 +20,7 @@ export function CreateNiveau() {
   const [description, setDescription] = useState('');
   const [matiereIds, setMatiereIds] = useState<string[]>([]);
   const [allMatieres, setAllMatieres] = useState<{ id: string; nom: string; code: string }[]>([]);
+  const [niveauxCount, setNiveauxCount] = useState(0);
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -28,6 +29,9 @@ export function CreateNiveau() {
   useEffect(() => {
     readApi.matieresList(1, 200).then((res: any) => {
       if (res?.items) setAllMatieres(res.items.map((m: any) => ({ id: m.id, nom: m.nom, code: m.code })));
+    });
+    readApi.niveaux().then((res: any) => {
+      if (res && Array.isArray(res)) setNiveauxCount(res.length);
     });
   }, []);
 
@@ -40,11 +44,16 @@ export function CreateNiveau() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nom.trim()) { setError('Le nom est requis'); return; }
+    const ordreVal = parseInt(ordre) || 0;
+    if (ordreVal < 0 || ordreVal > niveauxCount) {
+      setError(`L'ordre doit être entre 0 et ${niveauxCount}`);
+      return;
+    }
     setSubmitting(true);
     setError('');
     const result = await create({
       nom: nom.trim(),
-      ordre: parseInt(ordre) || 0,
+      ordre: ordreVal,
       description,
       matiere_ids: matiereIds,
     });
@@ -83,6 +92,8 @@ export function CreateNiveau() {
               onChange={e => setOrdre(e.target.value)}
               placeholder="0"
               min={0}
+              max={niveauxCount}
+              hint={`Entre 0 et ${niveauxCount}`}
             />
 
             <div style={{ gridColumn: '1 / -1' }}>
