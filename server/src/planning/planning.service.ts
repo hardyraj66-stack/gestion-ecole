@@ -1,14 +1,20 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Creneau } from './creneau.schema';
+import { Classe } from '../classes/classe.schema';
+import { NiveauxService } from '../niveaux/niveaux.service';
 
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 function toMin(t: string) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 
 @Injectable()
 export class PlanningService {
-  constructor(@InjectModel(Creneau.name) private model: Model<Creneau>) {}
+  constructor(
+    @InjectModel(Creneau.name) private model: Model<Creneau>,
+    @InjectModel(Classe.name) private classeModel: Model<Classe>,
+    private niveauxService: NiveauxService,
+  ) {}
 
   findAll() { return this.model.find().exec(); }
   findById(id: string) { return this.model.findById(id).exec(); }
@@ -30,13 +36,30 @@ export class PlanningService {
     }
   }
 
+  private async checkMatiereAutorisee(classeId: string, matiereId: string) {
+    if (!classeId || !matiereId) return;
+    const classe = await this.classeModel.findById(classeId).lean().exec() as any;
+    if (!classe) return;
+    const autorisee = await this.niveauxService.isMatiereAutorisee(classe.niveau, matiereId);
+    if (!autorisee) {
+      throw new BadRequestException(
+        `Cette matière n'est pas autorisée pour le niveau ${classe.niveau}`,
+      );
+    }
+  }
+
   async create(data: any) {
+    await this.checkMatiereAutorisee(data.classe_id, data.matiere_id);
     await this.checkSalleConflict(data.salle, data.jour, data.heure_debut, data.heure_fin);
     return new this.model(data).save();
   }
 
   async update(id: string, data: any) {
     const existing = await this.model.findById(id).lean().exec() as any;
+    const classeId = data.classe_id ?? existing?.classe_id;
+    const matiereId = data.matiere_id ?? existing?.matiere_id;
+    await this.checkMatiereAutorisee(classeId, matiereId);
+
     const salle = data.salle ?? existing?.salle;
     const jour = data.jour ?? existing?.jour;
     const hd = data.heure_debut ?? existing?.heure_debut;
@@ -82,7 +105,6 @@ export class PlanningService {
         await this.model.findByIdAndUpdate(a._id, { heure_fin: b.heure_fin }).exec();
         await this.model.findByIdAndDelete(b._id).exec();
         deleted.add(String(b._id));
-        // Mettre à jour a dans le tableau trié pour permettre la fusion en cascade
         sorted[i] = { ...a, heure_fin: b.heure_fin };
         mergeCount++;
       }
