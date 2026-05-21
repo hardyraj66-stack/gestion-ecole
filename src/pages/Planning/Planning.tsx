@@ -241,30 +241,36 @@ export function Planning() {
       <CreateModal
         show={s.showCreatePopup}
         formJour={s.formJour} formDebut={s.formDebut} formFin={s.formFin}
-        formMatiereId={s.formMatiereId} formSalle={s.formSalle} formEnseignant={s.formEnseignant}
+        formMatiereId={s.formMatiereId} formSalle={s.formSalle}
+        profResolu={s.profResolu}
         formSubmitting={s.formSubmitting} formError={s.formError}
         matiereOptions={matiereOptions}
         salleFixe={selectedClasse?.salle_type === 'fixe' ? (selectedClasse.salle || '') : undefined}
         initialConflict={s.formSalleConflict}
+        classeData={classeData}
+        selectedClasse={selectedClasse}
         onClose={() => s.setShowCreatePopup(false)}
         onSubmit={e => { e.preventDefault(); s.doCreate(); }}
         setFormJour={s.setFormJour} setFormDebut={s.setFormDebut} setFormFin={s.setFormFin}
-        setFormMatiereId={s.setFormMatiereId} setFormSalle={s.setFormSalle} setFormEnseignant={s.setFormEnseignant}
+        setFormMatiereId={s.setFormMatiereId} setFormSalle={s.setFormSalle}
+        setProfResolu={s.setProfResolu}
       />
 
       <EditModal
         show={s.showEditPopup} editCreneau={s.editCreneau}
         editMatiereId={s.editMatiereId} editJour={s.editJour} editDebut={s.editDebut} editFin={s.editFin}
-        editSalle={s.editSalle} editEnseignant={s.editEnseignant}
+        editSalle={s.editSalle} editProfResolu={s.editProfResolu}
         editSubmitting={s.editSubmitting} editError={s.editError}
         matiereOptions={matiereOptions}
         salleFixe={selectedClasse?.salle_type === 'fixe' ? (selectedClasse.salle || '') : undefined}
         initialConflict={s.editSalleConflict}
+        classeData={classeData}
+        selectedClasse={selectedClasse}
         onClose={() => s.setShowEditPopup(false)}
         onSubmit={e => { e.preventDefault(); s.doEdit(); }}
         setEditMatiereId={s.setEditMatiereId} setEditJour={s.setEditJour}
         setEditDebut={s.setEditDebut} setEditFin={s.setEditFin}
-        setEditSalle={s.setEditSalle} setEditEnseignant={s.setEditEnseignant}
+        setEditSalle={s.setEditSalle} setEditProfResolu={s.setEditProfResolu}
       />
 
       <MoveModal

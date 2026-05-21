@@ -12,6 +12,9 @@ import { SuiviModule } from './suivi/suivi.module';
 import { ExclusionsModule } from './exclusions/exclusions.module';
 import { DepartsModule } from './departs/departs.module';
 import { NiveauxModule } from './niveaux/niveaux.module';
+import { ProfesseursModule } from './professeurs/professeurs.module';
+import { TeacherAssignmentsModule } from './teacher-assignments/teacher-assignments.module';
+import { PlanningExecutionsModule } from './planning-executions/planning-executions.module';
 import { EventsModule } from './events/events.module';
 import { SeederModule } from './data/seeder.module';
 import { ApiLoggerMiddleware } from './common/api-logger.middleware';
@@ -35,6 +38,9 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ec
     ExclusionsModule,
     DepartsModule,
     NiveauxModule,
+    ProfesseursModule,
+    TeacherAssignmentsModule,
+    PlanningExecutionsModule,
   ],
 })
 export class AppModule implements NestModule {

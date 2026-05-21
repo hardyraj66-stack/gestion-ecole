@@ -180,7 +180,7 @@ function PlanningCell({ jour: _j, heure: h, cellCr, isBreak, inSel, ghost, ghost
             <div className="pcb-title">{cellCr.matiere_nom}</div>
             <div className="pcb-meta">{cellCr.heure_debut}–{cellCr.heure_fin}</div>
             {cellCr.salle && <div className="pcb-meta">📍 {cellCr.salle}</div>}
-            {cellCr.enseignant && <div className="pcb-meta pcb-teacher">👤 {cellCr.enseignant}</div>}
+            {cellCr.professeur_nom && <div className="creneau-block-prof">{cellCr.professeur_nom}</div>}
           </div>
           {!readOnly && <button type="button" className="pcb-delete" onClick={e => { e.stopPropagation(); onDelete(cellCr); }}>✕</button>}
           {!readOnly && isEnd && <div className="pcb-resize-handle pcb-resize-bottom" onMouseDown={e => onResizeStart(e, cellCr, 'bottom')} />}

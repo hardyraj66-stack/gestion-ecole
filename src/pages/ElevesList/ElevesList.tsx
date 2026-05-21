@@ -24,7 +24,6 @@ export function ElevesList() {
   const { data, loading, error } = useElevesListData(page, search, classeId, eleveId);
 
   const eleves = data?.eleves || [];
-  const classes = data?.classes || [];
   const total = data?.total || 0;
   const totalAll = data?.totalAll || 0;
 
@@ -79,7 +78,7 @@ export function ElevesList() {
         <EmptyState icon={<Icon path={Icons.search} size={28} />} message="Aucun élève ne correspond" />
       ) : (
         <>
-          <ElevesListTable eleves={eleves} classes={classes} />
+          <ElevesListTable eleves={eleves} />
           <Pagination currentPage={page} totalItems={total} pageSize={12} onPageChange={setPage} />
         </>
       )}

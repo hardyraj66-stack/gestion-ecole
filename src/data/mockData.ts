@@ -243,7 +243,8 @@ function generateCreneaux(): Creneau[] {
             heure_debut: heureDebut,
             heure_fin: heureFin,
             salle: salleNom,
-            enseignant: enseignants[matiere.id] || '',
+            professeur_id: '',
+            professeur_nom: enseignants[matiere.id] || '',
           });
           
           creneauId++;

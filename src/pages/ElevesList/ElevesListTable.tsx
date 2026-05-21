@@ -9,13 +9,10 @@ import { getInitials } from '../../utils/helpers';
 
 interface ElevesListTableProps {
   eleves: Eleve[];
-  classes: any[];
 }
 
-export function ElevesListTable({ eleves, classes }: ElevesListTableProps) {
+export function ElevesListTable({ eleves }: ElevesListTableProps) {
   const navigate = useNavigate();
-
-  const getClasseName = (cid: string) => classes.find((c: any) => c.id === cid)?.nom || '—';
 
   return (
     <Card padding="none">
@@ -34,7 +31,7 @@ export function ElevesListTable({ eleves, classes }: ElevesListTableProps) {
             <TableRow key={e.id} onClick={() => navigate(`/eleves/${e.id}`)}>
               <TableCell><div className="eleve-info"><Avatar initiales={getInitials(e)} genre={e.genre} /><span className="eleve-name eleve-name-link">{e.prenom} {e.nom}</span></div></TableCell>
               <TableCell><Badge label={e.genre === 'M' ? 'Garçon' : 'Fille'} variant={e.genre === 'M' ? 'info' : 'warning'} /></TableCell>
-              <TableCell><Link to={`/classes/${e.classe_id}/eleves`} className="link-primary">{e.classe_nom || getClasseName(e.classe_id)}</Link></TableCell>
+              <TableCell><Link to={`/classes/${e.classe_id}/eleves`} className="link-primary">{e.classe_nom || '—'}</Link></TableCell>
               <TableCell>{e.email || '—'}</TableCell>
               <TableCell>
                 <div style={{ display: 'flex', gap: '0.5rem' }} onClick={ev => ev.stopPropagation()}>

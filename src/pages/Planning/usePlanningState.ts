@@ -48,7 +48,7 @@ export function usePlanningState(
   const [formFin, setFormFin] = useState('09:00');
   const [formMatiereId, setFormMatiereId] = useState('');
   const [formSalle, setFormSalle] = useState('');
-  const [formEnseignant, setFormEnseignant] = useState('');
+  const [profResolu, setProfResolu] = useState<{ id: string; nom: string } | null>(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSalleConflict, setFormSalleConflict] = useState<SalleOccupant | null>(null);
@@ -61,7 +61,7 @@ export function usePlanningState(
   const [editDebut, setEditDebut] = useState('');
   const [editFin, setEditFin] = useState('');
   const [editSalle, setEditSalle] = useState('');
-  const [editEnseignant, setEditEnseignant] = useState('');
+  const [editProfResolu, setEditProfResolu] = useState<{ id: string; nom: string } | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
   const [editSalleConflict, setEditSalleConflict] = useState<SalleOccupant | null>(null);
@@ -183,7 +183,7 @@ export function usePlanningState(
     if (breaksOverlap(startH, endH)) { notification.show('⏸ Chevauche la pause.'); setSelStart(null); setSelEnd(null); return; }
     const salle = selectedClasse?.salle || '';
     setFormJour(selStart.jour); setFormDebut(startH); setFormFin(endH);
-    setFormSalle(salle); setFormMatiereId(''); setFormEnseignant(''); setFormError('');
+    setFormSalle(salle); setFormMatiereId(''); setProfResolu(null); setFormError('');
     const conflict = await checkSalleConflict(salle, selStart.jour, startH, endH);
     setFormSalleConflict(conflict);
     setShowCreatePopup(true);
@@ -200,7 +200,7 @@ export function usePlanningState(
     if (!mat) return;
     setFormSubmitting(true); setFormError('');
     await createWithError(
-      { classe_id: selectedClasse.id, matiere_id: formMatiereId, matiere_nom: mat.nom, matiere_couleur: mat.couleur || '#2563eb', jour: formJour, heure_debut: formDebut, heure_fin: formFin, salle: formSalle, enseignant: formEnseignant.trim() },
+      { classe_id: selectedClasse.id, matiere_id: formMatiereId, matiere_nom: mat.nom, matiere_couleur: mat.couleur || '#2563eb', jour: formJour, heure_debut: formDebut, heure_fin: formFin, salle: formSalle, professeur_id: profResolu?.id || '', professeur_nom: profResolu?.nom || '' },
       () => setShowCreatePopup(false),
       (err) => setFormError(err),
     );
@@ -213,7 +213,8 @@ export function usePlanningState(
     if (readOnly) return;
     setEditCreneau(cr); setEditMatiereId(cr.matiere_id); setEditJour(cr.jour);
     setEditDebut(cr.heure_debut); setEditFin(cr.heure_fin);
-    setEditSalle(cr.salle || ''); setEditEnseignant(cr.enseignant || '');
+    setEditSalle(cr.salle || '');
+    setEditProfResolu(cr.professeur_id ? { id: cr.professeur_id, nom: cr.professeur_nom || '' } : null);
     setEditError(''); setContextMenu(null);
     const conflict = await checkSalleConflict(cr.salle || '', cr.jour, cr.heure_debut, cr.heure_fin, cr.id);
     setEditSalleConflict(conflict);
@@ -227,8 +228,8 @@ export function usePlanningState(
     const mat = allMatieres.find((m: any) => m.id === editMatiereId);
     setEditSubmitting(true); setEditError('');
     try {
-      const before = { matiere_id: editCreneau.matiere_id, jour: editCreneau.jour, heure_debut: editCreneau.heure_debut, heure_fin: editCreneau.heure_fin, salle: editCreneau.salle, enseignant: editCreneau.enseignant };
-      const payload: any = { jour: editJour, heure_debut: editDebut, heure_fin: editFin, salle: editSalle, enseignant: editEnseignant.trim() };
+      const before = { matiere_id: editCreneau.matiere_id, jour: editCreneau.jour, heure_debut: editCreneau.heure_debut, heure_fin: editCreneau.heure_fin, salle: editCreneau.salle, professeur_id: editCreneau.professeur_id };
+      const payload: any = { jour: editJour, heure_debut: editDebut, heure_fin: editFin, salle: editSalle, professeur_id: editProfResolu?.id || '' };
       if (mat) { payload.matiere_id = editMatiereId; payload.matiere_nom = mat.nom; payload.matiere_couleur = mat.couleur || '#2563eb'; }
       await updateCreneau(editCreneau.id, payload);
       pushUndo({ type: 'update', id: editCreneau.id, before, after: payload });
@@ -243,7 +244,7 @@ export function usePlanningState(
     setContextMenu(null);
     notification.show('Duplication en cours…');
     await createWithError(
-      { classe_id: cr.classe_id, matiere_id: cr.matiere_id, matiere_nom: cr.matiere_nom, matiere_couleur: cr.matiere_couleur, jour: cr.jour, heure_debut: cr.heure_debut, heure_fin: cr.heure_fin, salle: cr.salle, enseignant: cr.enseignant || '' },
+      { classe_id: cr.classe_id, matiere_id: cr.matiere_id, matiere_nom: cr.matiere_nom, matiere_couleur: cr.matiere_couleur, jour: cr.jour, heure_debut: cr.heure_debut, heure_fin: cr.heure_fin, salle: cr.salle, professeur_id: cr.professeur_id || '', professeur_nom: cr.professeur_nom || '' },
       () => notification.show('✓ Créneau dupliqué'),
       (err) => notification.show(`⚠ ${err}`),
     );
@@ -329,13 +330,13 @@ export function usePlanningState(
     showCreatePopup, setShowCreatePopup,
     formJour, setFormJour, formDebut, setFormDebut, formFin, setFormFin,
     formMatiereId, setFormMatiereId, formSalle, setFormSalle,
-    formEnseignant, setFormEnseignant, formSubmitting, formError, doCreate,
+    profResolu, setProfResolu, formSubmitting, formError, doCreate,
     formSalleConflict, setFormSalleConflict,
     // Edit
     showEditPopup, setShowEditPopup, editCreneau,
     editMatiereId, setEditMatiereId, editJour, setEditJour,
     editDebut, setEditDebut, editFin, setEditFin,
-    editSalle, setEditSalle, editEnseignant, setEditEnseignant,
+    editSalle, setEditSalle, editProfResolu, setEditProfResolu,
     editSubmitting, editError, doEdit,
     editSalleConflict, setEditSalleConflict,
     handleOpenEdit,

@@ -10,6 +10,8 @@ import { ReadSalle } from './schemas/read-salle.schema';
 import { AnneeScolaire } from '../annees/annee.schema';
 import { Convocation } from '../suivi/convocation.schema';
 import { Niveau } from '../niveaux/niveau.schema';
+import { Professeur } from '../professeurs/professeur.schema';
+import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -31,10 +33,12 @@ export class ReadService {
     @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
     @InjectModel(Convocation.name) private convocationModel: Model<Convocation>,
     @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
+    @InjectModel(Professeur.name) private professeurModel: Model<Professeur>,
+    @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
   ) {}
 
   // ============ DASHBOARD ============
-  async getDashboard(classesPage = 1, classesLimit = 5) {
+  async getDashboard(classesPage = 1, classesLimit = 5): Promise<any> {
     const today = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
@@ -86,17 +90,25 @@ export class ReadService {
     if (search) filter.nom = { $regex: search, $options: 'i' };
     if (niveau) filter.niveau = niveau;
 
-    const [items, total, allNiveaux] = await Promise.all([
+    const [items, total, niveauxConfig, distinctNiveaux, sallesFixe] = await Promise.all([
       this.readClasseModel.find(filter).skip((page - 1) * limit).limit(limit).exec(),
       this.readClasseModel.countDocuments(filter).exec(),
+      this.niveauModel.find().sort({ ordre: 1 }).exec(),
       this.readClasseModel.distinct('niveau').exec(),
+      this.readClasseModel.find({ salle_type: 'fixe', salle: { $ne: '' } }, { source_id: 1, salle: 1, nom: 1 }).exec(),
     ]);
+
+    // Niveaux dans l'ordre configuré, puis orphelins à la fin
+    const configuredNoms = niveauxConfig.map(n => n.nom);
+    const orphelins = (distinctNiveaux as string[]).filter(n => !configuredNoms.includes(n)).sort();
+    const niveaux = [...configuredNoms.filter(n => (distinctNiveaux as string[]).includes(n)), ...orphelins];
 
     return {
       items: items.map(c => c.toJSON()),
-      niveaux: allNiveaux.sort(),
+      niveaux,
       total, page, limit,
       totalPages: Math.ceil(total / limit),
+      sallesOccupees: sallesFixe.map(c => ({ classeId: c.source_id, classNom: c.nom, salle: c.salle })),
     };
   }
 
@@ -164,17 +176,14 @@ export class ReadService {
       }
     }
 
-    const [items, total, classes] = await Promise.all([
+    const [items, total, totalAll] = await Promise.all([
       this.readEleveModel.find(filter).skip((page - 1) * limit).limit(limit).exec(),
       this.readEleveModel.countDocuments(filter).exec(),
-      this.readClasseModel.find().exec(),
+      this.readEleveModel.countDocuments().exec(),
     ]);
-
-    const totalAll = await this.readEleveModel.countDocuments().exec();
 
     return {
       eleves: items.map(e => e.toJSON()),
-      classes: classes.map(c => { const j = c.toJSON(); return { id: j.id, nom: j.nom, niveau: j.niveau }; }),
       total, totalAll, page, limit,
       totalPages: Math.ceil(total / limit),
     };
@@ -236,18 +245,30 @@ export class ReadService {
 
   // ============ PLANNING — créneaux d'UNE classe ============
   async getPlanningClasse(classeId: string) {
-    const [classe, creneaux, matieres] = await Promise.all([
+    const [classe, creneaux, matieres, assignments] = await Promise.all([
       this.readClasseModel.findOne({ source_id: classeId }).exec(),
       this.readCreneauModel.find({ classe_id: classeId }).exec(),
       this.readMatiereModel.find().exec(),
+      this.assignmentModel.find({ classe_id: classeId }).lean().exec(),
     ]);
 
     if (!classe) return null;
+
+    const profIds = [...new Set((assignments as any[]).map((a: any) => a.professeur_id).filter(Boolean))];
+    const profs = profIds.length > 0
+      ? await this.professeurModel.find({ _id: { $in: profIds } }).lean().exec()
+      : [];
+    const pm = new Map((profs as any[]).map((p: any) => [p._id.toString(), p]));
+    const assignmentsEnriched = (assignments as any[]).map((a: any) => {
+      const p = pm.get(a.professeur_id);
+      return { ...a, id: a._id.toString(), professeur_nom: p ? `${p.prenom} ${p.nom}` : '' };
+    });
 
     return {
       classe: classe.toJSON(),
       creneaux: creneaux.map(c => c.toJSON()),
       matieres: matieres.map(m => m.toJSON()),
+      assignments: assignmentsEnriched,
     };
   }
 
@@ -315,6 +336,57 @@ export class ReadService {
       annee: annee.toJSON(), classes: classes.map(c => c.toJSON()), eleves: eleves.map(e => e.toJSON()),
       notes: notes.map(n => n.toJSON()), creneaux: creneaux.map(c => c.toJSON()), matieres: matieres.map(m => m.toJSON()),
     };
+  }
+
+  // ============ PROFESSEURS ============
+  async getProfesseursList(page = 1, limit = 20, search = '') {
+    const filter: any = {};
+    if (search) {
+      filter.$or = [
+        { nom: { $regex: search, $options: 'i' } },
+        { prenom: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+    const [items, total] = await Promise.all([
+      this.professeurModel.find(filter).skip((page - 1) * limit).limit(limit).exec(),
+      this.professeurModel.countDocuments(filter).exec(),
+    ]);
+    return {
+      items: items.map((p: any) => p.toJSON()),
+      total, page, limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getProfesseursActifs() {
+    const profs = await this.professeurModel.find({ statut: 'actif' }).exec();
+    return profs.map((p: any) => p.toJSON());
+  }
+
+  async getProfesseurDetail(id: string) {
+    const prof = await this.professeurModel.findById(id).exec();
+    if (!prof) return null;
+    const assignments = await this.assignmentModel.find({ professeur_id: id }).lean().exec();
+
+    const classeIds = [...new Set(assignments.map((a: any) => a.classe_id))];
+    const matiereIds = [...new Set(assignments.map((a: any) => a.matiere_id))];
+    const [classes, matieres] = await Promise.all([
+      this.readClasseModel.find({ source_id: { $in: classeIds } }).lean().exec(),
+      this.readMatiereModel.find({ source_id: { $in: matiereIds } }).lean().exec(),
+    ]);
+    const classeMap = new Map((classes as any[]).map((c: any) => [c.source_id, c.nom]));
+    const matiereMap = new Map((matieres as any[]).map((m: any) => [m.source_id, { nom: m.nom, couleur: m.couleur }]));
+
+    const assignmentsEnriched = assignments.map((a: any) => ({
+      ...a,
+      id: a._id.toString(),
+      classe_nom: classeMap.get(a.classe_id) || a.classe_id,
+      matiere_nom: matiereMap.get(a.matiere_id)?.nom || a.matiere_id,
+      matiere_couleur: matiereMap.get(a.matiere_id)?.couleur || '#64748b',
+    }));
+
+    return { professeur: (prof as any).toJSON(), assignments: assignmentsEnriched };
   }
 
   async getCreateClasseData() { return { salles: (await this.readSalleModel.find().exec()).map(s => s.toJSON()) }; }

@@ -33,9 +33,6 @@ export class Creneau extends Document {
 
   @Prop({ required: true })
   salle: string;
-
-  @Prop({ default: '' })
-  enseignant: string;
 }
 
 export const CreneauSchema = SchemaFactory.createForClass(Creneau);

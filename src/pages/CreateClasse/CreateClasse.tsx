@@ -35,18 +35,35 @@ export function CreateClasse() {
   const [salleType, setSalleType] = useState<SalleType>('fixe');
   const [salleId, setSalleId] = useState('');
 
+  const [sallesOccupees, setSallesOccupees] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   const schoolYearOptions: SelectOption[] = generateSchoolYears().map(y => ({ value: y, label: y }));
-  const salleOptions: SelectOption[] = salles.map(s => ({
-    value: s.id,
-    label: `${s.nom} — ${s.capacite} places (${getTypeLabel(s.type)})`,
-  }));
+  const salleOptions: SelectOption[] = salles.map(s => {
+    const occupee = sallesOccupees.includes(s.nom);
+    return {
+      value: s.id,
+      label: occupee ? `${s.nom} — déjà assignée` : `${s.nom} — ${s.capacite} places (${getTypeLabel(s.type)})`,
+      disabled: occupee,
+    };
+  });
 
   const fetchedRef = useRef(false);
-  useEffect(() => { if (fetchedRef.current) return; fetchedRef.current = true; fetchSalles(); }, [fetchSalles]);
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetchSalles();
+    // Récupère toutes les salles déjà assignées en fixe
+    fetch('http://localhost:3000/read/classes?limit=1000')
+      .then(r => r.json())
+      .then((res: any) => {
+        const occupees: string[] = (res.sallesOccupees ?? []).map((o: any) => o.salle as string);
+        setSallesOccupees(occupees);
+      })
+      .catch(() => {});
+  }, [fetchSalles]);
 
   useEffect(() => {
     readApi.niveaux().then((res: any) => {
@@ -61,8 +78,11 @@ export function CreateClasse() {
   }, []);
 
   useEffect(() => {
-    if (salles.length > 0 && !salleId) setSalleId(salles[0].id);
-  }, [salles, salleId]);
+    if (salles.length > 0 && !salleId) {
+      const libre = salles.find(s => !sallesOccupees.includes(s.nom));
+      setSalleId(libre?.id ?? salles[0].id);
+    }
+  }, [salles, salleId, sallesOccupees]);
 
   if (isViewingArchive) return <Navigate to="/classes" replace />;
 

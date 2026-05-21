@@ -8,6 +8,8 @@ import { Creneau, CreneauSchema } from '../planning/creneau.schema';
 import { Salle, SalleSchema } from '../salles/salle.schema';
 import { AnneeScolaire, AnneeScolaireSchema } from '../annees/annee.schema';
 import { Convocation, ConvocationSchema } from '../suivi/convocation.schema';
+import { Professeur, ProfesseurSchema } from '../professeurs/professeur.schema';
+import { TeacherAssignment, TeacherAssignmentSchema } from '../teacher-assignments/teacher-assignment.schema';
 import { ReadClasse, ReadClasseSchema } from './schemas/read-classe.schema';
 import { ReadEleve, ReadEleveSchema } from './schemas/read-eleve.schema';
 import { ReadMatiere, ReadMatiereSchema } from './schemas/read-matiere.schema';
@@ -38,6 +40,8 @@ import { ViewBuilderService } from './view-builder.service';
       { name: ReadCreneau.name, schema: ReadCreneauSchema },
       { name: ReadSalle.name, schema: ReadSalleSchema },
       { name: Niveau.name, schema: NiveauSchema },
+      { name: Professeur.name, schema: ProfesseurSchema },
+      { name: TeacherAssignment.name, schema: TeacherAssignmentSchema },
     ]),
   ],
   controllers: [ReadController],

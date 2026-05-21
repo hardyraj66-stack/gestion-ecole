@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert } from '../../components/shared/Alert';
-import { Input } from '../../components/shared/Input';
 import { Select, SelectOption } from '../../components/shared/Select';
 import { Button } from '../../components/shared/Button';
 import { FormGrid, FormActions } from '../../components/shared/FormGrid';
@@ -12,15 +11,50 @@ import { SalleOccupant } from './planning.types';
 const JOUR_OPTIONS: SelectOption[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map(j => ({ value: j, label: j }));
 const HEURE_OPTIONS: SelectOption[] = HEURES.map(h => ({ value: h, label: h }));
 
+function ProfDisplay({ matiereId, classeData, selectedClasse, onResolved }: {
+  matiereId: string;
+  classeData: any;
+  selectedClasse: any;
+  onResolved: (prof: { id: string; nom: string } | null) => void;
+}) {
+  useEffect(() => {
+    if (!matiereId || !selectedClasse) { onResolved(null); return; }
+    const assignment = classeData?.assignments?.find((a: any) => a.matiere_id === matiereId);
+    if (assignment?.professeur_id) {
+      onResolved({ id: assignment.professeur_id, nom: assignment.professeur_nom || '' });
+    } else {
+      onResolved(null);
+    }
+  }, [matiereId, selectedClasse, classeData]);
+
+  if (!matiereId) return null;
+
+  const assignment = classeData?.assignments?.find((a: any) => a.matiere_id === matiereId);
+  const profNom = assignment?.professeur_nom;
+
+  return (
+    <div>
+      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Enseignant</label>
+      {profNom
+        ? <div style={{ fontSize: '0.9rem', fontWeight: 500, padding: '0.4rem 0' }}>{profNom}</div>
+        : <div style={{ fontSize: '0.85rem', color: 'var(--warning)', padding: '0.4rem 0' }}>Aucun prof assigné à cette matière</div>
+      }
+    </div>
+  );
+}
+
 // ─── Create modal ─────────────────────────────────────────────────────────────
 interface CreateModalProps {
   show: boolean;
   formJour: JourSemaine; formDebut: string; formFin: string;
-  formMatiereId: string; formSalle: string; formEnseignant: string;
+  formMatiereId: string; formSalle: string;
+  profResolu: { id: string; nom: string } | null;
   formSubmitting: boolean; formError: string;
   matiereOptions: SelectOption[];
   salleFixe?: string;
   initialConflict: SalleOccupant | null;
+  classeData: any;
+  selectedClasse: any;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   setFormJour: (v: JourSemaine) => void;
@@ -28,14 +62,15 @@ interface CreateModalProps {
   setFormFin: (v: string) => void;
   setFormMatiereId: (v: string) => void;
   setFormSalle: (v: string) => void;
-  setFormEnseignant: (v: string) => void;
+  setProfResolu: (v: { id: string; nom: string } | null) => void;
 }
 
 export function CreateModal({
-  show, formJour, formDebut, formFin, formMatiereId, formSalle, formEnseignant,
+  show, formJour, formDebut, formFin, formMatiereId, formSalle,
   formSubmitting, formError, matiereOptions, salleFixe, initialConflict,
+  classeData, selectedClasse,
   onClose, onSubmit, setFormJour, setFormDebut, setFormFin,
-  setFormMatiereId, setFormSalle, setFormEnseignant,
+  setFormMatiereId, setFormSalle, setProfResolu,
 }: CreateModalProps) {
   const [salleConflict, setSalleConflict] = useState(!!initialConflict);
 
@@ -53,7 +88,12 @@ export function CreateModal({
           <form onSubmit={onSubmit}>
             <FormGrid columns={2}>
               <Select label="Matière *" value={formMatiereId} onChange={e => setFormMatiereId(e.target.value)} options={matiereOptions} placeholder="Choisir" />
-              <Input label="Enseignant" value={formEnseignant} onChange={e => setFormEnseignant(e.target.value)} placeholder="M. Dupont" />
+              <ProfDisplay
+                matiereId={formMatiereId}
+                classeData={classeData}
+                selectedClasse={selectedClasse}
+                onResolved={setProfResolu}
+              />
             </FormGrid>
             <FormGrid columns={3}>
               <Select label="Jour" value={formJour} onChange={e => setFormJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
@@ -93,11 +133,13 @@ export function CreateModal({
 interface EditModalProps {
   show: boolean; editCreneau: any;
   editMatiereId: string; editJour: JourSemaine; editDebut: string; editFin: string;
-  editSalle: string; editEnseignant: string;
+  editSalle: string; editProfResolu: { id: string; nom: string } | null;
   editSubmitting: boolean; editError: string;
   matiereOptions: SelectOption[];
   salleFixe?: string;
   initialConflict: SalleOccupant | null;
+  classeData: any;
+  selectedClasse: any;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   setEditMatiereId: (v: string) => void;
@@ -105,15 +147,15 @@ interface EditModalProps {
   setEditDebut: (v: string) => void;
   setEditFin: (v: string) => void;
   setEditSalle: (v: string) => void;
-  setEditEnseignant: (v: string) => void;
+  setEditProfResolu: (v: { id: string; nom: string } | null) => void;
 }
 
 export function EditModal({
   show, editCreneau, editMatiereId, editJour, editDebut, editFin,
-  editSalle, editEnseignant, editSubmitting, editError, matiereOptions, salleFixe,
-  initialConflict,
+  editSalle, editSubmitting, editError, matiereOptions, salleFixe,
+  initialConflict, classeData, selectedClasse,
   onClose, onSubmit, setEditMatiereId, setEditJour, setEditDebut, setEditFin,
-  setEditSalle, setEditEnseignant,
+  setEditSalle, setEditProfResolu,
 }: EditModalProps) {
   const [salleConflict, setSalleConflict] = useState(!!initialConflict);
 
@@ -131,7 +173,12 @@ export function EditModal({
           <form onSubmit={onSubmit}>
             <FormGrid columns={2}>
               <Select label="Matière *" value={editMatiereId} onChange={e => setEditMatiereId(e.target.value)} options={matiereOptions} placeholder="Choisir" />
-              <Input label="Enseignant" value={editEnseignant} onChange={e => setEditEnseignant(e.target.value)} placeholder="M. Dupont" />
+              <ProfDisplay
+                matiereId={editMatiereId}
+                classeData={classeData}
+                selectedClasse={selectedClasse}
+                onResolved={setEditProfResolu}
+              />
             </FormGrid>
             <FormGrid columns={3}>
               <Select label="Jour" value={editJour} onChange={e => setEditJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />

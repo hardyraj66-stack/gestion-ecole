@@ -48,4 +48,9 @@ export const readApi = {
   niveaux: () => get<any>('/niveaux'),
   classesParNiveau: (niveau: string, dateNaissance?: string) =>
     get<any>(`/niveaux/${encodeURIComponent(niveau)}/classes${dateNaissance ? `?dateNaissance=${dateNaissance}` : ''}`),
+
+  professeurs: (page = 1, limit = 20, search = '') =>
+    get<any>(`/professeurs${qs({ page, limit, search: search || undefined })}`),
+  professeursActifs: () => get<any>('/professeurs/actifs'),
+  professeur: (id: string) => get<any>(`/professeurs/${id}`),
 };

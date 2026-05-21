@@ -151,7 +151,26 @@ export interface Creneau {
   heure_debut: string;
   heure_fin: string;
   salle: string;
-  enseignant: string;
+  professeur_id: string;
+  professeur_nom: string;
+}
+
+export interface Professeur {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  genre: 'M' | 'F';
+  statut: 'actif' | 'inactif';
+}
+
+export interface TeacherAssignment {
+  id: string;
+  professeur_id: string;
+  classe_id: string;
+  matiere_id: string;
+  professeur_nom?: string;
 }
 
 export type TypeSalle = 'standard' | 'laboratoire' | 'informatique' | 'sport' | 'arts' | 'amphi' | 'autre';

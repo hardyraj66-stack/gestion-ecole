@@ -58,10 +58,20 @@ export function ClassesList() {
 
   const handleNiveauFilter = (n: string) => { setFilterNiveau(n); setPage(1); };
 
-  const salleOptions: SelectOption[] = salles.map(s => ({
-    value: s.id,
-    label: `${s.nom} — ${s.capacite} places (${getTypeLabel(s.type)})`,
-  }));
+  // Salles déjà assignées en fixe à une autre classe (excl. la classe en cours d'édition)
+  const sallesOccupees: { classeId: string; classNom: string; salle: string }[] = (data as any).sallesOccupees ?? [];
+  const sallesOccupeesHorsEdit = sallesOccupees.filter(o => o.classeId !== editClasse?.id);
+
+  const salleOptions: SelectOption[] = salles.map(s => {
+    const conflit = sallesOccupeesHorsEdit.find(o => o.salle === s.nom);
+    return {
+      value: s.id,
+      label: conflit
+        ? `${s.nom} — occupée par ${conflit.classNom}`
+        : `${s.nom} — ${s.capacite} places (${getTypeLabel(s.type)})`,
+      disabled: !!conflit,
+    };
+  });
 
   const selectedSalle = salles.find(s => s.id === editSalleId);
 

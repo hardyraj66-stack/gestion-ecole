@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { label: 'Classes', path: '/classes', icon: 'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z' },
   { label: 'Élèves', path: '/eleves', iconMultiple: [{ type: 'path', d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }, { type: 'circle', cx: 9, cy: 7, r: 4 }] },
   { label: 'Matières', path: '/matieres', iconMultiple: [{ type: 'path', d: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' }, { type: 'path', d: 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' }] },
+  { label: 'Professeurs', path: '/professeurs', iconMultiple: [{ type: 'path', d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }, { type: 'circle', cx: 9, cy: 7, r: 4 }, { type: 'path', d: 'M23 21v-2a4 4 0 0 0-3-3.87' }, { type: 'path', d: 'M16 3.13a4 4 0 0 1 0 7.75' }] },
   { label: 'Notes', path: '/notes', iconMultiple: [{ type: 'path', d: 'M12 20h9' }, { type: 'path', d: 'M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z' }] },
   { label: 'Planning', path: '/planning', iconMultiple: [{ type: 'path', d: 'M8 2v4' }, { type: 'path', d: 'M16 2v4' }, { type: 'path', d: 'M3 10h18' }, { type: 'rect', x: 3, y: 4, width: 18, height: 18, rx: 2 }] },
   { label: 'Salles', path: '/salles', iconMultiple: [{ type: 'path', d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }, { type: 'path', d: 'M9 22V12h6v10' }] },

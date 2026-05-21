@@ -138,3 +138,11 @@ export function useEleveFicheData(eleveId: string) {
 export function useNiveauxListData() {
   return usePageFetch(useCallback(() => readApi.niveaux(), []), undefined, 'niveaux');
 }
+
+export function useProfesseursListData(page = 1, search = '') {
+  return usePageFetch(useCallback(() => readApi.professeurs(page, 20, search), [page, search]), undefined, 'professeurs');
+}
+
+export function useProfesseurDetailData(id: string) {
+  return usePageFetch(useCallback(() => id ? readApi.professeur(id) : Promise.resolve(null), [id]), undefined, 'professeurs');
+}

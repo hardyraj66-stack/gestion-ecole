@@ -100,4 +100,23 @@ export class ReadController {
   getClassesParNiveau(@Param('niveau') niveau: string, @Query('dateNaissance') dn?: string) {
     return this.service.getClassesParNiveau(decodeURIComponent(niveau), dn);
   }
+
+  @Get('professeurs/actifs')
+  getProfesseursActifs() { return this.service.getProfesseursActifs(); }
+
+  @Get('professeurs/:id')
+  async getProfesseurDetail(@Param('id') id: string) {
+    const data = await this.service.getProfesseurDetail(id);
+    if (!data) throw new NotFoundException();
+    return data;
+  }
+
+  @Get('professeurs')
+  getProfesseursList(
+    @Query('page') p?: string,
+    @Query('limit') l?: string,
+    @Query('search') s?: string,
+  ) {
+    return this.service.getProfesseursList(parseInt(p!) || 1, parseInt(l!) || 20, s || '');
+  }
 }

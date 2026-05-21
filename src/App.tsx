@@ -18,6 +18,9 @@ import { CreateSalle } from './pages/CreateSalle/CreateSalle';
 import { NiveauxList } from './pages/NiveauxList/NiveauxList';
 import { CreateNiveau } from './pages/CreateNiveau/CreateNiveau';
 import { AnneeScolairePage } from './pages/AnneeScolaire/AnneeScolaire';
+import { ProfesseursList } from './pages/Professeurs/ProfesseursList';
+import { ProfesseurDetail } from './pages/Professeurs/ProfesseurDetail';
+import { ProfesseurAssignments } from './pages/Professeurs/ProfesseurAssignments';
 
 function App() {
   return (
@@ -48,6 +51,10 @@ function App() {
 
             <Route path="niveaux" element={<NiveauxList />} />
             <Route path="niveaux/nouveau" element={<CreateNiveau />} />
+
+            <Route path="professeurs" element={<ProfesseursList />} />
+            <Route path="professeurs/affectations" element={<ProfesseurAssignments />} />
+            <Route path="professeurs/:id" element={<ProfesseurDetail />} />
 
             <Route path="annee-scolaire" element={<AnneeScolairePage />} />
 

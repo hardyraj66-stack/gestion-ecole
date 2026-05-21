@@ -7,6 +7,8 @@ import { Matiere } from '../matieres/matiere.schema';
 import { Note } from '../notes/note.schema';
 import { Creneau } from '../planning/creneau.schema';
 import { Salle } from '../salles/salle.schema';
+import { Professeur } from '../professeurs/professeur.schema';
+import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
 import { ReadClasse } from './schemas/read-classe.schema';
 import { ReadEleve } from './schemas/read-eleve.schema';
 import { ReadMatiere } from './schemas/read-matiere.schema';
@@ -27,6 +29,8 @@ export class ViewBuilderService implements OnModuleInit {
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
     @InjectModel(Salle.name) private salleModel: Model<Salle>,
+    @InjectModel(Professeur.name) private professeurModel: Model<Professeur>,
+    @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
     @InjectModel(ReadClasse.name) private readClasseModel: Model<ReadClasse>,
     @InjectModel(ReadEleve.name) private readEleveModel: Model<ReadEleve>,
     @InjectModel(ReadMatiere.name) private readMatiereModel: Model<ReadMatiere>,
@@ -63,46 +67,48 @@ export class ViewBuilderService implements OnModuleInit {
 
   // ============ API PUBLIQUE — appelée par les write controllers ============
 
-  /** Appelé après POST/PATCH/DELETE sur la collection classes */
   async onClasseWrite() {
     await Promise.all([this.rebuildClasses(), this.rebuildEleves(), this.rebuildCreneaux()]);
     this.logger.log('Read sync: classes + eleves + creneaux');
   }
 
-  /** Appelé après POST/PATCH/DELETE sur la collection eleves */
   async onEleveWrite() {
     await Promise.all([this.rebuildEleves(), this.rebuildClasses()]);
     this.logger.log('Read sync: eleves + classes');
   }
 
-  /** Appelé après POST/PATCH/DELETE sur la collection matieres */
   async onMatiereWrite() {
     await Promise.all([this.rebuildMatieres(), this.rebuildNotes()]);
     this.logger.log('Read sync: matieres + notes');
   }
 
-  /** Appelé après POST/PATCH/DELETE sur la collection notes */
   async onNoteWrite() {
     await this.rebuildNotes();
     this.logger.log('Read sync: notes');
   }
 
-  /** Appelé après POST/PATCH/DELETE sur la collection creneaux */
   async onCreneauWrite() {
     await this.rebuildCreneaux();
     this.logger.log('Read sync: creneaux');
   }
 
-  /** Appelé après POST/PATCH/DELETE sur la collection salles */
   async onSalleWrite() {
     await this.rebuildSalles();
     this.logger.log('Read sync: salles');
   }
 
-  // ============ CHANGE STREAM HANDLER (bonus replica set) ============
+  async onProfesseurWrite() {
+    await this.rebuildCreneaux();
+    this.logger.log('Read sync: creneaux (prof updated)');
+  }
+
+  async onAssignmentWrite() {
+    await this.rebuildCreneaux();
+    this.logger.log('Read sync: creneaux (assignment updated)');
+  }
+
+  // ============ CHANGE STREAM HANDLER ============
   private async onWriteChange(collection: string) {
-    // Si les Change Streams fonctionnent, on les utilise aussi
-    // mais les write controllers appellent déjà la synchro — double safety
     try {
       switch (collection) {
         case 'classes': await this.onClasseWrite(); break;
@@ -206,20 +212,40 @@ export class ViewBuilderService implements OnModuleInit {
   }
 
   private async rebuildCreneaux() {
-    const [creneaux, classes] = await Promise.all([
+    const [creneaux, classes, assignments, professeurs] = await Promise.all([
       this.creneauModel.find().lean().exec(),
       this.classeModel.find().lean().exec(),
+      this.assignmentModel.find().lean().exec(),
+      this.professeurModel.find().lean().exec(),
     ]);
+
     const cm = new Map(classes.map(c => [c._id.toString(), c]));
+    const pm = new Map(professeurs.map(p => [p._id.toString(), p]));
+    const am = new Map((assignments as any[]).map(a => [`${a.classe_id}::${a.matiere_id}`, a.professeur_id]));
+
     const ops = creneaux.map(c => {
-      const sid = c._id.toString(); const cl = cm.get(c.classe_id);
+      const sid = c._id.toString();
+      const cl = cm.get(c.classe_id);
+      const profId = am.get(`${c.classe_id}::${c.matiere_id}`) || '';
+      const prof = profId ? (pm.get(profId) as any) : null;
+      const profNom = prof ? `${prof.prenom} ${prof.nom}` : '';
+
       return { updateOne: { filter: { source_id: sid }, update: { $set: {
-        source_id: sid, classe_id: c.classe_id, matiere_id: c.matiere_id,
-        matiere_nom: c.matiere_nom, matiere_couleur: c.matiere_couleur,
-        jour: c.jour, heure_debut: c.heure_debut, heure_fin: c.heure_fin,
-        salle: c.salle, enseignant: c.enseignant || '', classe_nom: cl?.nom || '',
+        source_id: sid,
+        classe_id: c.classe_id,
+        matiere_id: c.matiere_id,
+        matiere_nom: c.matiere_nom,
+        matiere_couleur: c.matiere_couleur,
+        jour: c.jour,
+        heure_debut: c.heure_debut,
+        heure_fin: c.heure_fin,
+        salle: c.salle,
+        professeur_id: profId,
+        professeur_nom: profNom,
+        classe_nom: cl?.nom || '',
       }}, upsert: true }};
     });
+
     const ids = creneaux.map(c => c._id.toString());
     await this.readCreneauModel.deleteMany({ source_id: { $nin: ids } }).exec();
     if (ops.length > 0) await this.readCreneauModel.bulkWrite(ops);

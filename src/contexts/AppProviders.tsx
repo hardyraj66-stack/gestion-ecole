@@ -8,6 +8,8 @@ import { SalleProvider } from './SalleContext';
 import { AnneeProvider } from './AnneeContext';
 import { ViewingProvider } from './ViewingContext';
 import { NiveauProvider } from './NiveauContext';
+import { ProfesseurProvider } from './ProfesseurContext';
+import { TeacherAssignmentProvider } from './TeacherAssignmentContext';
 import { ConfirmProvider } from '../components/shared/ConfirmDialog';
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -21,9 +23,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 <MatiereProvider>
                   <NiveauProvider>
                     <NoteProvider>
-                      <PlanningProvider>
-                        {children}
-                      </PlanningProvider>
+                      <ProfesseurProvider>
+                        <TeacherAssignmentProvider>
+                          <PlanningProvider>
+                            {children}
+                          </PlanningProvider>
+                        </TeacherAssignmentProvider>
+                      </ProfesseurProvider>
                     </NoteProvider>
                   </NiveauProvider>
                 </MatiereProvider>

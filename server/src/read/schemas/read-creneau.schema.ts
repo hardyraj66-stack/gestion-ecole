@@ -18,7 +18,8 @@ export class ReadCreneau extends Document {
   @Prop() heure_debut: string;
   @Prop() heure_fin: string;
   @Prop() salle: string;
-  @Prop() enseignant: string;
+  @Prop({ default: '' }) professeur_id: string;
+  @Prop({ default: '' }) professeur_nom: string;
   @Prop({ default: '' }) classe_nom: string;
 }
 
