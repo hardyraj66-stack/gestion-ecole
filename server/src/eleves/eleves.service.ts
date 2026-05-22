@@ -16,8 +16,8 @@ export class ElevesService {
     return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
-  async delete(id: string) {
-    const result = await this.model.findByIdAndDelete(id).exec();
+  async setStatut(id: string, statut: 'actif' | 'exclu' | 'parti') {
+    const result = await this.model.findByIdAndUpdate(id, { statut }, { new: true }).exec();
     return !!result;
   }
 }

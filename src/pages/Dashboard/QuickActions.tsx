@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Icon } from '../../components/shared/Icon';
 
 const actions = [
   {
@@ -33,9 +34,7 @@ export function QuickActions() {
         {actions.map((action) => (
           <Link key={action.path} to={action.path} className="quick-action">
             <div className="quick-action-icon">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={action.icon} />
-              </svg>
+              <Icon path={action.icon} size={18} />
             </div>
             <span>{action.label}</span>
           </Link>

@@ -12,6 +12,8 @@ import { Button } from '../../components/shared/Button';
 import { Alert } from '../../components/shared/Alert';
 import { Input } from '../../components/shared/Input';
 import { Icon, Icons } from '../../components/shared/Icon';
+import { Modal } from '../../components/shared/Modal';
+import { MatierePills } from '../../components/shared/MatierePills';
 import { Badge } from '../../components/ui/Badge';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import type { Niveau } from '../../contexts/NiveauContext';
@@ -258,85 +260,67 @@ function EditNiveauModal({
   onClose: () => void;
 }) {
   return (
-    <div className="planning-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="planning-modal" style={{ maxWidth: 560 }}>
-        <div className="planning-modal-header">
-          <h3>Modifier le niveau — {niveau.nom}</h3>
-          <button type="button" className="planning-modal-close" onClick={onClose}>✕</button>
+    <Modal
+      title={`Modifier le niveau — ${niveau.nom}`}
+      onClose={onClose}
+      maxWidth={560}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>Annuler</Button>
+          <Button variant="primary" onClick={onSave} disabled={submitting || !form.nom.trim()}>
+            {submitting ? 'Enregistrement…' : 'Enregistrer'}
+          </Button>
+        </>
+      }
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem' }}>
+          <Input
+            label="Nom du niveau *"
+            value={form.nom}
+            onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
+            placeholder="Ex: 6ème, CE1..."
+          />
+          <Input
+            label={`Ordre (0–${maxOrdre})`}
+            type="number"
+            value={form.ordre}
+            onChange={e => setForm(f => ({ ...f, ordre: e.target.value }))}
+            min={0}
+            max={maxOrdre}
+            style={{ width: 90 }}
+          />
         </div>
 
-        <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem' }}>
-            <Input
-              label="Nom du niveau *"
-              value={form.nom}
-              onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-              placeholder="Ex: 6ème, CE1..."
-            />
-            <Input
-              label={`Ordre (0–${maxOrdre})`}
-              type="number"
-              value={form.ordre}
-              onChange={e => setForm(f => ({ ...f, ordre: e.target.value }))}
-              min={0}
-              max={maxOrdre}
-              style={{ width: 90 }}
-            />
-          </div>
+        <Input
+          label="Description (optionnel)"
+          value={form.description}
+          onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+          placeholder="Description courte du niveau"
+        />
 
-          <Input
-            label="Description (optionnel)"
-            value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            placeholder="Description courte du niveau"
-          />
-
-          <div>
-            <label className="form-label">Matières autorisées <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(vide = toutes autorisées)</span></label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.4rem', maxHeight: 200, overflowY: 'auto', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 8 }}>
-              {allMatieres.map(m => {
-                const checked = form.matiere_ids.includes(m.id);
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => onToggleMatiere(m.id)}
-                    style={{
-                      padding: '0.25rem 0.6rem',
-                      borderRadius: 6,
-                      border: '1.5px solid',
-                      borderColor: checked ? 'var(--primary)' : 'var(--border)',
-                      background: checked ? 'rgba(37,99,235,0.08)' : 'transparent',
-                      color: checked ? 'var(--primary)' : 'var(--text-muted)',
-                      fontSize: '0.8rem',
-                      fontWeight: checked ? 600 : 400,
-                      cursor: 'pointer',
-                      transition: 'all 0.12s',
-                    }}
-                  >
-                    {m.nom}
-                  </button>
-                );
-              })}
-              {allMatieres.length === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Aucune matière disponible</span>}
-            </div>
-            {form.matiere_ids.length > 0 && (
-              <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                {form.matiere_ids.length} matière{form.matiere_ids.length > 1 ? 's' : ''} sélectionnée{form.matiere_ids.length > 1 ? 's' : ''}
-              </p>
+        <div>
+          <label className="form-label">Matières autorisées <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(vide = toutes autorisées)</span></label>
+          <div style={{ marginTop: '0.4rem', maxHeight: 200, overflowY: 'auto', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 8 }}>
+            {allMatieres.length === 0 ? (
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Aucune matière disponible</span>
+            ) : (
+              <MatierePills
+                matieres={allMatieres}
+                selectedIds={form.matiere_ids}
+                onToggle={onToggleMatiere}
+              />
             )}
           </div>
-
-          {error && <Alert variant="error">{error}</Alert>}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-            <Button variant="ghost" onClick={onClose} disabled={submitting}>Annuler</Button>
-            <Button variant="primary" onClick={onSave} disabled={submitting || !form.nom.trim()}>
-              {submitting ? 'Enregistrement…' : 'Enregistrer'}
-            </Button>
-          </div>
+          {form.matiere_ids.length > 0 && (
+            <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              {form.matiere_ids.length} matière{form.matiere_ids.length > 1 ? 's' : ''} sélectionnée{form.matiere_ids.length > 1 ? 's' : ''}
+            </p>
+          )}
         </div>
+
+        {error && <Alert variant="error">{error}</Alert>}
       </div>
-    </div>
+    </Modal>
   );
 }

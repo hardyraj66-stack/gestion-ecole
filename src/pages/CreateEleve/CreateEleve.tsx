@@ -13,6 +13,7 @@ import { Alert } from '../../components/shared/Alert';
 import { Badge } from '../../components/ui/Badge';
 import { Icon } from '../../components/shared/Icon';
 import { PageLoader } from '../../components/ui/PageLoader';
+import { Modal } from '../../components/shared/Modal';
 import { FormGrid, FormSection, FormActions } from '../../components/shared/FormGrid';
 
 const GENRE_OPTIONS: SelectOption[] = [
@@ -178,74 +179,67 @@ export function CreateEleve() {
 
       {/* ===== POPUP ===== */}
       {showPopup && selectedNiveau && (
-        <div className="classe-popup-overlay" onClick={() => setShowPopup(false)}>
-          <div className="classe-popup" onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>Affecter une classe — {selectedNiveau}</h3>
-              <button type="button" className="classe-popup-close" onClick={() => setShowPopup(false)}>✕</button>
-            </div>
-
-            {loadingClasses ? (
-              <div style={{ padding: '3rem' }}><PageLoader /></div>
-            ) : (
-              <>
-                {/* Suggestion */}
-                {suggestedClasse && (
-                  <div className={`classe-popup-suggestion ${suggestedClasse.pleine ? 'classe-popup-suggestion-warning' : ''}`}>
-                    <div className="classe-popup-suggestion-header">
-                      <Icon path="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" size={18} />
-                      <span>Suggestion automatique</span>
-                      {suggestedClasse.pleine && <Badge label="Toutes les classes sont pleines" variant="warning" />}
+        <Modal title={`Affecter une classe — ${selectedNiveau}`} onClose={() => setShowPopup(false)}>
+          {loadingClasses ? (
+            <div style={{ padding: '3rem' }}><PageLoader /></div>
+          ) : (
+            <>
+              {/* Suggestion */}
+              {suggestedClasse && (
+                <div className={`classe-popup-suggestion ${suggestedClasse.pleine ? 'classe-popup-suggestion-warning' : ''}`}>
+                  <div className="classe-popup-suggestion-header">
+                    <Icon path="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" size={18} />
+                    <span>Suggestion automatique</span>
+                    {suggestedClasse.pleine && <Badge label="Toutes les classes sont pleines" variant="warning" />}
+                  </div>
+                  <div className="classe-popup-suggestion-card" onClick={() => handleSelectClasse(suggestedClasse)}>
+                    <div className="classe-popup-suggestion-main">
+                      <span className="classe-popup-suggestion-name">{suggestedClasse.nom}</span>
+                      <Badge label="Recommandée" variant={suggestedClasse.pleine ? 'warning' : 'success'} />
                     </div>
-                    <div className="classe-popup-suggestion-card" onClick={() => handleSelectClasse(suggestedClasse)}>
-                      <div className="classe-popup-suggestion-main">
-                        <span className="classe-popup-suggestion-name">{suggestedClasse.nom}</span>
-                        <Badge label="Recommandée" variant={suggestedClasse.pleine ? 'warning' : 'success'} />
-                      </div>
-                      <div className="classe-popup-suggestion-meta">
-                        <span>{suggestedClasse.nb_eleves}/{suggestedClasse.capacite} élèves</span>
-                        <span>•</span>
-                        <span>{suggestedClasse.pleine ? 'Capacité atteinte' : `${suggestedClasse.places_restantes} places restantes`}</span>
-                      </div>
-                      <div className="classe-popup-suggestion-bar">
-                        <div className="progress" style={{ height: '4px' }}>
-                          <div className={`progress-bar ${suggestedClasse.taux >= 90 ? 'full' : ''}`} style={{ width: `${Math.min(suggestedClasse.taux, 100)}%` }} />
-                        </div>
+                    <div className="classe-popup-suggestion-meta">
+                      <span>{suggestedClasse.nb_eleves}/{suggestedClasse.capacite} élèves</span>
+                      <span>•</span>
+                      <span>{suggestedClasse.pleine ? 'Capacité atteinte' : `${suggestedClasse.places_restantes} places restantes`}</span>
+                    </div>
+                    <div className="classe-popup-suggestion-bar">
+                      <div className="progress" style={{ height: '4px' }}>
+                        <div className={`progress-bar ${suggestedClasse.taux >= 90 ? 'full' : ''}`} style={{ width: `${Math.min(suggestedClasse.taux, 100)}%` }} />
                       </div>
                     </div>
                   </div>
-                )}
-
-                {/* Liste */}
-                <div className="classe-popup-list">
-                  <div className="classe-popup-list-header">Toutes les classes — {selectedNiveau}</div>
-                  {classesNiveau.map((c: any) => (
-                    <div
-                      key={c.id}
-                      className={`classe-popup-item ${c.id === classeId ? 'classe-popup-item-selected' : ''} ${c.pleine ? 'classe-popup-item-warning' : ''}`}
-                      onClick={() => handleSelectClasse(c)}
-                    >
-                      <div className="classe-popup-item-left">
-                        <span className="classe-popup-item-name">{c.nom}</span>
-                        {c.id === suggestedId && <Badge label="Suggérée" variant={c.pleine ? 'warning' : 'success'} />}
-                        {c.pleine && <Badge label="Complète" variant="danger" />}
-                      </div>
-                      <div className="classe-popup-item-right">
-                        <span className="classe-popup-item-count">{c.nb_eleves}/{c.capacite}</span>
-                        <div className="classe-popup-item-bar">
-                          <div className="progress" style={{ width: '60px', height: '4px' }}>
-                            <div className={`progress-bar ${c.taux >= 90 ? 'full' : ''}`} style={{ width: `${Math.min(c.taux, 100)}%` }} />
-                          </div>
-                        </div>
-                        <span className="classe-popup-item-places">{c.pleine ? '0' : c.places_restantes} pl.</span>
-                      </div>
-                    </div>
-                  ))}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
+              )}
+
+              {/* Liste */}
+              <div className="classe-popup-list">
+                <div className="classe-popup-list-header">Toutes les classes — {selectedNiveau}</div>
+                {classesNiveau.map((c: any) => (
+                  <div
+                    key={c.id}
+                    className={`classe-popup-item ${c.id === classeId ? 'classe-popup-item-selected' : ''} ${c.pleine ? 'classe-popup-item-warning' : ''}`}
+                    onClick={() => handleSelectClasse(c)}
+                  >
+                    <div className="classe-popup-item-left">
+                      <span className="classe-popup-item-name">{c.nom}</span>
+                      {c.id === suggestedId && <Badge label="Suggérée" variant={c.pleine ? 'warning' : 'success'} />}
+                      {c.pleine && <Badge label="Complète" variant="danger" />}
+                    </div>
+                    <div className="classe-popup-item-right">
+                      <span className="classe-popup-item-count">{c.nb_eleves}/{c.capacite}</span>
+                      <div className="classe-popup-item-bar">
+                        <div className="progress" style={{ width: '60px', height: '4px' }}>
+                          <div className={`progress-bar ${c.taux >= 90 ? 'full' : ''}`} style={{ width: `${Math.min(c.taux, 100)}%` }} />
+                        </div>
+                      </div>
+                      <span className="classe-popup-item-places">{c.pleine ? '0' : c.places_restantes} pl.</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </Modal>
       )}
     </div>
   );

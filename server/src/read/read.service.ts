@@ -340,7 +340,7 @@ export class ReadService {
 
   // ============ PROFESSEURS ============
   async getProfesseursList(page = 1, limit = 20, search = '') {
-    const filter: any = {};
+    const filter: any = { statut: { $ne: 'inactif' } };
     if (search) {
       filter.$or = [
         { nom: { $regex: search, $options: 'i' } },

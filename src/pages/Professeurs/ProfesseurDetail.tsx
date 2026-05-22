@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
@@ -10,32 +10,26 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/shared/Button';
 import { Card } from '../../components/shared/Card';
 import { Alert } from '../../components/shared/Alert';
-import { FormGrid, FormActions } from '../../components/shared/FormGrid';
+import { FormGrid } from '../../components/shared/FormGrid';
 import { Input } from '../../components/shared/Input';
 import { Avatar } from '../../components/shared/Avatar';
 import { Table, TableHead, TableBody, TableRow, TableCell } from '../../components/shared/Table';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Icon, Icons } from '../../components/shared/Icon';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
+import { Modal } from '../../components/shared/Modal';
+import { MatierePills } from '../../components/shared/MatierePills';
+import { DropdownMenu } from '../../components/shared/DropdownMenu';
 import { readApi } from '../../services/readApi';
 
 export function ProfesseurDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isViewingArchive: readOnly } = useViewing();
-  const { update: updateProfesseur, delete: deleteProfesseur } = useProfesseurs();
+  const { update: updateProfesseur, desactiver: desactiverProfesseur, activer: activerProfesseur } = useProfesseurs();
   const { create: createAssignment, delete: deleteAssignment } = useTeacherAssignments();
   const confirm = useConfirm();
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const { data, loading, error, refresh } = useProfesseurDetailData(id!);
 
@@ -109,7 +103,6 @@ export function ProfesseurDetail() {
     setEditForm({ nom: p.nom, prenom: p.prenom, email: p.email || '', telephone: p.telephone || '' });
     setEditFieldErrors({ nom: '', prenom: '', email: '', telephone: '' });
     setEditError('');
-    setMenuOpen(false);
     setShowEditForm(true);
   };
 
@@ -125,12 +118,18 @@ export function ProfesseurDetail() {
     setEditFieldErrors(f => ({ ...f, [field]: validateEditField(field, value) }));
   };
 
-  const handleDeleteProfesseur = async () => {
-    setMenuOpen(false);
-    const ok = await confirm({ title: 'Supprimer le professeur', message: `Supprimer ${p.prenom} ${p.nom} ? Cette action est irréversible.`, confirmText: 'Supprimer', variant: 'danger' });
+  const handleDesactiverProfesseur = async () => {
+    const ok = await confirm({ title: 'Désactiver le professeur', message: `Désactiver ${p.prenom} ${p.nom} ? Il ne sera plus disponible pour les affectations, mais ses données sont conservées.`, confirmText: 'Désactiver', variant: 'danger' });
     if (!ok) return;
-    await deleteProfesseur(id!);
+    await desactiverProfesseur(id!);
     navigate('/professeurs');
+  };
+
+  const handleActiverProfesseur = async () => {
+    const ok = await confirm({ title: 'Réactiver le professeur', message: `Réactiver ${p.prenom} ${p.nom} ? Il redeviendra disponible pour les affectations.`, confirmText: 'Réactiver', variant: 'warning' });
+    if (!ok) return;
+    await activerProfesseur(id!);
+    refresh();
   };
 
   return (
@@ -141,31 +140,16 @@ export function ProfesseurDetail() {
       >
         <Button variant="secondary" onClick={() => navigate('/professeurs')}>← Retour</Button>
         {!readOnly && (
-          <div ref={menuRef} style={{ position: 'relative' }}>
-            <button
-              type="button"
-              onClick={() => setMenuOpen(v => !v)}
-              style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.6rem', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, fontSize: '1.1rem' }}
-            >⋯</button>
-            {menuOpen && (
-              <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 4px)', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)', boxShadow: 'var(--card-shadow)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
-                <button
-                  type="button"
-                  onClick={openEdit}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.65rem 1rem', background: 'none', border: 'none', borderBottom: '1px solid var(--border-color)', cursor: 'pointer', color: 'var(--text)', fontSize: '0.875rem', textAlign: 'left' }}
-                >
-                  <Icon path={Icons.edit} size={15} /> Modifier
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteProfesseur}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.65rem 1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: '0.875rem', textAlign: 'left' }}
-                >
-                  <Icon path={Icons.trash} size={15} /> Supprimer
-                </button>
-              </div>
-            )}
-          </div>
+          <DropdownMenu
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            items={p.statut === 'actif' ? [
+              { label: 'Modifier', icon: Icons.edit, onClick: openEdit },
+              { label: 'Désactiver', icon: Icons.trash, onClick: handleDesactiverProfesseur, variant: 'danger' },
+            ] : [
+              { label: 'Réactiver', icon: Icons.edit, onClick: handleActiverProfesseur },
+            ]}
+          />
         )}
       </PageHeader>
 
@@ -249,120 +233,78 @@ export function ProfesseurDetail() {
 
       {/* Popup modification professeur */}
       {showEditForm && (
-        <div className="classe-popup-overlay" onClick={() => setShowEditForm(false)}>
-          <div className="classe-popup" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>Modifier le professeur</h3>
-              <button type="button" className="classe-popup-close" onClick={() => setShowEditForm(false)}>✕</button>
-            </div>
-            <div style={{ padding: '1.25rem' }}>
-              {editError && <Alert variant="error">{editError}</Alert>}
-              <form onSubmit={handleEditSubmit}>
-                <FormGrid columns={2}>
-                  <Input label="Nom *" value={editForm.nom} onChange={e => handleEditField('nom', e.target.value)} placeholder="Dupont" error={editFieldErrors.nom} />
-                  <Input label="Prénom *" value={editForm.prenom} onChange={e => handleEditField('prenom', e.target.value)} placeholder="Jean" error={editFieldErrors.prenom} />
-                  <Input label="Email" type="email" value={editForm.email} onChange={e => handleEditField('email', e.target.value)} placeholder="jean.dupont@ecole.fr" error={editFieldErrors.email} />
-                  <Input label="Téléphone" value={editForm.telephone} onChange={e => handleEditField('telephone', e.target.value)} placeholder="06 00 00 00 00" error={editFieldErrors.telephone} />
-                </FormGrid>
-                <FormActions>
-                  <Button type="button" variant="secondary" onClick={() => setShowEditForm(false)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={editSubmitting} loading={editSubmitting}>Enregistrer</Button>
-                </FormActions>
-              </form>
-            </div>
-          </div>
-        </div>
+        <Modal title="Modifier le professeur" onClose={() => setShowEditForm(false)} maxWidth={480}
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setShowEditForm(false)}>Annuler</Button>
+              <Button type="submit" form="edit-prof-form" variant="primary" disabled={editSubmitting} loading={editSubmitting}>Enregistrer</Button>
+            </>
+          }
+        >
+          {editError && <Alert variant="error">{editError}</Alert>}
+          <form id="edit-prof-form" onSubmit={handleEditSubmit}>
+            <FormGrid columns={2}>
+              <Input label="Nom *" value={editForm.nom} onChange={e => handleEditField('nom', e.target.value)} placeholder="Dupont" error={editFieldErrors.nom} />
+              <Input label="Prénom *" value={editForm.prenom} onChange={e => handleEditField('prenom', e.target.value)} placeholder="Jean" error={editFieldErrors.prenom} />
+              <Input label="Email" type="email" value={editForm.email} onChange={e => handleEditField('email', e.target.value)} placeholder="jean.dupont@ecole.fr" error={editFieldErrors.email} />
+              <Input label="Téléphone" value={editForm.telephone} onChange={e => handleEditField('telephone', e.target.value)} placeholder="06 00 00 00 00" error={editFieldErrors.telephone} />
+            </FormGrid>
+          </form>
+        </Modal>
       )}
 
       {/* Popup ajout affectation */}
       {showAssignForm && (
-        <div className="classe-popup-overlay" onClick={() => setShowAssignForm(false)}>
-          <div className="classe-popup" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>Nouvelle affectation</h3>
-              <button type="button" className="classe-popup-close" onClick={() => setShowAssignForm(false)}>✕</button>
+        <Modal title="Nouvelle affectation" onClose={() => setShowAssignForm(false)} maxWidth={560}
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setShowAssignForm(false)}>Annuler</Button>
+              <Button type="submit" form="assign-form" variant="primary" disabled={assignSubmitting || assignClasses.size === 0 || !assignMatiere} loading={assignSubmitting}>
+                Ajouter {assignClasses.size > 1 ? `(${assignClasses.size})` : ''}
+              </Button>
+            </>
+          }
+        >
+          {assignError && <Alert variant="error">{assignError}</Alert>}
+          <form id="assign-form" onSubmit={handleAddAssignment}>
+            {/* Matière */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Matière *</div>
+              <MatierePills
+                matieres={matieres}
+                selectedIds={assignMatiere ? [assignMatiere] : []}
+                onToggle={(id) => setAssignMatiere(id)}
+                singleSelect={true}
+              />
             </div>
-            <div style={{ padding: '1.25rem' }}>
-              {assignError && <Alert variant="error">{assignError}</Alert>}
-              <form onSubmit={handleAddAssignment}>
-                {/* Matière — select simple */}
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Matière *</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    {matieres.map((m: any) => {
-                      const selected = assignMatiere === m.id;
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => setAssignMatiere(m.id)}
-                          style={{
-                            padding: '0.3rem 0.75rem',
-                            borderRadius: '20px',
-                            border: `1.5px solid ${selected ? m.couleur || '#2563eb' : 'var(--border-color)'}`,
-                            background: selected ? `${m.couleur || '#2563eb'}18` : 'transparent',
-                            color: selected ? (m.couleur || '#2563eb') : 'var(--text)',
-                            fontSize: '0.825rem',
-                            fontWeight: selected ? 600 : 400,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                          }}
-                        >
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.couleur || '#64748b', flexShrink: 0 }} />
-                          {m.nom}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
 
-                {/* Classes — multi-select */}
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Classes * {assignClasses.size > 0 && <span style={{ color: 'var(--primary)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>— {assignClasses.size} sélectionnée(s)</span>}
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    {classes.map((c: any) => {
-                      const selected = assignClasses.has(c.id);
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => setAssignClasses(prev => {
-                            const next = new Set(prev);
-                            selected ? next.delete(c.id) : next.add(c.id);
-                            return next;
-                          })}
-                          style={{
-                            padding: '0.3rem 0.75rem',
-                            borderRadius: '20px',
-                            border: `1.5px solid ${selected ? 'var(--primary)' : 'var(--border-color)'}`,
-                            background: selected ? '#2563eb18' : 'transparent',
-                            color: selected ? 'var(--primary)' : 'var(--text)',
-                            fontSize: '0.825rem',
-                            fontWeight: selected ? 600 : 400,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {c.nom}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <FormActions>
-                  <Button type="button" variant="secondary" onClick={() => setShowAssignForm(false)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={assignSubmitting || assignClasses.size === 0 || !assignMatiere} loading={assignSubmitting}>
-                    Ajouter {assignClasses.size > 1 ? `(${assignClasses.size})` : ''}
-                  </Button>
-                </FormActions>
-              </form>
+            {/* Classes */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Classes * {assignClasses.size > 0 && <span style={{ color: 'var(--primary)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>— {assignClasses.size} sélectionnée(s)</span>}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                {classes.map((c: any) => {
+                  const selected = assignClasses.has(c.id);
+                  return (
+                    <button key={c.id} type="button"
+                      onClick={() => setAssignClasses(prev => { const next = new Set(prev); selected ? next.delete(c.id) : next.add(c.id); return next; })}
+                      style={{
+                        padding: '0.3rem 0.75rem', borderRadius: '20px',
+                        border: `1.5px solid ${selected ? 'var(--primary)' : 'var(--border-color)'}`,
+                        background: selected ? '#2563eb18' : 'transparent',
+                        color: selected ? 'var(--primary)' : 'var(--text)',
+                        fontSize: '0.825rem', fontWeight: selected ? 600 : 400, cursor: 'pointer',
+                      }}
+                    >
+                      {c.nom}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

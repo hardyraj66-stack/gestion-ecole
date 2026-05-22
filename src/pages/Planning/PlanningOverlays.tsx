@@ -48,7 +48,7 @@ export function PlanningTooltip({ hoverCr, visible }: TooltipProps) {
       </div>
       <div className="planning-tooltip-row">🕐 {hoverCr.cr.heure_debut} – {hoverCr.cr.heure_fin}</div>
       <div className="planning-tooltip-row">📍 {hoverCr.cr.salle}</div>
-      {hoverCr.cr.enseignant && <div className="planning-tooltip-row">👤 {hoverCr.cr.enseignant}</div>}
+      {hoverCr.cr.professeur_nom && <div className="planning-tooltip-row">👤 {hoverCr.cr.professeur_nom}</div>}
       <div className="planning-tooltip-row" style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.25rem' }}>
         Clic droit pour plus d'options
       </div>

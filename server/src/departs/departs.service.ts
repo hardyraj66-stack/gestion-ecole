@@ -3,12 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EleveQuitte } from './depart.schema';
 import { Eleve } from '../eleves/eleve.schema';
+import { Classe } from '../classes/classe.schema';
 
 @Injectable()
 export class DepartsService {
   constructor(
     @InjectModel(EleveQuitte.name) private quitteModel: Model<EleveQuitte>,
     @InjectModel(Eleve.name) private eleveModel: Model<Eleve>,
+    @InjectModel(Classe.name) private classeModel: Model<Classe>,
   ) {}
 
   findAll() {
@@ -27,7 +29,8 @@ export class DepartsService {
     if (!data.raison?.trim()) throw new BadRequestException('Une raison est obligatoire');
     if (!data.motif) throw new BadRequestException('Un motif est obligatoire');
 
-    const classe_nom = (eleve as any).classe_nom || '';
+    const classe = await this.classeModel.findById(eleve.classe_id).lean().exec();
+    const classe_nom = (classe as any)?.nom || '';
     const quitte = await new this.quitteModel({
       eleve_id: eleveId,
       nom: eleve.nom,

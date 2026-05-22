@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Professeur } from './professeur.schema';
+import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
 
 @Injectable()
 export class ProfesseursService {
-  constructor(@InjectModel(Professeur.name) private model: Model<Professeur>) {}
+  constructor(
+    @InjectModel(Professeur.name) private model: Model<Professeur>,
+    @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
+  ) {}
 
   findAll() { return this.model.find().exec(); }
   findById(id: string) { return this.model.findById(id).exec(); }
@@ -17,8 +21,19 @@ export class ProfesseursService {
     return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
-  async delete(id: string) {
-    const result = await this.model.findByIdAndDelete(id).exec();
-    return !!result;
+  async desactiver(id: string) {
+    const prof = await this.model.findByIdAndUpdate(
+      id,
+      { statut: 'inactif' },
+      { new: true },
+    ).exec();
+    if (!prof) return false;
+    await this.assignmentModel.deleteMany({ professeur_id: id }).exec();
+    return true;
+  }
+
+  async activer(id: string) {
+    const prof = await this.model.findByIdAndUpdate(id, { statut: 'actif' }, { new: true }).exec();
+    return !!prof;
   }
 }

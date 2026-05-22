@@ -32,7 +32,7 @@ export class SallesService {
     @InjectModel(Classe.name) private classeModel: Model<Classe>,
   ) {}
 
-  findAll() { return this.salleModel.find().exec(); }
+  findAll() { return this.salleModel.find({ actif: { $ne: false } }).exec(); }
   findById(id: string) { return this.salleModel.findById(id).exec(); }
 
   async create(data: any) {
@@ -60,7 +60,7 @@ export class SallesService {
   }
 
   async delete(id: string) {
-    const result = await this.salleModel.findByIdAndDelete(id).exec();
+    const result = await this.salleModel.findByIdAndUpdate(id, { actif: false }, { new: true }).exec();
     return !!result;
   }
 
@@ -100,7 +100,7 @@ export class SallesService {
   }
 
   async getDisponibles(jour: string, heureDebut: string, heureFin: string, excludeCreneauId?: string): Promise<SalleDisponible[]> {
-    const allSalles = await this.salleModel.find().exec();
+    const allSalles = await this.salleModel.find({ actif: { $ne: false } }).exec();
     const allCreneaux = await this.creneauModel.find({ jour }).exec();
 
     const hd = this.toMinutes(heureDebut);

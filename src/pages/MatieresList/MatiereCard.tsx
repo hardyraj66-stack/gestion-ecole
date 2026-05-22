@@ -76,18 +76,18 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
 
   const handleDelete = async () => {
     const ok = await confirm({
-      title: 'Supprimer la matière',
-      message: `Êtes-vous sûr de vouloir supprimer « ${matiere.nom} » ? Cette action est impossible si la matière est utilisée dans des notes ou des plannings.`,
-      confirmText: 'Supprimer',
+      title: 'Désactiver la matière',
+      message: `Désactiver « ${matiere.nom} » ? Elle ne sera plus proposée dans les nouveaux créneaux, mais les bulletins existants sont conservés.`,
+      confirmText: 'Désactiver',
       variant: 'danger',
     });
     if (!ok) return;
-    const res = await fetch(`${API_BASE_URL}/matieres/${matiere.id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE_URL}/matieres/${matiere.id}/desactiver`, { method: 'PATCH' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       await confirm({
-        title: 'Suppression impossible',
-        message: body.message || 'Cette matière est utilisée et ne peut pas être supprimée.',
+        title: 'Désactivation impossible',
+        message: body.message || 'Cette matière ne peut pas être désactivée.',
         confirmText: 'Fermer',
         variant: 'danger',
       });

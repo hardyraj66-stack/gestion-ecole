@@ -3,12 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EleveExclu } from './exclusion.schema';
 import { Eleve } from '../eleves/eleve.schema';
+import { Classe } from '../classes/classe.schema';
 
 @Injectable()
 export class ExclusionsService {
   constructor(
     @InjectModel(EleveExclu.name) private excluModel: Model<EleveExclu>,
     @InjectModel(Eleve.name) private eleveModel: Model<Eleve>,
+    @InjectModel(Classe.name) private classeModel: Model<Classe>,
   ) {}
 
   findAll() {
@@ -26,7 +28,8 @@ export class ExclusionsService {
     if (eleve.statut === 'parti') throw new BadRequestException('Élève déjà parti');
     if (!data.raison?.trim()) throw new BadRequestException('Une raison est obligatoire');
 
-    const classe_nom = (eleve as any).classe_nom || '';
+    const classe = await this.classeModel.findById(eleve.classe_id).lean().exec();
+    const classe_nom = (classe as any)?.nom || '';
     const exclu = await new this.excluModel({
       eleve_id: eleveId,
       nom: eleve.nom,
