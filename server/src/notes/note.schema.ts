@@ -27,6 +27,9 @@ export class Note extends Document {
 
   @Prop()
   commentaire: string;
+
+  @Prop({ default: false })
+  annulee: boolean;
 }
 
 export const NoteSchema = SchemaFactory.createForClass(Note);

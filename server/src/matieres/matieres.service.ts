@@ -13,7 +13,7 @@ export class MatieresService {
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
   ) {}
 
-  findAll() { return this.model.find().exec(); }
+  findAll() { return this.model.find({ actif: { $ne: false } }).exec(); }
   findById(id: string) { return this.model.findById(id).exec(); }
 
   async create(data: any) {
@@ -30,17 +30,14 @@ export class MatieresService {
     return this.model.findByIdAndUpdate(id, payload, { new: true }).exec();
   }
 
-  async delete(id: string) {
-    const [notesCount, creneauxCount] = await Promise.all([
-      this.noteModel.countDocuments({ matiere_id: id }).exec(),
-      this.creneauModel.countDocuments({ matiere_id: id }).exec(),
-    ]);
-    if (notesCount > 0 || creneauxCount > 0) {
+  async desactiver(id: string) {
+    const creneauActif = await this.creneauModel.findOne({ matiere_id: id }).exec();
+    if (creneauActif) {
       throw new BadRequestException(
-        `Cette matière ne peut pas être supprimée car elle est utilisée dans ${notesCount} note(s) et ${creneauxCount} créneau(x) de planning.`,
+        'Cette matière est utilisée dans le planning. Retirez-la d\'abord de tous les créneaux.',
       );
     }
-    const result = await this.model.findByIdAndDelete(id).exec();
+    const result = await this.model.findByIdAndUpdate(id, { actif: false }, { new: true }).exec();
     return !!result;
   }
 

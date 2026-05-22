@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, NotFoundException, HttpCode } from '@nestjs/common';
 import { ProfesseursService } from './professeurs.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
@@ -38,10 +38,10 @@ export class ProfesseursController {
     return item;
   }
 
-  @Delete(':id')
+  @Patch(':id/desactiver')
   @HttpCode(200)
-  async delete(@Param('id') id: string) {
-    const ok = await this.service.delete(id);
+  async desactiver(@Param('id') id: string) {
+    const ok = await this.service.desactiver(id);
     if (!ok) throw new NotFoundException();
     this.events.emit('professeur:event', { id });
     this.viewBuilder.onProfesseurWrite();

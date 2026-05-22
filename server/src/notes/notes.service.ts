@@ -20,9 +20,9 @@ export class NotesService {
     @InjectModel(Matiere.name) private matiereModel: Model<Matiere>,
   ) {}
 
-  findAll() { return this.noteModel.find().exec(); }
+  findAll() { return this.noteModel.find({ annulee: { $ne: true } }).exec(); }
   findById(id: string) { return this.noteModel.findById(id).exec(); }
-  findByEleveId(eleveId: string) { return this.noteModel.find({ eleve_id: eleveId }).exec(); }
+  findByEleveId(eleveId: string) { return this.noteModel.find({ eleve_id: eleveId, annulee: { $ne: true } }).exec(); }
   create(data: any) {
     if (data.valeur !== undefined && (data.valeur < 0 || data.valeur > 20))
       throw new BadRequestException('La note doit être comprise entre 0 et 20.');
@@ -35,13 +35,13 @@ export class NotesService {
     return this.noteModel.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
-  async delete(id: string) {
-    const result = await this.noteModel.findByIdAndDelete(id).exec();
+  async annuler(id: string) {
+    const result = await this.noteModel.findByIdAndUpdate(id, { annulee: true }, { new: true }).exec();
     return !!result;
   }
 
   async getBulletin(eleveId: string, trimestre: number): Promise<BulletinMatiere[]> {
-    const eleveNotes = await this.noteModel.find({ eleve_id: eleveId, trimestre }).exec();
+    const eleveNotes = await this.noteModel.find({ eleve_id: eleveId, trimestre, annulee: { $ne: true } }).exec();
     const matieres = await this.matiereModel.find().exec();
 
     const map = new Map<string, number[]>();

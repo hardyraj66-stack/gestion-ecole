@@ -29,6 +29,9 @@ export class Matiere extends Document {
 
   @Prop()
   couleur: string;
+
+  @Prop({ default: true })
+  actif: boolean;
 }
 
 export const MatiereSchema = SchemaFactory.createForClass(Matiere);

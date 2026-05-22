@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Patch, Param, Body, NotFoundException } from '@nestjs/common';
 import { ElevesService } from './eleves.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
@@ -26,14 +26,5 @@ export class ElevesController {
     this.events.emit('eleve:updated', item);
     this.viewBuilder.onEleveWrite();
     return item;
-  }
-
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    const ok = await this.service.delete(id);
-    if (!ok) throw new NotFoundException();
-    this.events.emit('eleve:deleted', { id });
-    this.viewBuilder.onEleveWrite();
-    return { id };
   }
 }

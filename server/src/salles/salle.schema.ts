@@ -36,6 +36,9 @@ export class Salle extends Document {
 
   @Prop({ default: '' })
   etage: string;
+
+  @Prop({ default: true })
+  actif: boolean;
 }
 
 export const SalleSchema = SchemaFactory.createForClass(Salle);

@@ -27,6 +27,9 @@ export class Classe extends Document {
 
   @Prop({ required: true, enum: ['fixe', 'variable'], default: 'fixe' })
   salle_type: string;
+
+  @Prop({ default: true })
+  actif: boolean;
 }
 
 export const ClasseSchema = SchemaFactory.createForClass(Classe);
