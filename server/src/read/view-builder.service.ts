@@ -137,7 +137,7 @@ export class ViewBuilderService implements OnModuleInit {
 
   private async rebuildClasses() {
     const [classes, eleves] = await Promise.all([
-      this.classeModel.find().lean().exec(),
+      this.classeModel.find({ actif: { $ne: false } }).lean().exec(),
       this.eleveModel.find().lean().exec(),
     ]);
     const ops = classes.map(c => {
@@ -177,7 +177,7 @@ export class ViewBuilderService implements OnModuleInit {
   }
 
   private async rebuildMatieres() {
-    const matieres = await this.matiereModel.find().lean().exec();
+    const matieres = await this.matiereModel.find({ actif: { $ne: false } }).lean().exec();
     const ops = matieres.map(m => ({ updateOne: { filter: { source_id: m._id.toString() }, update: { $set: {
       source_id: m._id.toString(), nom: m.nom, code: m.code, coefficient: (m as any).coefficient ?? 1,
       coefficients: (m as any).coefficients || [],
@@ -190,7 +190,7 @@ export class ViewBuilderService implements OnModuleInit {
 
   private async rebuildNotes() {
     const [notes, eleves, matieres] = await Promise.all([
-      this.noteModel.find().lean().exec(),
+      this.noteModel.find({ annulee: { $ne: true } }).lean().exec(),
       this.eleveModel.find().lean().exec(),
       this.matiereModel.find().lean().exec(),
     ]);
@@ -252,7 +252,7 @@ export class ViewBuilderService implements OnModuleInit {
   }
 
   private async rebuildSalles() {
-    const salles = await this.salleModel.find().lean().exec();
+    const salles = await this.salleModel.find({ actif: { $ne: false } }).lean().exec();
     const ops = salles.map(s => ({ updateOne: { filter: { source_id: s._id.toString() }, update: { $set: {
       source_id: s._id.toString(),
       nom: s.nom,
