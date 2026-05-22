@@ -18,9 +18,9 @@ export function ClasseCard({ classe, onDelete, onEdit, readOnly }: ClasseCardPro
 
   const handleDelete = async () => {
     const ok = await confirm({
-      title: 'Supprimer la classe',
-      message: `Supprimer « ${classe.nom} » ?`,
-      confirmText: 'Supprimer',
+      title: 'Désactiver la classe',
+      message: `Désactiver « ${classe.nom} » ? Les données sont conservées.`,
+      confirmText: 'Désactiver',
       variant: 'danger',
     });
     if (ok) onDelete(classe.id);

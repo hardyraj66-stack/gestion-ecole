@@ -6,7 +6,7 @@ import { onEvent, notifyDataChange } from '../services/socketService';
 interface ClasseContextType {
   create: (data: Omit<Classe, 'id'>, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
   update: (id: string, data: Partial<Classe>, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
-  delete: (id: string) => Promise<void>;
+  desactiver: (id: string, onError?: (error: string) => void) => Promise<void>;
 }
 
 const ClasseContext = createContext<ClasseContextType | undefined>(undefined);
@@ -27,20 +27,21 @@ export function ClasseProvider({ children }: { children: ReactNode }) {
     } catch { onError?.('Erreur de connexion'); }
   }, []);
 
-  const del = useCallback(async (id: string) => {
-    try { await fetch(`${API_BASE_URL}/classes/${id}`, { method: 'DELETE' }); } catch {}
+  const desactiver = useCallback(async (id: string, onError?: (error: string) => void) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/classes/${id}/desactiver`, { method: 'PATCH' });
+      if (!res.ok) { const e = await res.json(); onError?.(e.message || 'Erreur'); }
+    } catch { onError?.('Erreur de connexion'); }
   }, []);
 
-  // Écoute les sockets et notifie les pages de re-fetcher
   useEffect(() => {
     const u1 = onEvent('classe:created', () => notifyDataChange('classes'));
     const u2 = onEvent('classe:updated', () => notifyDataChange('classes'));
-    const u3 = onEvent('classe:deleted', () => notifyDataChange('classes'));
-    return () => { u1(); u2(); u3(); };
+    return () => { u1(); u2(); };
   }, []);
 
   return (
-    <ClasseContext.Provider value={{ create, update, delete: del }}>
+    <ClasseContext.Provider value={{ create, update, desactiver }}>
       {children}
     </ClasseContext.Provider>
   );

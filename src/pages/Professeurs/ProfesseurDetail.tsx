@@ -23,7 +23,7 @@ export function ProfesseurDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isViewingArchive: readOnly } = useViewing();
-  const { update: updateProfesseur, delete: deleteProfesseur } = useProfesseurs();
+  const { update: updateProfesseur, desactiver: desactiverProfesseur } = useProfesseurs();
   const { create: createAssignment, delete: deleteAssignment } = useTeacherAssignments();
   const confirm = useConfirm();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -125,11 +125,11 @@ export function ProfesseurDetail() {
     setEditFieldErrors(f => ({ ...f, [field]: validateEditField(field, value) }));
   };
 
-  const handleDeleteProfesseur = async () => {
+  const handleDesactiverProfesseur = async () => {
     setMenuOpen(false);
-    const ok = await confirm({ title: 'Supprimer le professeur', message: `Supprimer ${p.prenom} ${p.nom} ? Cette action est irréversible.`, confirmText: 'Supprimer', variant: 'danger' });
+    const ok = await confirm({ title: 'Désactiver le professeur', message: `Désactiver ${p.prenom} ${p.nom} ? Il ne sera plus disponible pour les affectations, mais ses données sont conservées.`, confirmText: 'Désactiver', variant: 'danger' });
     if (!ok) return;
-    await deleteProfesseur(id!);
+    await desactiverProfesseur(id!);
     navigate('/professeurs');
   };
 
@@ -158,10 +158,10 @@ export function ProfesseurDetail() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleDeleteProfesseur}
+                  onClick={handleDesactiverProfesseur}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.65rem 1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: '0.875rem', textAlign: 'left' }}
                 >
-                  <Icon path={Icons.trash} size={15} /> Supprimer
+                  <Icon path={Icons.trash} size={15} /> Désactiver
                 </button>
               </div>
             )}

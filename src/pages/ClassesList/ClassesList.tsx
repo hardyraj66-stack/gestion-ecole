@@ -25,7 +25,8 @@ const SALLE_TYPES: SelectOption[] = [
 ];
 
 export function ClassesList() {
-  const { delete: deleteClasse, update: updateClasse } = useClasses();
+  const { desactiver: desactiverClasse, update: updateClasse } = useClasses();
+  const [deleteError, setDeleteError] = useState('');
   const { salles, getAll: fetchSalles } = useSalles();
   const { isViewingArchive: readOnly } = useViewing();
   const confirm = useConfirm();
@@ -152,9 +153,10 @@ export function ClassesList() {
           action={!readOnly ? <Button as="link" to="/classes/nouvelle" variant="primary">Créer une classe</Button> : undefined} />
       ) : (
         <>
+          {deleteError && <Alert variant="error">{deleteError}</Alert>}
           <div className="classes-grid">
             {items.map((c: any) => (
-              <ClasseCard key={c.id} classe={c} onDelete={readOnly ? () => {} : deleteClasse} onEdit={readOnly ? undefined : openEdit} readOnly={readOnly} />
+              <ClasseCard key={c.id} classe={c} onDelete={readOnly ? () => {} : (id) => desactiverClasse(id, setDeleteError)} onEdit={readOnly ? undefined : openEdit} readOnly={readOnly} />
             ))}
             {!readOnly && page === totalPages && <AddCard to="/classes/nouvelle" label="Nouvelle classe" />}
           </div>

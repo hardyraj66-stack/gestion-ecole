@@ -6,7 +6,7 @@ import { onEvent, notifyDataChange } from '../services/socketService';
 interface NoteContextType {
   create: (data: Omit<Note, 'id'>) => Promise<boolean>;
   update: (id: string, data: Partial<Note>) => Promise<boolean>;
-  delete: (id: string) => Promise<void>;
+  annuler: (id: string) => Promise<void>;
   getBulletinFromApi: (eleveId: string, trimestre: Trimestre) => Promise<BulletinMatiere[]>;
   getMoyenneGenerale: (bm: BulletinMatiere[]) => number;
 }
@@ -22,8 +22,8 @@ export function NoteProvider({ children }: { children: ReactNode }) {
     try { const r = await fetch(`${API_BASE_URL}/notes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); return r.ok; } catch { return false; }
   }, []);
 
-  const del = useCallback(async (id: string) => {
-    try { await fetch(`${API_BASE_URL}/notes/${id}`, { method: 'DELETE' }); } catch {}
+  const annuler = useCallback(async (id: string) => {
+    try { await fetch(`${API_BASE_URL}/notes/${id}/annuler`, { method: 'PATCH' }); } catch {}
   }, []);
 
   const getBulletinFromApi = useCallback(async (eleveId: string, trimestre: Trimestre): Promise<BulletinMatiere[]> => {
@@ -44,11 +44,10 @@ export function NoteProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const u1 = onEvent('note:created', () => notifyDataChange('notes'));
     const u2 = onEvent('note:updated', () => notifyDataChange('notes'));
-    const u3 = onEvent('note:deleted', () => notifyDataChange('notes'));
-    return () => { u1(); u2(); u3(); };
+    return () => { u1(); u2(); };
   }, []);
 
-  return <Ctx.Provider value={{ create, update, delete: del, getBulletinFromApi, getMoyenneGenerale }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ create, update, annuler, getBulletinFromApi, getMoyenneGenerale }}>{children}</Ctx.Provider>;
 }
 
 export function useNotes() { const c = useContext(Ctx); if (!c) throw new Error('useNotes must be used within NoteProvider'); return c; }
