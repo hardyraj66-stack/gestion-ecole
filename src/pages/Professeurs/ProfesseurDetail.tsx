@@ -10,13 +10,14 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/shared/Button';
 import { Card } from '../../components/shared/Card';
 import { Alert } from '../../components/shared/Alert';
-import { FormGrid, FormActions } from '../../components/shared/FormGrid';
+import { FormGrid } from '../../components/shared/FormGrid';
 import { Input } from '../../components/shared/Input';
 import { Avatar } from '../../components/shared/Avatar';
 import { Table, TableHead, TableBody, TableRow, TableCell } from '../../components/shared/Table';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Icon, Icons } from '../../components/shared/Icon';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
+import { Modal } from '../../components/shared/Modal';
 import { readApi } from '../../services/readApi';
 
 export function ProfesseurDetail() {
@@ -249,120 +250,92 @@ export function ProfesseurDetail() {
 
       {/* Popup modification professeur */}
       {showEditForm && (
-        <div className="classe-popup-overlay" onClick={() => setShowEditForm(false)}>
-          <div className="classe-popup" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>Modifier le professeur</h3>
-              <button type="button" className="classe-popup-close" onClick={() => setShowEditForm(false)}>✕</button>
-            </div>
-            <div style={{ padding: '1.25rem' }}>
-              {editError && <Alert variant="error">{editError}</Alert>}
-              <form onSubmit={handleEditSubmit}>
-                <FormGrid columns={2}>
-                  <Input label="Nom *" value={editForm.nom} onChange={e => handleEditField('nom', e.target.value)} placeholder="Dupont" error={editFieldErrors.nom} />
-                  <Input label="Prénom *" value={editForm.prenom} onChange={e => handleEditField('prenom', e.target.value)} placeholder="Jean" error={editFieldErrors.prenom} />
-                  <Input label="Email" type="email" value={editForm.email} onChange={e => handleEditField('email', e.target.value)} placeholder="jean.dupont@ecole.fr" error={editFieldErrors.email} />
-                  <Input label="Téléphone" value={editForm.telephone} onChange={e => handleEditField('telephone', e.target.value)} placeholder="06 00 00 00 00" error={editFieldErrors.telephone} />
-                </FormGrid>
-                <FormActions>
-                  <Button type="button" variant="secondary" onClick={() => setShowEditForm(false)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={editSubmitting} loading={editSubmitting}>Enregistrer</Button>
-                </FormActions>
-              </form>
-            </div>
-          </div>
-        </div>
+        <Modal title="Modifier le professeur" onClose={() => setShowEditForm(false)} maxWidth={480}
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setShowEditForm(false)}>Annuler</Button>
+              <Button type="submit" form="edit-prof-form" variant="primary" disabled={editSubmitting} loading={editSubmitting}>Enregistrer</Button>
+            </>
+          }
+        >
+          {editError && <Alert variant="error">{editError}</Alert>}
+          <form id="edit-prof-form" onSubmit={handleEditSubmit}>
+            <FormGrid columns={2}>
+              <Input label="Nom *" value={editForm.nom} onChange={e => handleEditField('nom', e.target.value)} placeholder="Dupont" error={editFieldErrors.nom} />
+              <Input label="Prénom *" value={editForm.prenom} onChange={e => handleEditField('prenom', e.target.value)} placeholder="Jean" error={editFieldErrors.prenom} />
+              <Input label="Email" type="email" value={editForm.email} onChange={e => handleEditField('email', e.target.value)} placeholder="jean.dupont@ecole.fr" error={editFieldErrors.email} />
+              <Input label="Téléphone" value={editForm.telephone} onChange={e => handleEditField('telephone', e.target.value)} placeholder="06 00 00 00 00" error={editFieldErrors.telephone} />
+            </FormGrid>
+          </form>
+        </Modal>
       )}
 
       {/* Popup ajout affectation */}
       {showAssignForm && (
-        <div className="classe-popup-overlay" onClick={() => setShowAssignForm(false)}>
-          <div className="classe-popup" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>Nouvelle affectation</h3>
-              <button type="button" className="classe-popup-close" onClick={() => setShowAssignForm(false)}>✕</button>
+        <Modal title="Nouvelle affectation" onClose={() => setShowAssignForm(false)} maxWidth={560}
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setShowAssignForm(false)}>Annuler</Button>
+              <Button type="submit" form="assign-form" variant="primary" disabled={assignSubmitting || assignClasses.size === 0 || !assignMatiere} loading={assignSubmitting}>
+                Ajouter {assignClasses.size > 1 ? `(${assignClasses.size})` : ''}
+              </Button>
+            </>
+          }
+        >
+          {assignError && <Alert variant="error">{assignError}</Alert>}
+          <form id="assign-form" onSubmit={handleAddAssignment}>
+            {/* Matière */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Matière *</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                {matieres.map((m: any) => {
+                  const selected = assignMatiere === m.id;
+                  return (
+                    <button key={m.id} type="button" onClick={() => setAssignMatiere(m.id)}
+                      style={{
+                        padding: '0.3rem 0.75rem', borderRadius: '20px',
+                        border: `1.5px solid ${selected ? m.couleur || '#2563eb' : 'var(--border-color)'}`,
+                        background: selected ? `${m.couleur || '#2563eb'}18` : 'transparent',
+                        color: selected ? (m.couleur || '#2563eb') : 'var(--text)',
+                        fontSize: '0.825rem', fontWeight: selected ? 600 : 400, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      }}
+                    >
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.couleur || '#64748b', flexShrink: 0 }} />
+                      {m.nom}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div style={{ padding: '1.25rem' }}>
-              {assignError && <Alert variant="error">{assignError}</Alert>}
-              <form onSubmit={handleAddAssignment}>
-                {/* Matière — select simple */}
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Matière *</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    {matieres.map((m: any) => {
-                      const selected = assignMatiere === m.id;
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => setAssignMatiere(m.id)}
-                          style={{
-                            padding: '0.3rem 0.75rem',
-                            borderRadius: '20px',
-                            border: `1.5px solid ${selected ? m.couleur || '#2563eb' : 'var(--border-color)'}`,
-                            background: selected ? `${m.couleur || '#2563eb'}18` : 'transparent',
-                            color: selected ? (m.couleur || '#2563eb') : 'var(--text)',
-                            fontSize: '0.825rem',
-                            fontWeight: selected ? 600 : 400,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                          }}
-                        >
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.couleur || '#64748b', flexShrink: 0 }} />
-                          {m.nom}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
 
-                {/* Classes — multi-select */}
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Classes * {assignClasses.size > 0 && <span style={{ color: 'var(--primary)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>— {assignClasses.size} sélectionnée(s)</span>}
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    {classes.map((c: any) => {
-                      const selected = assignClasses.has(c.id);
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => setAssignClasses(prev => {
-                            const next = new Set(prev);
-                            selected ? next.delete(c.id) : next.add(c.id);
-                            return next;
-                          })}
-                          style={{
-                            padding: '0.3rem 0.75rem',
-                            borderRadius: '20px',
-                            border: `1.5px solid ${selected ? 'var(--primary)' : 'var(--border-color)'}`,
-                            background: selected ? '#2563eb18' : 'transparent',
-                            color: selected ? 'var(--primary)' : 'var(--text)',
-                            fontSize: '0.825rem',
-                            fontWeight: selected ? 600 : 400,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {c.nom}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <FormActions>
-                  <Button type="button" variant="secondary" onClick={() => setShowAssignForm(false)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={assignSubmitting || assignClasses.size === 0 || !assignMatiere} loading={assignSubmitting}>
-                    Ajouter {assignClasses.size > 1 ? `(${assignClasses.size})` : ''}
-                  </Button>
-                </FormActions>
-              </form>
+            {/* Classes */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Classes * {assignClasses.size > 0 && <span style={{ color: 'var(--primary)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>— {assignClasses.size} sélectionnée(s)</span>}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                {classes.map((c: any) => {
+                  const selected = assignClasses.has(c.id);
+                  return (
+                    <button key={c.id} type="button"
+                      onClick={() => setAssignClasses(prev => { const next = new Set(prev); selected ? next.delete(c.id) : next.add(c.id); return next; })}
+                      style={{
+                        padding: '0.3rem 0.75rem', borderRadius: '20px',
+                        border: `1.5px solid ${selected ? 'var(--primary)' : 'var(--border-color)'}`,
+                        background: selected ? '#2563eb18' : 'transparent',
+                        color: selected ? 'var(--primary)' : 'var(--text)',
+                        fontSize: '0.825rem', fontWeight: selected ? 600 : 400, cursor: 'pointer',
+                      }}
+                    >
+                      {c.nom}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

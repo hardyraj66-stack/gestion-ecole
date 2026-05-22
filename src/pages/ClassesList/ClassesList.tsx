@@ -14,9 +14,9 @@ import { Pagination } from '../../components/shared/Pagination';
 import { Alert } from '../../components/shared/Alert';
 import { Input } from '../../components/shared/Input';
 import { Select, SelectOption } from '../../components/shared/Select';
-import { FormActions } from '../../components/shared/FormGrid';
 import { SalleType } from '../../types';
 import { getTypeLabel } from '../../utils/helpers';
+import { Modal } from '../../components/shared/Modal';
 import { ClasseCard } from './ClasseCard';
 
 const SALLE_TYPES: SelectOption[] = [
@@ -166,53 +166,44 @@ export function ClassesList() {
 
       {/* ===== POPUP ÉDITION ===== */}
       {editClasse && (
-        <div className="classe-popup-overlay" onClick={() => setEditClasse(null)}>
-          <div className="classe-popup" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>Modifier — {editClasse.nom}</h3>
-              <button type="button" className="classe-popup-close" onClick={() => setEditClasse(null)}>✕</button>
-            </div>
-            <div style={{ padding: '1.25rem' }}>
-              {editError && <Alert variant="error">{editError}</Alert>}
-              <form onSubmit={handleEditSubmit}>
-                <Input label="Nom de la classe *" value={editNom} onChange={e => setEditNom(e.target.value)} required />
-
-                <Select label="Mode de salle *" value={editSalleType} onChange={e => setEditSalleType(e.target.value as SalleType)} options={SALLE_TYPES} />
-
-                {editIsFixe ? (
-                  <>
-                    <Select label="Salle assignée *" value={editSalleId} onChange={e => setEditSalleId(e.target.value)} options={salleOptions} placeholder="Choisir une salle" />
-                    {selectedSalle && (
-                      <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
-                        background: editCapacite > selectedSalle.capacite ? 'var(--warning-light)' : 'var(--success-light)',
-                        border: `1px solid ${editCapacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
-                        color: editCapacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
-                      }}>
-                        <strong>{selectedSalle.nom}</strong> — {selectedSalle.capacite} places
-                        {editCapacite > selectedSalle.capacite && <span> · ⚠ +{editCapacite - selectedSalle.capacite}</span>}
-                      </div>
-                    )}
-                  </>
-                ) : (
+        <Modal title={`Modifier — ${editClasse.nom}`} onClose={() => setEditClasse(null)} maxWidth={520}
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setEditClasse(null)}>Annuler</Button>
+              <Button type="submit" form="edit-classe-form" variant="primary" disabled={editSubmitting || !editNom.trim() || (editIsFixe && !editSalleId)} loading={editSubmitting}>
+                Enregistrer
+              </Button>
+            </>
+          }
+        >
+          {editError && <Alert variant="error">{editError}</Alert>}
+          <form id="edit-classe-form" onSubmit={handleEditSubmit}>
+            <Input label="Nom de la classe *" value={editNom} onChange={e => setEditNom(e.target.value)} required />
+            <Select label="Mode de salle *" value={editSalleType} onChange={e => setEditSalleType(e.target.value as SalleType)} options={SALLE_TYPES} />
+            {editIsFixe ? (
+              <>
+                <Select label="Salle assignée *" value={editSalleId} onChange={e => setEditSalleId(e.target.value)} options={salleOptions} placeholder="Choisir une salle" />
+                {selectedSalle && (
                   <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
-                    background: 'var(--info-light)', border: '1px solid #a5f3fc', color: 'var(--info)',
+                    background: editCapacite > selectedSalle.capacite ? 'var(--warning-light)' : 'var(--success-light)',
+                    border: `1px solid ${editCapacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
+                    color: editCapacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
                   }}>
-                    La salle sera déterminée dynamiquement selon le planning.
+                    <strong>{selectedSalle.nom}</strong> — {selectedSalle.capacite} places
+                    {editCapacite > selectedSalle.capacite && <span> · ⚠ +{editCapacite - selectedSalle.capacite}</span>}
                   </div>
                 )}
-
-                <Input label="Capacité maximale *" type="number" value={editCapacite} onChange={e => setEditCapacite(Number(e.target.value))} min={1} max={200} />
-
-                <FormActions>
-                  <Button type="button" variant="secondary" onClick={() => setEditClasse(null)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={editSubmitting || !editNom.trim() || (editIsFixe && !editSalleId)} loading={editSubmitting}>
-                    Enregistrer
-                  </Button>
-                </FormActions>
-              </form>
-            </div>
-          </div>
-        </div>
+              </>
+            ) : (
+              <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
+                background: 'var(--info-light)', border: '1px solid #a5f3fc', color: 'var(--info)',
+              }}>
+                La salle sera déterminée dynamiquement selon le planning.
+              </div>
+            )}
+            <Input label="Capacité maximale *" type="number" value={editCapacite} onChange={e => setEditCapacite(Number(e.target.value))} min={1} max={200} />
+          </form>
+        </Modal>
       )}
     </div>
   );

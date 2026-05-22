@@ -15,12 +15,13 @@ import { SearchInputSuggestions, Suggestion } from '../../components/shared/Sear
 import { Alert } from '../../components/shared/Alert';
 import { Input } from '../../components/shared/Input';
 import { Select } from '../../components/shared/Select';
-import { FormGrid, FormActions } from '../../components/shared/FormGrid';
+import { FormGrid } from '../../components/shared/FormGrid';
 import { Card } from '../../components/shared/Card';
 import { Table, TableHead, TableBody, TableRow, TableCell } from '../../components/shared/Table';
 import { Avatar } from '../../components/shared/Avatar';
 import { Pagination } from '../../components/shared/Pagination';
 import { Icon, Icons } from '../../components/shared/Icon';
+import { Modal } from '../../components/shared/Modal';
 
 const GENRE_OPTIONS = [{ value: 'M', label: 'Masculin (M.)' }, { value: 'F', label: 'Féminin (Mme)' }];
 const STATUT_OPTIONS = [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }];
@@ -115,37 +116,35 @@ export function ProfesseursList() {
 
       {/* Modal formulaire */}
       {showForm && (
-        <div className="classe-popup-overlay" onClick={() => setShowForm(false)}>
-          <div className="classe-popup" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
-            <div className="classe-popup-header">
-              <h3>{editingId ? 'Modifier le professeur' : 'Nouveau professeur'}</h3>
-              <button type="button" className="classe-popup-close" onClick={() => setShowForm(false)}>✕</button>
-            </div>
-            <div style={{ padding: '1.25rem' }}>
-              {formError && <Alert variant="error">{formError}</Alert>}
-              <form onSubmit={handleSubmit}>
-                <FormGrid columns={2}>
-                  <Input label="Nom *" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} placeholder="Dupont" />
-                  <Input label="Prénom *" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} placeholder="Jean" />
-                </FormGrid>
-                <FormGrid columns={2}>
-                  <Input label="Email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="jean.dupont@ecole.fr" />
-                  <Input label="Téléphone" value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} placeholder="06 00 00 00 00" />
-                </FormGrid>
-                <FormGrid columns={2}>
-                  <Select label="Genre" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))} options={GENRE_OPTIONS} />
-                  <Select label="Statut" value={form.statut} onChange={e => setForm(f => ({ ...f, statut: e.target.value }))} options={STATUT_OPTIONS} />
-                </FormGrid>
-                <FormActions>
-                  <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Annuler</Button>
-                  <Button type="submit" variant="primary" disabled={formSubmitting} loading={formSubmitting}>
-                    {editingId ? 'Enregistrer' : 'Créer'}
-                  </Button>
-                </FormActions>
-              </form>
-            </div>
-          </div>
-        </div>
+        <Modal
+          title={editingId ? 'Modifier le professeur' : 'Nouveau professeur'}
+          onClose={() => setShowForm(false)}
+          maxWidth={520}
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Annuler</Button>
+              <Button type="submit" form="prof-form" variant="primary" disabled={formSubmitting} loading={formSubmitting}>
+                {editingId ? 'Enregistrer' : 'Créer'}
+              </Button>
+            </>
+          }
+        >
+          {formError && <Alert variant="error">{formError}</Alert>}
+          <form id="prof-form" onSubmit={handleSubmit}>
+            <FormGrid columns={2}>
+              <Input label="Nom *" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} placeholder="Dupont" />
+              <Input label="Prénom *" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} placeholder="Jean" />
+            </FormGrid>
+            <FormGrid columns={2}>
+              <Input label="Email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="jean.dupont@ecole.fr" />
+              <Input label="Téléphone" value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} placeholder="06 00 00 00 00" />
+            </FormGrid>
+            <FormGrid columns={2}>
+              <Select label="Genre" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))} options={GENRE_OPTIONS} />
+              <Select label="Statut" value={form.statut} onChange={e => setForm(f => ({ ...f, statut: e.target.value }))} options={STATUT_OPTIONS} />
+            </FormGrid>
+          </form>
+        </Modal>
       )}
 
       {items.length === 0 ? (
