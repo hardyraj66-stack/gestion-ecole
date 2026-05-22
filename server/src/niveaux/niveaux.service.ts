@@ -2,10 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Niveau } from './niveau.schema';
+import { Classe } from '../classes/classe.schema';
 
 @Injectable()
 export class NiveauxService {
-  constructor(@InjectModel(Niveau.name) private model: Model<Niveau>) {}
+  constructor(
+    @InjectModel(Niveau.name) private model: Model<Niveau>,
+    @InjectModel(Classe.name) private classeModel: Model<Classe>,
+  ) {}
 
   findAll() {
     return this.model.find().sort({ ordre: 1, nom: 1 }).exec();
@@ -82,6 +86,19 @@ export class NiveauxService {
   }
 
   async delete(id: string) {
+    const niveau = await this.model.findById(id).exec();
+    if (!niveau) return false;
+
+    const classeUtilisante = await this.classeModel.findOne({
+      niveau: niveau.nom,
+      actif: { $ne: false },
+    }).exec();
+    if (classeUtilisante) {
+      throw new BadRequestException(
+        `Impossible de supprimer le niveau « ${niveau.nom} » : des classes actives l'utilisent.`,
+      );
+    }
+
     const deleted = await this.model.findByIdAndDelete(id).exec();
     if (!deleted) return false;
     await this.recompact();

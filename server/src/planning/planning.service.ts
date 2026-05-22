@@ -99,7 +99,7 @@ export class PlanningService {
         a.jour === b.jour &&
         a.matiere_id === b.matiere_id &&
         a.salle === b.salle &&
-        (a.enseignant || '') === (b.enseignant || '') &&
+        (a.professeur_id || '') === (b.professeur_id || '') &&
         a.heure_fin === b.heure_debut
       ) {
         await this.model.findByIdAndUpdate(a._id, { heure_fin: b.heure_fin }).exec();

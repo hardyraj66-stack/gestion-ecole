@@ -3,6 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Note } from './note.schema';
 import { Matiere } from '../matieres/matiere.schema';
+import { Eleve } from '../eleves/eleve.schema';
+import { Classe } from '../classes/classe.schema';
+import { MatieresService } from '../matieres/matieres.service';
 
 export interface BulletinMatiere {
   matiere_id: string;
@@ -18,6 +21,8 @@ export class NotesService {
   constructor(
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(Matiere.name) private matiereModel: Model<Matiere>,
+    @InjectModel(Eleve.name) private eleveModel: Model<Eleve>,
+    @InjectModel(Classe.name) private classeModel: Model<Classe>,
   ) {}
 
   findAll() { return this.noteModel.find({ annulee: { $ne: true } }).exec(); }
@@ -44,6 +49,14 @@ export class NotesService {
     const eleveNotes = await this.noteModel.find({ eleve_id: eleveId, trimestre, annulee: { $ne: true } }).exec();
     const matieres = await this.matiereModel.find().exec();
 
+    // Récupérer le niveau de la classe de l'élève pour choisir le bon coefficient
+    let niveauClasse: string | undefined;
+    const eleve = await this.eleveModel.findById(eleveId).lean().exec() as any;
+    if (eleve?.classe_id) {
+      const classe = await this.classeModel.findById(eleve.classe_id).lean().exec() as any;
+      niveauClasse = classe?.niveau;
+    }
+
     const map = new Map<string, number[]>();
     for (const n of eleveNotes) {
       const mid = n.matiere_id;
@@ -56,11 +69,12 @@ export class NotesService {
       const mat = matieres.find(m => m._id.toString() === matiereId || (m as any).id === matiereId);
       if (!mat) continue;
       const moy = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+      const coefficient = MatieresService.resolveCoefficient(mat, niveauClasse);
       result.push({
         matiere_id: matiereId,
         matiere_nom: mat.nom,
         code: mat.code,
-        coefficient: mat.coefficient,
+        coefficient,
         notes: vals,
         moyenne: moy,
       });
