@@ -28,10 +28,10 @@ export function RecentEleves({ eleves }: RecentElevesProps) {
             key={eleve.id}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="eleve-info">
               <Avatar initiales={getInitials(eleve)} genre={eleve.genre} />
               <div>
-                <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>{eleve.prenom} {eleve.nom}</div>
+                <div className="eleve-name">{eleve.prenom} {eleve.nom}</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{eleve.classe_nom}</div>
               </div>
             </div>

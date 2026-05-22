@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
@@ -18,6 +18,8 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Icon, Icons } from '../../components/shared/Icon';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { Modal } from '../../components/shared/Modal';
+import { MatierePills } from '../../components/shared/MatierePills';
+import { DropdownMenu } from '../../components/shared/DropdownMenu';
 import { readApi } from '../../services/readApi';
 
 export function ProfesseurDetail() {
@@ -28,15 +30,6 @@ export function ProfesseurDetail() {
   const { create: createAssignment, delete: deleteAssignment } = useTeacherAssignments();
   const confirm = useConfirm();
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const { data, loading, error, refresh } = useProfesseurDetailData(id!);
 
@@ -110,7 +103,6 @@ export function ProfesseurDetail() {
     setEditForm({ nom: p.nom, prenom: p.prenom, email: p.email || '', telephone: p.telephone || '' });
     setEditFieldErrors({ nom: '', prenom: '', email: '', telephone: '' });
     setEditError('');
-    setMenuOpen(false);
     setShowEditForm(true);
   };
 
@@ -127,7 +119,6 @@ export function ProfesseurDetail() {
   };
 
   const handleDesactiverProfesseur = async () => {
-    setMenuOpen(false);
     const ok = await confirm({ title: 'Désactiver le professeur', message: `Désactiver ${p.prenom} ${p.nom} ? Il ne sera plus disponible pour les affectations, mais ses données sont conservées.`, confirmText: 'Désactiver', variant: 'danger' });
     if (!ok) return;
     await desactiverProfesseur(id!);
@@ -142,31 +133,14 @@ export function ProfesseurDetail() {
       >
         <Button variant="secondary" onClick={() => navigate('/professeurs')}>← Retour</Button>
         {!readOnly && (
-          <div ref={menuRef} style={{ position: 'relative' }}>
-            <button
-              type="button"
-              onClick={() => setMenuOpen(v => !v)}
-              style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.6rem', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, fontSize: '1.1rem' }}
-            >⋯</button>
-            {menuOpen && (
-              <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 4px)', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)', boxShadow: 'var(--card-shadow)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
-                <button
-                  type="button"
-                  onClick={openEdit}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.65rem 1rem', background: 'none', border: 'none', borderBottom: '1px solid var(--border-color)', cursor: 'pointer', color: 'var(--text)', fontSize: '0.875rem', textAlign: 'left' }}
-                >
-                  <Icon path={Icons.edit} size={15} /> Modifier
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDesactiverProfesseur}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.65rem 1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: '0.875rem', textAlign: 'left' }}
-                >
-                  <Icon path={Icons.trash} size={15} /> Désactiver
-                </button>
-              </div>
-            )}
-          </div>
+          <DropdownMenu
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            items={[
+              { label: 'Modifier', icon: Icons.edit, onClick: openEdit },
+              { label: 'Désactiver', icon: Icons.trash, onClick: handleDesactiverProfesseur, variant: 'danger' },
+            ]}
+          />
         )}
       </PageHeader>
 
@@ -287,26 +261,12 @@ export function ProfesseurDetail() {
             {/* Matière */}
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Matière *</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                {matieres.map((m: any) => {
-                  const selected = assignMatiere === m.id;
-                  return (
-                    <button key={m.id} type="button" onClick={() => setAssignMatiere(m.id)}
-                      style={{
-                        padding: '0.3rem 0.75rem', borderRadius: '20px',
-                        border: `1.5px solid ${selected ? m.couleur || '#2563eb' : 'var(--border-color)'}`,
-                        background: selected ? `${m.couleur || '#2563eb'}18` : 'transparent',
-                        color: selected ? (m.couleur || '#2563eb') : 'var(--text)',
-                        fontSize: '0.825rem', fontWeight: selected ? 600 : 400, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '0.4rem',
-                      }}
-                    >
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.couleur || '#64748b', flexShrink: 0 }} />
-                      {m.nom}
-                    </button>
-                  );
-                })}
-              </div>
+              <MatierePills
+                matieres={matieres}
+                selectedIds={assignMatiere ? [assignMatiere] : []}
+                onToggle={(id) => setAssignMatiere(id)}
+                singleSelect={true}
+              />
             </div>
 
             {/* Classes */}

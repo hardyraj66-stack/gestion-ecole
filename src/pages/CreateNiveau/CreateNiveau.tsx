@@ -9,6 +9,7 @@ import { Input } from '../../components/shared/Input';
 import { Button } from '../../components/shared/Button';
 import { Alert } from '../../components/shared/Alert';
 import { FormGrid, FormActions } from '../../components/shared/FormGrid';
+import { MatierePills } from '../../components/shared/MatierePills';
 
 export function CreateNiveau() {
   const { isViewingArchive } = useViewing();
@@ -112,37 +113,15 @@ export function CreateNiveau() {
                   (vide = toutes autorisées)
                 </span>
               </label>
-              <div style={{
-                display: 'flex', flexWrap: 'wrap', gap: '0.4rem',
-                marginTop: '0.4rem', maxHeight: 220, overflowY: 'auto',
-                padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 8,
-              }}>
-                {allMatieres.map(m => {
-                  const checked = matiereIds.includes(m.id);
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => toggleMatiere(m.id)}
-                      style={{
-                        padding: '0.3rem 0.7rem',
-                        borderRadius: 6,
-                        border: '1.5px solid',
-                        borderColor: checked ? 'var(--primary)' : 'var(--border)',
-                        background: checked ? 'rgba(37,99,235,0.08)' : 'transparent',
-                        color: checked ? 'var(--primary)' : 'var(--text)',
-                        fontSize: '0.82rem',
-                        fontWeight: checked ? 600 : 400,
-                        cursor: 'pointer',
-                        transition: 'all 0.12s',
-                      }}
-                    >
-                      {m.nom}
-                    </button>
-                  );
-                })}
-                {allMatieres.length === 0 && (
+              <div style={{ marginTop: '0.4rem', maxHeight: 220, overflowY: 'auto', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 8 }}>
+                {allMatieres.length === 0 ? (
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Chargement des matières…</span>
+                ) : (
+                  <MatierePills
+                    matieres={allMatieres}
+                    selectedIds={matiereIds}
+                    onToggle={toggleMatiere}
+                  />
                 )}
               </div>
               {matiereIds.length > 0 && (
