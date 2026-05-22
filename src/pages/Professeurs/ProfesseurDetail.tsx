@@ -26,7 +26,7 @@ export function ProfesseurDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isViewingArchive: readOnly } = useViewing();
-  const { update: updateProfesseur, desactiver: desactiverProfesseur } = useProfesseurs();
+  const { update: updateProfesseur, desactiver: desactiverProfesseur, activer: activerProfesseur } = useProfesseurs();
   const { create: createAssignment, delete: deleteAssignment } = useTeacherAssignments();
   const confirm = useConfirm();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -125,6 +125,13 @@ export function ProfesseurDetail() {
     navigate('/professeurs');
   };
 
+  const handleActiverProfesseur = async () => {
+    const ok = await confirm({ title: 'Réactiver le professeur', message: `Réactiver ${p.prenom} ${p.nom} ? Il redeviendra disponible pour les affectations.`, confirmText: 'Réactiver', variant: 'warning' });
+    if (!ok) return;
+    await activerProfesseur(id!);
+    refresh();
+  };
+
   return (
     <div>
       <PageHeader
@@ -136,9 +143,11 @@ export function ProfesseurDetail() {
           <DropdownMenu
             open={menuOpen}
             onOpenChange={setMenuOpen}
-            items={[
+            items={p.statut === 'actif' ? [
               { label: 'Modifier', icon: Icons.edit, onClick: openEdit },
               { label: 'Désactiver', icon: Icons.trash, onClick: handleDesactiverProfesseur, variant: 'danger' },
+            ] : [
+              { label: 'Réactiver', icon: Icons.edit, onClick: handleActiverProfesseur },
             ]}
           />
         )}

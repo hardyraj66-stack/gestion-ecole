@@ -6,6 +6,7 @@ interface ProfesseurContextType {
   create: (data: any, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
   update: (id: string, data: any, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
   desactiver: (id: string) => Promise<void>;
+  activer: (id: string) => Promise<void>;
 }
 
 const ProfesseurContext = createContext<ProfesseurContextType | undefined>(undefined);
@@ -29,13 +30,17 @@ export function ProfesseurProvider({ children }: { children: ReactNode }) {
     try { await fetch(`${API_BASE_URL}/professeurs/${id}/desactiver`, { method: 'PATCH' }); } catch {}
   }, []);
 
+  const activer = useCallback(async (id: string) => {
+    try { await fetch(`${API_BASE_URL}/professeurs/${id}/activer`, { method: 'PATCH' }); } catch {}
+  }, []);
+
   useEffect(() => {
     const unsub = onEvent('professeur:event', () => notifyDataChange('professeurs'));
     return () => { unsub(); };
   }, []);
 
   return (
-    <ProfesseurContext.Provider value={{ create, update, desactiver }}>
+    <ProfesseurContext.Provider value={{ create, update, desactiver, activer }}>
       {children}
     </ProfesseurContext.Provider>
   );

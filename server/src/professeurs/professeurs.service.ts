@@ -31,4 +31,9 @@ export class ProfesseursService {
     await this.assignmentModel.deleteMany({ professeur_id: id }).exec();
     return true;
   }
+
+  async activer(id: string) {
+    const prof = await this.model.findByIdAndUpdate(id, { statut: 'actif' }, { new: true }).exec();
+    return !!prof;
+  }
 }

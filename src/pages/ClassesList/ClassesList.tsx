@@ -130,6 +130,8 @@ export function ClassesList() {
         {!readOnly && <Button as="link" to="/classes/nouvelle" variant="primary">+ Nouvelle classe</Button>}
       </PageHeader>
 
+      {deleteError && <Alert variant="error">{deleteError}</Alert>}
+
       {/* Filtre par niveau */}
       <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Filtrer :</span>
@@ -153,7 +155,6 @@ export function ClassesList() {
           action={!readOnly ? <Button as="link" to="/classes/nouvelle" variant="primary">Créer une classe</Button> : undefined} />
       ) : (
         <>
-          {deleteError && <Alert variant="error">{deleteError}</Alert>}
           <div className="classes-grid">
             {items.map((c: any) => (
               <ClasseCard key={c.id} classe={c} onDelete={readOnly ? () => {} : (id) => desactiverClasse(id, setDeleteError)} onEdit={readOnly ? undefined : openEdit} readOnly={readOnly} />

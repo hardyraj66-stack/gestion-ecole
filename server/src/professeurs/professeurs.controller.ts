@@ -47,4 +47,14 @@ export class ProfesseursController {
     this.viewBuilder.onProfesseurWrite();
     return { id };
   }
+
+  @Patch(':id/activer')
+  @HttpCode(200)
+  async activer(@Param('id') id: string) {
+    const ok = await this.service.activer(id);
+    if (!ok) throw new NotFoundException();
+    this.events.emit('professeur:event', { id });
+    this.viewBuilder.onProfesseurWrite();
+    return { id };
+  }
 }
