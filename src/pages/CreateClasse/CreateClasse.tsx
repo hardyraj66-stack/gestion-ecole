@@ -13,7 +13,7 @@ import { Alert } from '../../components/shared/Alert';
 import { FormGrid, FormActions } from '../../components/shared/FormGrid';
 import { SalleType } from '../../types';
 import { readApi } from '../../services/readApi';
-import { generateSchoolYears, getTypeLabel } from '../../utils/helpers';
+import { getTypeLabel } from '../../utils/helpers';
 
 const SALLE_TYPES: SelectOption[] = [
   { value: 'fixe', label: 'Salle fixe (toujours la même)' },
@@ -30,7 +30,6 @@ export function CreateClasse() {
   const [niveauxOptions, setNiveauxOptions] = useState<SelectOption[]>([]);
   const [nom, setNom] = useState('');
   const [niveau, setNiveau] = useState('');
-  const [anneeScolaire, setAnneeScolaire] = useState(generateSchoolYears()[0]);
   const [capacite, setCapacite] = useState(30);
   const [salleType, setSalleType] = useState<SalleType>('fixe');
   const [salleId, setSalleId] = useState('');
@@ -40,7 +39,6 @@ export function CreateClasse() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const schoolYearOptions: SelectOption[] = generateSchoolYears().map(y => ({ value: y, label: y }));
   const salleOptions: SelectOption[] = salles.map(s => {
     const occupee = sallesOccupees.includes(s.nom);
     return {
@@ -107,7 +105,7 @@ export function CreateClasse() {
 
     setSubmitting(true); setError('');
     await create(
-      { nom: nom.trim(), niveau, annee_scolaire: anneeScolaire, capacite, salle: isFixe ? selectedSalle!.nom : '', salle_type: salleType },
+      { nom: nom.trim(), niveau, capacite, salle: isFixe ? selectedSalle!.nom : '', salle_type: salleType },
       () => { setSuccess(true); setTimeout(() => navigate('/classes'), 1500); },
       (err) => { setError(err); setSubmitting(false); },
     );
@@ -131,8 +129,12 @@ export function CreateClasse() {
               ? <Select label="Niveau *" value="" options={[]} placeholder="Chargement…" disabled />
               : <Select label="Niveau *" value={niveau} onChange={e => setNiveau(e.target.value)} options={niveauxOptions} />
             }
-            <Select label="Année scolaire *" value={anneeScolaire} onChange={e => setAnneeScolaire(e.target.value)} options={schoolYearOptions} />
           </FormGrid>
+          <div style={{ padding: '0.5rem 0.85rem', marginBottom: '1rem', fontSize: '0.85rem',
+            background: 'var(--info-light)', border: '1px solid #a5f3fc', borderRadius: 'var(--radius-sm)', color: 'var(--info)',
+          }}>
+            La classe sera automatiquement créée pour l'année scolaire active.
+          </div>
 
           <Input label="Capacité maximale *" type="number" value={capacite} onChange={e => setCapacite(Number(e.target.value))} min={1} max={200} />
 

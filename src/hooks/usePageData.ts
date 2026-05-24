@@ -127,6 +127,10 @@ export function useNotesPageData() {
   return usePageFetch(useCallback(() => readApi.notesPage(), []), undefined, 'notes');
 }
 
+export function useNotesFiltersData() {
+  return usePageFetch(useCallback(() => readApi.notesFilters(), []), undefined, 'notes');
+}
+
 export function useBulletinData(eleveId: string, trimestre: number) {
   return usePageFetch(useCallback(() => readApi.bulletin(eleveId, trimestre), [eleveId, trimestre]), undefined, 'notes');
 }

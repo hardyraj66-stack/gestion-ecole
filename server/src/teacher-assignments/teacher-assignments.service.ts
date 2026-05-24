@@ -1,14 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TeacherAssignment } from './teacher-assignment.schema';
 import { Professeur } from '../professeurs/professeur.schema';
+import { Classe } from '../classes/classe.schema';
+import { NiveauxService } from '../niveaux/niveaux.service';
 
 @Injectable()
 export class TeacherAssignmentsService {
   constructor(
     @InjectModel(TeacherAssignment.name) private model: Model<TeacherAssignment>,
     @InjectModel(Professeur.name) private professeurModel: Model<Professeur>,
+    @InjectModel(Classe.name) private classeModel: Model<Classe>,
+    private readonly niveauxService: NiveauxService,
   ) {}
 
   findAll() { return this.model.find().exec(); }
@@ -25,6 +29,11 @@ export class TeacherAssignmentsService {
   }
 
   async create(data: any) {
+    const classe = await this.classeModel.findById(data.classe_id).lean().exec();
+    if (classe?.niveau) {
+      const ok = await this.niveauxService.isMatiereAutorisee(classe.niveau, data.matiere_id);
+      if (!ok) throw new BadRequestException('Cette matière n\'est pas enseignée dans ce niveau.');
+    }
     const existing = await this.model.findOne({ classe_id: data.classe_id, matiere_id: data.matiere_id }).exec();
     if (existing) {
       return this.model.findByIdAndUpdate(existing._id, { professeur_id: data.professeur_id }, { new: true }).exec();

@@ -22,7 +22,7 @@ export class Classe extends Document {
   @Prop({ required: true, default: 30 })
   capacite: number;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   salle: string;
 
   @Prop({ required: true, enum: ['fixe', 'variable'], default: 'fixe' })

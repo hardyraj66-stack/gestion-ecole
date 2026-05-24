@@ -27,11 +27,11 @@ export function ProfesseurProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const desactiver = useCallback(async (id: string) => {
-    try { await fetch(`${API_BASE_URL}/professeurs/${id}/desactiver`, { method: 'PATCH' }); } catch {}
+    try { await fetch(`${API_BASE_URL}/professeurs/${id}/desactiver`, { method: 'PATCH' }); } catch (e) { console.error('ProfesseurContext.desactiver', e); }
   }, []);
 
   const activer = useCallback(async (id: string) => {
-    try { await fetch(`${API_BASE_URL}/professeurs/${id}/activer`, { method: 'PATCH' }); } catch {}
+    try { await fetch(`${API_BASE_URL}/professeurs/${id}/activer`, { method: 'PATCH' }); } catch (e) { console.error('ProfesseurContext.activer', e); }
   }, []);
 
   useEffect(() => {

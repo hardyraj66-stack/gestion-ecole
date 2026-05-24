@@ -1,12 +1,14 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
 import { NiveauxService } from './niveaux.service';
 import { EventsGateway } from '../events/events.gateway';
+import { ViewBuilderService } from '../read/view-builder.service';
 
 @Controller('niveaux')
 export class NiveauxController {
   constructor(
     private readonly service: NiveauxService,
     private readonly events: EventsGateway,
+    private readonly viewBuilder: ViewBuilderService,
   ) {}
 
   @Get()
@@ -32,6 +34,7 @@ export class NiveauxController {
   async create(@Body() body: any) {
     const item = await this.service.create(body);
     this.events.emit('niveau:created', item);
+    await this.viewBuilder.onNiveauWrite();
     return item;
   }
 
@@ -40,6 +43,7 @@ export class NiveauxController {
     const item = await this.service.update(id, body);
     if (!item) throw new NotFoundException();
     this.events.emit('niveau:updated', item);
+    await this.viewBuilder.onNiveauWrite();
     return item;
   }
 

@@ -77,15 +77,15 @@ export function Planning() {
 
   const s = usePlanningState(classeCreneaux, allMatieres, selectedClasse, readOnly);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts — refs évitent le stale closure sans re-attacher à chaque rendu
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); s.handleUndo(); }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); s.handleRedo(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); s.handleUndoRef.current(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); s.handleRedoRef.current(); }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  });
+  }, []);
 
   const handleSelectClasse = (cid: string) => {
     setSelectedClasseId(cid);

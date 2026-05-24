@@ -2,14 +2,18 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Niveau, NiveauSchema } from './niveau.schema';
 import { Classe, ClasseSchema } from '../classes/classe.schema';
+import { Matiere, MatiereSchema } from '../matieres/matiere.schema';
 import { NiveauxController } from './niveaux.controller';
 import { NiveauxService } from './niveaux.service';
 
 @Module({
-  imports: [MongooseModule.forFeature([
-    { name: Niveau.name, schema: NiveauSchema },
-    { name: Classe.name, schema: ClasseSchema },
-  ])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Niveau.name, schema: NiveauSchema },
+      { name: Classe.name, schema: ClasseSchema },
+      { name: Matiere.name, schema: MatiereSchema },
+    ]),
+  ],
   controllers: [NiveauxController],
   providers: [NiveauxService],
   exports: [NiveauxService, MongooseModule],

@@ -95,11 +95,6 @@ export function CreateModal({
                 onResolved={setProfResolu}
               />
             </FormGrid>
-            <FormGrid columns={3}>
-              <Select label="Jour" value={formJour} onChange={e => setFormJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
-              <Select label="Début" value={formDebut} onChange={e => setFormDebut(e.target.value)} options={HEURE_OPTIONS} />
-              <Select label="Fin" value={formFin} onChange={e => setFormFin(e.target.value)} options={HEURE_OPTIONS} />
-            </FormGrid>
             <SalleSelect
               jour={formJour}
               heureDebut={formDebut}
@@ -111,6 +106,11 @@ export function CreateModal({
               initialConflict={initialConflict}
               onConflictChange={setSalleConflict}
             />
+            <FormGrid columns={3}>
+              <Select label="Jour" value={formJour} onChange={e => setFormJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
+              <Select label="Début" value={formDebut} onChange={e => setFormDebut(e.target.value)} options={HEURE_OPTIONS} />
+              <Select label="Fin" value={formFin} onChange={e => setFormFin(e.target.value)} options={HEURE_OPTIONS} />
+            </FormGrid>
             <FormActions>
               <Button type="button" variant="secondary" onClick={onClose}>Annuler</Button>
               <Button
@@ -180,11 +180,6 @@ export function EditModal({
                 onResolved={setEditProfResolu}
               />
             </FormGrid>
-            <FormGrid columns={3}>
-              <Select label="Jour" value={editJour} onChange={e => setEditJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
-              <Select label="Début" value={editDebut} onChange={e => setEditDebut(e.target.value)} options={HEURE_OPTIONS} />
-              <Select label="Fin" value={editFin} onChange={e => setEditFin(e.target.value)} options={HEURE_OPTIONS} />
-            </FormGrid>
             <SalleSelect
               jour={editJour}
               heureDebut={editDebut}
@@ -197,6 +192,11 @@ export function EditModal({
               initialConflict={initialConflict}
               onConflictChange={setSalleConflict}
             />
+            <FormGrid columns={3}>
+              <Select label="Jour" value={editJour} onChange={e => setEditJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
+              <Select label="Début" value={editDebut} onChange={e => setEditDebut(e.target.value)} options={HEURE_OPTIONS} />
+              <Select label="Fin" value={editFin} onChange={e => setEditFin(e.target.value)} options={HEURE_OPTIONS} />
+            </FormGrid>
             <FormActions>
               <Button type="button" variant="secondary" onClick={onClose}>Annuler</Button>
               <Button

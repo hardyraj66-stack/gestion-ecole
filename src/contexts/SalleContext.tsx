@@ -43,15 +43,15 @@ export function SalleProvider({ children }: { children: ReactNode }) {
   }, [salles]);
 
   const create = useCallback(async (data: Omit<Salle, 'id'>, onSuccess?: () => void, onError?: (e: string) => void) => {
-    try { const r = await fetch(`${API_BASE_URL}/salles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) onSuccess?.(); else { const e = await r.json(); onError?.(e.message || 'Erreur'); } } catch { onError?.('Erreur de connexion'); }
+    try { const r = await fetch(`${API_BASE_URL}/salles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) onSuccess?.(); else { const e = await r.json(); onError?.(e.message || 'Erreur'); } } catch (e) { console.error('SalleContext.create', e); onError?.('Erreur de connexion'); }
   }, []);
 
   const update = useCallback(async (id: string, data: Partial<Salle>, onSuccess?: () => void, onError?: (e: string) => void) => {
-    try { const r = await fetch(`${API_BASE_URL}/salles/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) onSuccess?.(); else { const e = await r.json(); onError?.(e.message || 'Erreur'); } } catch { onError?.('Erreur de connexion'); }
+    try { const r = await fetch(`${API_BASE_URL}/salles/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) onSuccess?.(); else { const e = await r.json(); onError?.(e.message || 'Erreur'); } } catch (e) { console.error('SalleContext.update', e); onError?.('Erreur de connexion'); }
   }, []);
 
   const del = useCallback(async (id: string, onError?: (e: string) => void) => {
-    try { const r = await fetch(`${API_BASE_URL}/salles/${id}`, { method: 'DELETE' }); if (!r.ok) { const e = await r.json(); onError?.(e.message || 'Erreur'); } } catch { onError?.('Erreur de connexion'); }
+    try { const r = await fetch(`${API_BASE_URL}/salles/${id}`, { method: 'DELETE' }); if (!r.ok) { const e = await r.json(); onError?.(e.message || 'Erreur'); } } catch (e) { console.error('SalleContext.delete', e); onError?.('Erreur de connexion'); }
   }, []);
 
   useEffect(() => {

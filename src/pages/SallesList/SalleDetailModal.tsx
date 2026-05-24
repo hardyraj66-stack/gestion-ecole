@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Salle, SalleStats, TypeSalle, EQUIPEMENTS_SALLE, JourSemaine } from '../../types';
+import { JOURS } from '../Planning/planning.helpers';
 import { API_BASE_URL } from '../../config/api';
 import { Button } from '../../components/shared/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -16,7 +17,6 @@ const typeColors: Record<TypeSalle, string> = {
   autre: '#64748b',
 };
 
-const JOURS: JourSemaine[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 // Plages de 30 min — de 07h à 18h
 const HEURE_DEBUT = 7;
 const HEURE_FIN = 18;
