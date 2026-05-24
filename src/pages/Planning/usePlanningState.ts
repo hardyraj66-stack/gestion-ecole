@@ -154,6 +154,11 @@ export function usePlanningState(
     });
   }, []);
 
+  const handleUndoRef = useRef(handleUndo);
+  const handleRedoRef = useRef(handleRedo);
+  useEffect(() => { handleUndoRef.current = handleUndo; }, [handleUndo]);
+  useEffect(() => { handleRedoRef.current = handleRedo; }, [handleRedo]);
+
   // ─── Selection ────────────────────────────────────────────────────────────
   const isInSelection = (jour: JourSemaine, heure: string) => {
     if (!selStart || !selEnd || selStart.jour !== jour) return false;
@@ -354,7 +359,7 @@ export function usePlanningState(
     hoverCr, contextMenu, setContextMenu,
     handleContextMenu, handleCreneauMouseEnter, handleCreneauMouseLeave,
     // Undo/Redo
-    undoStack, redoStack, handleUndo, handleRedo,
+    undoStack, redoStack, handleUndo, handleRedo, handleUndoRef, handleRedoRef,
     // Notification
     notification,
     // Computed

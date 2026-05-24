@@ -107,6 +107,11 @@ export class ViewBuilderService implements OnModuleInit {
     this.logger.log('Read sync: creneaux (assignment updated)');
   }
 
+  async onNiveauWrite() {
+    await this.rebuildMatieres();
+    this.logger.log('Read sync: matieres (niveau updated)');
+  }
+
   // ============ CHANGE STREAM HANDLER ============
   private async onWriteChange(collection: string) {
     try {

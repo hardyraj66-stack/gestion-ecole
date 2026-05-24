@@ -5,7 +5,7 @@ import { onEvent, notifyDataChange } from '../services/socketService';
 
 interface MatiereContextType {
   create: (data: Omit<Matiere, 'id'>) => Promise<boolean>;
-  update: (id: string, data: Partial<Matiere>) => Promise<void>;
+  update: (id: string, data: Partial<Matiere>) => Promise<boolean>;
 }
 
 const Ctx = createContext<MatiereContextType | undefined>(undefined);
@@ -14,8 +14,8 @@ export function MatiereProvider({ children }: { children: ReactNode }) {
   const create = useCallback(async (d: Omit<Matiere, 'id'>): Promise<boolean> => {
     try { const r = await fetch(`${API_BASE_URL}/matieres`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) }); return r.ok; } catch { return false; }
   }, []);
-  const update = useCallback(async (id: string, d: Partial<Matiere>) => {
-    try { await fetch(`${API_BASE_URL}/matieres/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) }); } catch {}
+  const update = useCallback(async (id: string, d: Partial<Matiere>): Promise<boolean> => {
+    try { const r = await fetch(`${API_BASE_URL}/matieres/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) }); return r.ok; } catch (e) { console.error('MatiereContext.update', e); return false; }
   }, []);
 
   useEffect(() => {

@@ -34,29 +34,10 @@ export function SalleSelect({
   const [salles, setSalles] = useState<SalleDisponible[]>([]);
   const [checking, setChecking] = useState(true);
   const [open, setOpen] = useState(false);
+  const [exceptionnel, setExceptionnel] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
-  // ── Salle fixe ──────────────────────────────────────────────────────────────
-  if (salleFixe) {
-    return (
-      <div className="form-group">
-        <label className="form-label">Salle</label>
-        <div className={`salle-select-fixed${initialConflict ? ' conflict' : ''}`}>
-          <span className="salle-select-fixed-icon">🏫</span>
-          <span className="salle-select-fixed-nom">{salleFixe}</span>
-          {initialConflict
-            ? <span className="salle-select-fixed-badge conflict">⚠ Occupée</span>
-            : <span className="salle-select-fixed-badge">Salle fixe</span>
-          }
-        </div>
-        {initialConflict && (
-          <OccupantMsg nom={salleFixe} occupant={initialConflict} />
-        )}
-      </div>
-    );
-  }
-
-  // ── Fetch ───────────────────────────────────────────────────────────────────
   const fetchSalles = async () => {
     if (!jour || !heureDebut || !heureFin) return;
     setChecking(true);
@@ -84,32 +65,69 @@ export function SalleSelect({
     return () => document.removeEventListener('mousedown', close);
   }, [open]);
 
-  // ── Calcul conflit ──────────────────────────────────────────────────────────
   const selected = salles.find(s => s.nom === value);
-
-  // Pendant le checking : utiliser initialConflict (connu avant ouverture)
-  // Après fetch : utiliser les données réelles
   const occupant: SalleOccupant | null = checking
     ? (initialConflict ?? null)
     : (selected && !selected.disponible ? (selected.occupant as SalleOccupant | null) : null);
-
   const isConflict = !!occupant;
 
   useEffect(() => {
     onConflictChange?.(isConflict);
   }, [isConflict, onConflictChange]);
 
+  const openDropdown = () => {
+    if (disabled) return;
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom, left: rect.left, width: rect.width });
+    }
+    fetchSalles();
+    setOpen(o => !o);
+  };
+
   const libres = salles.filter(s => s.disponible);
   const occupees = salles.filter(s => !s.disponible);
 
+  // ── Salle fixe ──────────────────────────────────────────────────────────────
+  if (salleFixe && !exceptionnel) {
+    return (
+      <div className="form-group">
+        <label className="form-label">Salle</label>
+        <div className={`salle-select-fixed${initialConflict ? ' conflict' : ''}`}>
+          <span className="salle-select-fixed-icon">🏫</span>
+          <span className="salle-select-fixed-nom">{salleFixe}</span>
+          {initialConflict
+            ? <span className="salle-select-fixed-badge conflict">⚠ Occupée</span>
+            : <span className="salle-select-fixed-badge">Salle fixe</span>
+          }
+        </div>
+        {initialConflict && (
+          <OccupantMsg nom={salleFixe} occupant={initialConflict} />
+        )}
+        <button
+          type="button"
+          className="salle-select-exceptionnel-btn"
+          onClick={() => { setExceptionnel(true); openDropdown(); }}
+        >
+          Choisir une salle exceptionnelle
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="form-group" ref={containerRef} style={{ position: 'relative' }}>
-      <label className="form-label">Salle *</label>
+      <label className="form-label">
+        Salle *
+        {salleFixe && exceptionnel && (
+          <span className="salle-select-exceptionnel-badge">Salle exceptionnelle</span>
+        )}
+      </label>
 
       <button
         type="button"
         className={`salle-select-trigger${open ? ' open' : ''}${isConflict ? ' conflict' : ''}`}
-        onClick={() => { if (!disabled) { fetchSalles(); setOpen(o => !o); } }}
+        onClick={openDropdown}
         disabled={disabled}
       >
         {value ? (
@@ -128,8 +146,27 @@ export function SalleSelect({
         <OccupantMsg nom={value} occupant={occupant} />
       )}
 
-      {open && (
-        <div className="salle-select-dropdown">
+      {salleFixe && exceptionnel && (
+        <button
+          type="button"
+          className="salle-select-retour-fixe-btn"
+          onClick={() => { setExceptionnel(false); onChange(salleFixe); setOpen(false); }}
+        >
+          ↩ Revenir à la salle fixe ({salleFixe})
+        </button>
+      )}
+
+      {open && dropdownPos && (
+        <div
+          className="salle-select-dropdown"
+          style={{
+            position: 'fixed',
+            top: dropdownPos.top + 4,
+            left: dropdownPos.left,
+            width: dropdownPos.width,
+            zIndex: 2000,
+          }}
+        >
           {checking && <div className="salle-select-empty">Chargement…</div>}
 
           {!checking && libres.length === 0 && occupees.length === 0 && (

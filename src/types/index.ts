@@ -8,6 +8,7 @@ export interface Classe {
   capacite: number;
   salle: string;
   salle_type: SalleType;
+  actif?: boolean;
 }
 
 export interface ParentInfo {
@@ -41,7 +42,7 @@ export interface Eleve {
   pere?: ParentInfo | null;
   mere?: ParentInfo | null;
   tuteur?: TuteurInfo | null;
-  statut?: EleveStatut;
+  statut: EleveStatut;
 }
 
 export interface Avertissement {

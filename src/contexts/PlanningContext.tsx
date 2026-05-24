@@ -7,7 +7,7 @@ interface PlanningContextType {
   create: (data: Omit<Creneau, 'id'>) => Promise<boolean>;
   createWithError: (data: Omit<Creneau, 'id'>, onSuccess?: () => void, onError?: (e: string) => void) => Promise<void>;
   update: (id: string, data: Partial<Creneau>) => Promise<void>;
-  delete: (id: string) => Promise<void>;
+  delete: (id: string) => Promise<boolean>;
 }
 
 const Ctx = createContext<PlanningContextType | undefined>(undefined);
@@ -30,8 +30,8 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const del = useCallback(async (id: string) => {
-    try { await fetch(`${API_BASE_URL}/planning/${id}`, { method: 'DELETE' }); } catch {}
+  const del = useCallback(async (id: string): Promise<boolean> => {
+    try { const r = await fetch(`${API_BASE_URL}/planning/${id}`, { method: 'DELETE' }); return r.ok; } catch (e) { console.error('PlanningContext.delete', e); return false; }
   }, []);
 
   useEffect(() => {

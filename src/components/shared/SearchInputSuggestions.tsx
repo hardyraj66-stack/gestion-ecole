@@ -39,7 +39,6 @@ export function SearchInputSuggestions({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runFetch = useCallback(async (q: string) => {
-    if (q.trim().length < 2) { setSuggestions([]); setOpen(false); return; }
     const results = await fetchSuggestions(q);
     setSuggestions(results);
     setOpen(results.length > 0);
@@ -97,7 +96,7 @@ export function SearchInputSuggestions({
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
+          onFocus={() => { runFetch(value); }}
           placeholder={placeholder}
           autoComplete="off"
         />

@@ -24,8 +24,9 @@ export class ExclusionsService {
   async exclureEleve(eleveId: string, data: { raison: string; commentaire?: string; annee_scolaire: string; nb_avertissements?: number }) {
     const eleve = await this.eleveModel.findById(eleveId).exec();
     if (!eleve) throw new BadRequestException('Élève introuvable');
-    if (eleve.statut === 'exclu') throw new BadRequestException('Élève déjà exclu');
-    if (eleve.statut === 'parti') throw new BadRequestException('Élève déjà parti');
+    const statutActuel = eleve.statut ?? 'actif';
+    if (statutActuel === 'exclu') throw new BadRequestException('Élève déjà exclu');
+    if (statutActuel === 'parti') throw new BadRequestException('Élève déjà parti');
     if (!data.raison?.trim()) throw new BadRequestException('Une raison est obligatoire');
 
     const classe = await this.classeModel.findById(eleve.classe_id).lean().exec();

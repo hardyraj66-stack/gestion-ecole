@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useEleves } from '../../contexts/EleveContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
@@ -25,6 +25,7 @@ export function CreateEleve() {
   const { isViewingArchive } = useViewing();
   const { create } = useEleves();
   const confirm = useConfirm();
+  const navigate = useNavigate();
 
   const [niveaux, setNiveaux] = useState<{ niveau: string; count: number }[]>([]);
   const [classesNiveau, setClassesNiveau] = useState<any[]>([]);
@@ -43,7 +44,6 @@ export function CreateEleve() {
   const [telephone, setTelephone] = useState('');
   const [adresse, setAdresse] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   // 1. Niveaux au montage
@@ -100,15 +100,12 @@ export function CreateEleve() {
     setSubmitting(true); setError('');
     const result = await create({
       prenom: prenom.trim(), nom: nom.trim(), genre, date_naissance: dateNaissance, classe_id: classeId,
+      statut: 'actif' as const,
       email: email.trim() || undefined, telephone: telephone.trim() || undefined, adresse: adresse.trim() || undefined,
     });
     if (result) {
-      setSuccess(true);
-      setPrenom(''); setNom(''); setGenre('M'); setDateNaissance(''); setClasseId(''); setSelectedNiveau('');
-      setEmail(''); setTelephone(''); setAdresse(''); setClassesNiveau([]); setSuggestedId(null);
-      setTimeout(() => setSuccess(false), 3000);
-    } else { setError('Erreur lors de la création'); }
-    setSubmitting(false);
+      navigate(`/eleves/${result.id}`);
+    } else { setError('Erreur lors de la création'); setSubmitting(false); }
   };
 
   if (loadingNiveaux) return <PageLoader />;
@@ -119,7 +116,6 @@ export function CreateEleve() {
         <Button as="link" to="/eleves" variant="secondary">← Retour</Button>
       </PageHeader>
       <Card style={{ maxWidth: '700px' }}>
-        {success && <Alert variant="success">Élève inscrit avec succès !</Alert>}
         {error && <Alert variant="error">{error}</Alert>}
         <form onSubmit={handleSubmit}>
           <FormSection title="Informations personnelles">
@@ -172,7 +168,7 @@ export function CreateEleve() {
 
           <FormActions>
             <Button as="link" to="/eleves" variant="secondary">Annuler</Button>
-            <Button type="submit" variant="primary" disabled={submitting || !classeId} loading={submitting}>Inscrire l'élève</Button>
+            <Button type="submit" variant="primary" disabled={submitting || !classeId || !prenom.trim() || !nom.trim() || !dateNaissance} loading={submitting}>Inscrire l'élève</Button>
           </FormActions>
         </form>
       </Card>

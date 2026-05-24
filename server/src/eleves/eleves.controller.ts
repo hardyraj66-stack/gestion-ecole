@@ -15,7 +15,7 @@ export class ElevesController {
   async create(@Body() body: any) {
     const item = await this.service.create(body);
     this.events.emit('eleve:created', item);
-    this.viewBuilder.onEleveWrite();
+    await this.viewBuilder.onEleveWrite();
     return item;
   }
 
@@ -24,7 +24,7 @@ export class ElevesController {
     const item = await this.service.update(id, body);
     if (!item) throw new NotFoundException();
     this.events.emit('eleve:updated', item);
-    this.viewBuilder.onEleveWrite();
+    await this.viewBuilder.onEleveWrite();
     return item;
   }
 }

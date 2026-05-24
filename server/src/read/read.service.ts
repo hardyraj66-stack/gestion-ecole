@@ -37,19 +37,19 @@ export class ReadService {
     @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
   ) {}
 
+  // ============ HELPERS ============
+  private async getAnneeActiveLabel(): Promise<string | null> {
+    const annee = await this.anneeModel.findOne({ statut: 'active' }).exec();
+    return annee?.label ?? null;
+  }
+
   // ============ DASHBOARD ============
   async getDashboard(classesPage = 1, classesLimit = 5): Promise<any> {
     const today = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-    const [classesTotal, elevesCount, matieresCount, notesCount, anneeActive, recentEleves, convocations] = await Promise.all([
-      this.readClasseModel.countDocuments().exec(),
-      this.readEleveModel.countDocuments().exec(),
-      this.readMatiereModel.countDocuments().exec(),
-      this.readNoteModel.countDocuments().exec(),
+    const [anneeActive, convocations] = await Promise.all([
       this.anneeModel.findOne({ statut: 'active' }).exec(),
-      this.readEleveModel.find().sort({ _id: -1 }).limit(5).exec(),
-      // Convocations : hier, aujourd'hui, et à venir (non effectuées)
       this.convocationModel.find({
         $or: [
           { date: { $gte: yesterday }, effectuee: false },
@@ -57,6 +57,16 @@ export class ReadService {
           { date: yesterday },
         ],
       }).sort({ date: 1 }).exec(),
+    ]);
+
+    const classeFilter = anneeActive ? { annee_scolaire: anneeActive.label } : {};
+
+    const [classesTotal, elevesCount, matieresCount, notesCount, recentEleves] = await Promise.all([
+      this.readClasseModel.countDocuments(classeFilter).exec(),
+      this.readEleveModel.countDocuments().exec(),
+      this.readMatiereModel.countDocuments().exec(),
+      this.readNoteModel.countDocuments().exec(),
+      this.readEleveModel.find().sort({ _id: -1 }).limit(5).exec(),
     ]);
 
     // Enrichir chaque convocation avec les infos de l'élève
@@ -70,7 +80,7 @@ export class ReadService {
       periode: c.date === today ? 'today' : c.date === yesterday ? 'yesterday' : 'upcoming',
     }));
 
-    const classes = await this.readClasseModel.find()
+    const classes = await this.readClasseModel.find(classeFilter)
       .skip((classesPage - 1) * classesLimit).limit(classesLimit).exec();
 
     return {
@@ -86,16 +96,21 @@ export class ReadService {
 
   // ============ CLASSES LIST ============
   async getClassesList(page = 1, limit = 8, search = '', niveau = '') {
-    const filter: any = {};
+    const anneeLabel = await this.getAnneeActiveLabel();
+    const filter: any = anneeLabel ? { annee_scolaire: anneeLabel } : {};
     if (search) filter.nom = { $regex: search, $options: 'i' };
     if (niveau) filter.niveau = niveau;
+
+    const sallesFilter: any = anneeLabel
+      ? { salle_type: 'fixe', salle: { $ne: '' }, annee_scolaire: anneeLabel }
+      : { salle_type: 'fixe', salle: { $ne: '' } };
 
     const [items, total, niveauxConfig, distinctNiveaux, sallesFixe] = await Promise.all([
       this.readClasseModel.find(filter).skip((page - 1) * limit).limit(limit).exec(),
       this.readClasseModel.countDocuments(filter).exec(),
       this.niveauModel.find().sort({ ordre: 1 }).exec(),
-      this.readClasseModel.distinct('niveau').exec(),
-      this.readClasseModel.find({ salle_type: 'fixe', salle: { $ne: '' } }, { source_id: 1, salle: 1, nom: 1 }).exec(),
+      this.readClasseModel.distinct('niveau', anneeLabel ? { annee_scolaire: anneeLabel } : {}).exec(),
+      this.readClasseModel.find(sallesFilter, { source_id: 1, salle: 1, nom: 1 }).exec(),
     ]);
 
     // Niveaux dans l'ordre configuré, puis orphelins à la fin
@@ -229,8 +244,10 @@ export class ReadService {
 
   // ============ PLANNING — liste des niveaux/classes (léger) ============
   async getPlanningClasses() {
+    const anneeLabel = await this.getAnneeActiveLabel();
+    const classeFilter = anneeLabel ? { annee_scolaire: anneeLabel } : {};
     const [classes, creneaux] = await Promise.all([
-      this.readClasseModel.find().exec(),
+      this.readClasseModel.find(classeFilter).exec(),
       this.readCreneauModel.find().lean().exec(),
     ]);
 
@@ -245,7 +262,7 @@ export class ReadService {
 
   // ============ PLANNING — créneaux d'UNE classe ============
   async getPlanningClasse(classeId: string) {
-    const [classe, creneaux, matieres, assignments] = await Promise.all([
+    const [classe, creneaux, allMatieres, assignments] = await Promise.all([
       this.readClasseModel.findOne({ source_id: classeId }).exec(),
       this.readCreneauModel.find({ classe_id: classeId }).exec(),
       this.readMatiereModel.find().exec(),
@@ -253,6 +270,19 @@ export class ReadService {
     ]);
 
     if (!classe) return null;
+
+    // Récupérer les matières autorisées pour le niveau (pour marquer les non-autorisées)
+    let allowedMatiereIds: string[] | null = null;
+    if (classe.niveau) {
+      const niveau = await this.niveauModel.findOne({ nom: classe.niveau }).lean().exec();
+      const ids: string[] = (niveau as any)?.matiere_ids ?? [];
+      if (ids.length > 0) allowedMatiereIds = ids;
+    }
+
+    // Matières filtrées pour le planning (seulement les autorisées)
+    const matieres = allowedMatiereIds
+      ? allMatieres.filter(m => allowedMatiereIds!.includes(m.source_id))
+      : allMatieres;
 
     const profIds = [...new Set((assignments as any[]).map((a: any) => a.professeur_id).filter(Boolean))];
     const profs = profIds.length > 0
@@ -264,27 +294,69 @@ export class ReadService {
       return { ...a, id: a._id.toString(), professeur_nom: p ? `${p.prenom} ${p.nom}` : '' };
     });
 
+    // Toutes les matières avec flag autorisee (pour la page affectations)
+    const allMatieresWithFlag = allMatieres.map(m => ({
+      ...(m.toJSON() as any),
+      autorisee: allowedMatiereIds === null || allowedMatiereIds.includes(m.source_id),
+    }));
+
     return {
       classe: classe.toJSON(),
       creneaux: creneaux.map(c => c.toJSON()),
       matieres: matieres.map(m => m.toJSON()),
+      allMatieres: allMatieresWithFlag,
       assignments: assignmentsEnriched,
     };
   }
 
-  // ============ NOTES PAGE ============
-  async getNotesPage() {
-    const [classes, matieres, eleves, notes] = await Promise.all([
-      this.readClasseModel.find().exec(),
+  // ============ NOTES PAGE — filtres uniquement (pas d'élèves ni de notes) ============
+  async getNotesFilters() {
+    const anneeLabel = await this.getAnneeActiveLabel();
+    const classeFilter = anneeLabel ? { annee_scolaire: anneeLabel } : {};
+    const [classes, matieres, niveaux] = await Promise.all([
+      this.readClasseModel.find(classeFilter).exec(),
       this.readMatiereModel.find().exec(),
-      this.readEleveModel.find().exec(),
+      this.niveauModel.find().sort({ ordre: 1, nom: 1 }).lean().exec(),
+    ]);
+    return {
+      classes: classes.map(c => c.toJSON()),
+      matieres: matieres.map(m => m.toJSON()),
+      niveaux,
+    };
+  }
+
+  // ============ NOTES PAGE — élèves + notes pour une classe/matière/trimestre ============
+  async getNotesEleves(classeId: string, matiereId: string, trimestre: number) {
+    const [eleves, notes] = await Promise.all([
+      this.readEleveModel.find({ classe_id: classeId }).exec(),
+      this.readNoteModel.find({ matiere_id: matiereId, trimestre }).exec(),
+    ]);
+    return {
+      eleves: eleves.map(e => e.toJSON()),
+      notes: notes.map(n => n.toJSON()),
+    };
+  }
+
+  // ============ NOTES PAGE (legacy — conservé pour compatibilité) ============
+  async getNotesPage() {
+    const anneeLabel = await this.getAnneeActiveLabel();
+    const classeFilter = anneeLabel ? { annee_scolaire: anneeLabel } : {};
+
+    const classes = await this.readClasseModel.find(classeFilter).exec();
+    const classeIds = classes.map(c => c.source_id);
+
+    const [matieres, eleves, notes, niveaux] = await Promise.all([
+      this.readMatiereModel.find().exec(),
+      this.readEleveModel.find({ classe_id: { $in: classeIds } }).exec(),
       this.readNoteModel.find().exec(),
+      this.niveauModel.find().sort({ ordre: 1, nom: 1 }).lean().exec(),
     ]);
     return {
       classes: classes.map(c => c.toJSON()),
       matieres: matieres.map(m => m.toJSON()),
       eleves: eleves.map(e => e.toJSON()),
       notes: notes.map(n => n.toJSON()),
+      niveaux,
     };
   }
 
@@ -392,9 +464,11 @@ export class ReadService {
   async getCreateClasseData() { return { salles: (await this.readSalleModel.find().exec()).map(s => s.toJSON()) }; }
   // ============ NIVEAUX (léger) ============
   async getNiveaux() {
+    const anneeLabel = await this.getAnneeActiveLabel();
+    const classeFilter = anneeLabel ? { annee_scolaire: anneeLabel } : {};
     const [niveauxConfig, classes] = await Promise.all([
       this.niveauModel.find().sort({ ordre: 1, nom: 1 }).lean().exec(),
-      this.readClasseModel.find().exec(),
+      this.readClasseModel.find(classeFilter).exec(),
     ]);
 
     // Comptage des classes par niveau
@@ -435,7 +509,10 @@ export class ReadService {
 
   // ============ CLASSES D'UN NIVEAU + SUGGESTION ============
   async getClassesParNiveau(niveau: string, dateNaissance?: string) {
-    const classes = await this.readClasseModel.find({ niveau }).exec();
+    const anneeLabel = await this.getAnneeActiveLabel();
+    const filter: any = { niveau };
+    if (anneeLabel) filter.annee_scolaire = anneeLabel;
+    const classes = await this.readClasseModel.find(filter).exec();
     const sorted = classes.map(c => c.toJSON() as any).sort((a: any, b: any) => a.nom.localeCompare(b.nom));
 
     const items = sorted.map((c: any) => ({

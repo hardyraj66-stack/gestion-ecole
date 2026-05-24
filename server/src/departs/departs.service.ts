@@ -24,8 +24,9 @@ export class DepartsService {
   async enregistrerDepart(eleveId: string, data: { raison: string; motif: string; commentaire?: string; annee_scolaire: string }) {
     const eleve = await this.eleveModel.findById(eleveId).exec();
     if (!eleve) throw new BadRequestException('Élève introuvable');
-    if (eleve.statut === 'parti') throw new BadRequestException('Élève déjà marqué comme parti');
-    if (eleve.statut === 'exclu') throw new BadRequestException('Cet élève est exclu — utilisez la gestion des exclusions');
+    const statutActuel = eleve.statut ?? 'actif';
+    if (statutActuel === 'parti') throw new BadRequestException('Élève déjà marqué comme parti');
+    if (statutActuel === 'exclu') throw new BadRequestException('Cet élève est exclu — utilisez la gestion des exclusions');
     if (!data.raison?.trim()) throw new BadRequestException('Une raison est obligatoire');
     if (!data.motif) throw new BadRequestException('Un motif est obligatoire');
 

@@ -37,6 +37,9 @@ export const readApi = {
   planningClasses: () => get<any>('/planning/classes'),
   planningClasse: (id: string) => get<any>(`/planning/classe/${id}`),
   notesPage: () => get<any>('/notes'),
+  notesFilters: () => get<any>('/notes/filters'),
+  notesEleves: (classeId: string, matiereId: string, trimestre: number) =>
+    get<any>(`/notes/eleves${qs({ classeId, matiereId, trimestre })}`),
 
   bulletin: (eleveId: string, trimestre: number) =>
     get<any>(`/bulletin/${eleveId}?trimestre=${trimestre}`),

@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Matiere } from './matiere.schema';
 import { Note } from '../notes/note.schema';
 import { Creneau } from '../planning/creneau.schema';
+import { Niveau } from '../niveaux/niveau.schema';
 
 @Injectable()
 export class MatieresService {
@@ -11,6 +12,7 @@ export class MatieresService {
     @InjectModel(Matiere.name) private model: Model<Matiere>,
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
+    @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
   ) {}
 
   findAll() { return this.model.find({ actif: { $ne: false } }).exec(); }
@@ -20,14 +22,41 @@ export class MatieresService {
     this.validateCoefficients(data.coefficients);
     const payload = { ...data };
     delete payload.coefficient;
-    return new this.model(payload).save();
+    const saved = await new this.model(payload).save();
+    await this.syncNiveauxFromCoefficients(saved._id.toString(), [], data.coefficients ?? []);
+    return saved;
   }
 
   async update(id: string, data: any) {
     if (data.coefficients !== undefined) this.validateCoefficients(data.coefficients);
     const payload = { ...data };
     delete payload.coefficient;
-    return this.model.findByIdAndUpdate(id, payload, { new: true }).exec();
+    const before = await this.model.findById(id).lean().exec();
+    const updated = await this.model.findByIdAndUpdate(id, payload, { new: true }).exec();
+    if (data.coefficients !== undefined) {
+      const oldCoeffs: any[] = (before as any)?.coefficients ?? [];
+      await this.syncNiveauxFromCoefficients(id, oldCoeffs, data.coefficients);
+    }
+    return updated;
+  }
+
+  private async syncNiveauxFromCoefficients(matiereId: string, oldCoeffs: any[], newCoeffs: any[]) {
+    const oldNiveaux = new Set(oldCoeffs.map((c: any) => c.niveau));
+    const newNiveaux = new Set(newCoeffs.map((c: any) => c.niveau));
+    const added = [...newNiveaux].filter(n => !oldNiveaux.has(n));
+    const removed = [...oldNiveaux].filter(n => !newNiveaux.has(n));
+    if (added.length > 0) {
+      await this.niveauModel.updateMany(
+        { nom: { $in: added } },
+        { $addToSet: { matiere_ids: matiereId } },
+      ).exec();
+    }
+    if (removed.length > 0) {
+      await this.niveauModel.updateMany(
+        { nom: { $in: removed } },
+        { $pull: { matiere_ids: matiereId } as any },
+      ).exec();
+    }
   }
 
   async desactiver(id: string) {

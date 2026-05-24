@@ -1,7 +1,8 @@
-import { Controller, Post, Patch, Param, Body, NotFoundException, HttpCode } from '@nestjs/common';
+import { Controller, Post, Patch, Param, Body, NotFoundException, HttpCode, BadRequestException } from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { AnneesService } from '../annees/annees.service';
 
 @Controller('classes')
 export class ClassesController {
@@ -9,11 +10,15 @@ export class ClassesController {
     private readonly service: ClassesService,
     private readonly events: EventsGateway,
     private readonly viewBuilder: ViewBuilderService,
+    private readonly anneesService: AnneesService,
   ) {}
 
   @Post()
   async create(@Body() body: any) {
-    const item = await this.service.create(body);
+    const anneeActive = await this.anneesService.findActive();
+    if (!anneeActive) throw new BadRequestException('Aucune année scolaire active. Activez une année scolaire avant de créer une classe.');
+    const payload = { ...body, annee_scolaire: anneeActive.label };
+    const item = await this.service.create(payload);
     this.events.emit('classe:created', item);
     this.viewBuilder.onClasseWrite(); // sync read model
     return item;

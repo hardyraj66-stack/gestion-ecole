@@ -16,7 +16,7 @@ export class ClassesService {
 
   async create(data: any) {
     if (data.salle_type === 'fixe' && data.salle) {
-      const conflict = await this.model.findOne({ salle: data.salle, salle_type: 'fixe' }).exec();
+      const conflict = await this.model.findOne({ salle: data.salle, salle_type: 'fixe', actif: { $ne: false } }).exec();
       if (conflict) throw new BadRequestException(`La salle « ${data.salle} » est déjà assignée à la classe « ${conflict.nom} ».`);
     }
     return new this.model(data).save();
@@ -24,7 +24,7 @@ export class ClassesService {
 
   async update(id: string, data: any) {
     if (data.salle_type === 'fixe' && data.salle) {
-      const conflict = await this.model.findOne({ salle: data.salle, salle_type: 'fixe', _id: { $ne: id } }).exec();
+      const conflict = await this.model.findOne({ salle: data.salle, salle_type: 'fixe', actif: { $ne: false }, _id: { $ne: id } }).exec();
       if (conflict) throw new BadRequestException(`La salle « ${data.salle} » est déjà assignée à la classe « ${conflict.nom} ».`);
     }
     return this.model.findByIdAndUpdate(id, data, { new: true }).exec();

@@ -42,7 +42,7 @@ export function EleveFiche() {
       <div className="fiche-layout">
         {/* Colonne gauche */}
         <div className="fiche-col-left">
-          <FicheIdentite eleve={{ ...eleve, statut: statutCourant }} classe={classe} salleActuelle={salleActuelle} creneaux={creneaux} />
+          <FicheIdentite eleve={{ ...eleve, statut: statutCourant }} classe={classe} salleActuelle={salleActuelle} creneaux={creneaux} readOnly={readOnly} eleveId={id!} />
           <FicheFamille eleve={eleve} readOnly={readOnly} eleveId={id!} />
           <FicheStatut
             eleveId={id!}

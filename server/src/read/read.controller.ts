@@ -63,6 +63,18 @@ export class ReadController {
     return data;
   }
 
+  @Get('notes/filters')
+  getNotesFilters() { return this.service.getNotesFilters(); }
+
+  @Get('notes/eleves')
+  getNotesEleves(
+    @Query('classeId') classeId: string,
+    @Query('matiereId') matiereId: string,
+    @Query('trimestre') trimestre: string,
+  ) {
+    return this.service.getNotesEleves(classeId, matiereId, parseInt(trimestre) || 1);
+  }
+
   @Get('notes')
   getNotesPage() { return this.service.getNotesPage(); }
 

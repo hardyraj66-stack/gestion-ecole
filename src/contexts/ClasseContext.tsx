@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config/api';
 import { onEvent, notifyDataChange } from '../services/socketService';
 
 interface ClasseContextType {
-  create: (data: Omit<Classe, 'id'>, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
+  create: (data: Omit<Classe, 'id' | 'annee_scolaire'>, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
   update: (id: string, data: Partial<Classe>, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
   desactiver: (id: string, onError?: (error: string) => void) => Promise<void>;
 }
@@ -13,25 +13,25 @@ const ClasseContext = createContext<ClasseContextType | undefined>(undefined);
 
 export function ClasseProvider({ children }: { children: ReactNode }) {
 
-  const create = useCallback(async (data: Omit<Classe, 'id'>, onSuccess?: () => void, onError?: (error: string) => void) => {
+  const create = useCallback(async (data: Omit<Classe, 'id' | 'annee_scolaire'>, onSuccess?: () => void, onError?: (error: string) => void) => {
     try {
       const res = await fetch(`${API_BASE_URL}/classes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
       if (res.ok) { onSuccess?.(); } else { const e = await res.json(); onError?.(e.message || 'Erreur'); }
-    } catch { onError?.('Erreur de connexion'); }
+    } catch (e) { console.error('ClasseContext.create', e); onError?.('Erreur de connexion'); }
   }, []);
 
   const update = useCallback(async (id: string, data: Partial<Classe>, onSuccess?: () => void, onError?: (error: string) => void) => {
     try {
       const res = await fetch(`${API_BASE_URL}/classes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
       if (res.ok) { onSuccess?.(); } else { const e = await res.json(); onError?.(e.message || 'Erreur'); }
-    } catch { onError?.('Erreur de connexion'); }
+    } catch (e) { console.error('ClasseContext.update', e); onError?.('Erreur de connexion'); }
   }, []);
 
   const desactiver = useCallback(async (id: string, onError?: (error: string) => void) => {
     try {
       const res = await fetch(`${API_BASE_URL}/classes/${id}/desactiver`, { method: 'PATCH' });
       if (!res.ok) { const e = await res.json(); onError?.(e.message || 'Erreur'); }
-    } catch { onError?.('Erreur de connexion'); }
+    } catch (e) { console.error('ClasseContext.desactiver', e); onError?.('Erreur de connexion'); }
   }, []);
 
   useEffect(() => {

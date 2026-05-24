@@ -4,12 +4,16 @@ import { Classe, ClasseSchema } from './classe.schema';
 import { Eleve, EleveSchema } from '../eleves/eleve.schema';
 import { ClassesController } from './classes.controller';
 import { ClassesService } from './classes.service';
+import { AnneesModule } from '../annees/annees.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([
-    { name: Classe.name, schema: ClasseSchema },
-    { name: Eleve.name, schema: EleveSchema },
-  ])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Classe.name, schema: ClasseSchema },
+      { name: Eleve.name, schema: EleveSchema },
+    ]),
+    AnneesModule,
+  ],
   controllers: [ClassesController],
   providers: [ClassesService],
   exports: [ClassesService, MongooseModule],

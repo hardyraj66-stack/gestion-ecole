@@ -6,7 +6,7 @@ import { onEvent, notifyDataChange } from '../services/socketService';
 interface NoteContextType {
   create: (data: Omit<Note, 'id'>) => Promise<boolean>;
   update: (id: string, data: Partial<Note>) => Promise<boolean>;
-  annuler: (id: string) => Promise<void>;
+  annuler: (id: string) => Promise<boolean>;
   getBulletinFromApi: (eleveId: string, trimestre: Trimestre) => Promise<BulletinMatiere[]>;
   getMoyenneGenerale: (bm: BulletinMatiere[]) => number;
 }
@@ -22,8 +22,8 @@ export function NoteProvider({ children }: { children: ReactNode }) {
     try { const r = await fetch(`${API_BASE_URL}/notes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); return r.ok; } catch { return false; }
   }, []);
 
-  const annuler = useCallback(async (id: string) => {
-    try { await fetch(`${API_BASE_URL}/notes/${id}/annuler`, { method: 'PATCH' }); } catch {}
+  const annuler = useCallback(async (id: string): Promise<boolean> => {
+    try { const r = await fetch(`${API_BASE_URL}/notes/${id}/annuler`, { method: 'PATCH' }); return r.ok; } catch (e) { console.error('NoteContext.annuler', e); return false; }
   }, []);
 
   const getBulletinFromApi = useCallback(async (eleveId: string, trimestre: Trimestre): Promise<BulletinMatiere[]> => {

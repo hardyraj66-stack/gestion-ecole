@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNotes } from '../../contexts/NoteContext';
-import { useNotesPageData } from '../../hooks/usePageData';
+import { useNotesFiltersData } from '../../hooks/usePageData';
+import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { Alert } from '../../components/shared/Alert';
@@ -9,9 +10,11 @@ import { NotesFilters } from './NotesFilters';
 import { NotesStatsBar } from './NotesStatsBar';
 import { NotesTable, NoteRow } from './NotesTable';
 import { Trimestre } from '../../types';
+import { useViewing } from '../../contexts/ViewingContext';
 
 export function AjouterNotes() {
-  const { data, loading, readOnly } = useNotesPageData();
+  const { data, loading } = useNotesFiltersData();
+  const { isViewingArchive: readOnly } = useViewing();
   const { create: createNote, update: updateNote } = useNotes();
 
   const [selectedClasseId, setSelectedClasseId] = useState('');
@@ -26,9 +29,16 @@ export function AjouterNotes() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const matieres = data?.matieres || [];
-  const eleves = data?.eleves || [];
-  const notes = data?.notes || [];
+  const allMatieres = data?.matieres || [];
+  const niveaux: any[] = data?.niveaux || [];
+
+  const matieres = useMemo(() => {
+    if (!selectedNiveau) return allMatieres;
+    const niveauConfig = niveaux.find((n: any) => n.nom === selectedNiveau);
+    const allowedIds: string[] = niveauConfig?.matiere_ids ?? [];
+    if (allowedIds.length === 0) return allMatieres;
+    return allMatieres.filter((m: any) => allowedIds.includes(m.id));
+  }, [allMatieres, niveaux, selectedNiveau]);
 
   const classeStats = useMemo(() => {
     const wv = rows.filter(r => r.note !== null);
@@ -41,6 +51,8 @@ export function AjouterNotes() {
     setSelectedNiveau(niveau);
     setSelectedClasseId(classeId);
     setSelectedClasseNom(classeNom);
+    setSelectedMatiereId('');
+    setSelectedMatiereName('');
     setRows([]);
     setSuccess(false);
     setError('');
@@ -54,11 +66,19 @@ export function AjouterNotes() {
     setError('');
   };
 
-  const loadEleves = () => {
+  const loadEleves = async () => {
     if (!selectedClasseId || !selectedMatiereId) return;
-    setLoadingEleves(true); setSuccess(false); setError('');
-    const ce = eleves.filter((e: any) => e.classe_id === selectedClasseId);
-    const newRows: NoteRow[] = ce.map((eleve: any) => {
+    setLoadingEleves(true);
+    setSuccess(false);
+    setError('');
+    const res = await readApi.notesEleves(selectedClasseId, selectedMatiereId, selectedTrimestre);
+    if (!res) {
+      setError('Erreur lors du chargement des élèves.');
+      setLoadingEleves(false);
+      return;
+    }
+    const { eleves, notes } = res;
+    const newRows: NoteRow[] = eleves.map((eleve: any) => {
       const existing = notes.find((n: any) => n.eleve_id === eleve.id && n.matiere_id === selectedMatiereId && n.trimestre === selectedTrimestre);
       return { eleve, note: existing?.valeur ?? null, commentaire: existing?.commentaire ?? '', existingId: existing?.id ?? null };
     });
