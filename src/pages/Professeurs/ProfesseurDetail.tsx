@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
@@ -54,18 +54,22 @@ export function ProfesseurDetail() {
     readApi.niveaux().then((res: any) => { if (Array.isArray(res)) setNiveaux(res); });
   }, []);
 
-  // Pour chaque classe, indique si la matière sélectionnée est autorisée dans son niveau
-  const classeAutorisee = useMemo(() => {
-    if (!assignMatiere) return new Map<string, boolean>();
-    const map = new Map<string, boolean>();
-    for (const c of classes) {
-      const niveauConfig = niveaux.find((n: any) => (n.nom ?? n.niveau) === c.niveau);
-      const allowedIds: string[] = niveauConfig?.matiere_ids ?? [];
-      // Si pas de restriction configurée (allowedIds vide), toutes les matières sont autorisées
-      map.set(c.id, allowedIds.length === 0 || allowedIds.includes(assignMatiere));
+  const isClasseDisabled = useCallback((classeId: string): boolean => {
+    if (!assignMatiere) return false;
+    // Déjà assigné pour cette matière → grisé
+    const existingAssignments: any[] = data?.assignments ?? [];
+    if (existingAssignments.some((a: any) => a.classe_id === classeId && a.matiere_id === assignMatiere)) return true;
+    // Niveau n'autorise pas cette matière → grisé
+    if (niveaux.length > 0) {
+      const classe = classes.find((c: any) => c.id === classeId);
+      if (classe) {
+        const niveauConfig = niveaux.find((n: any) => (n.nom ?? n.niveau) === classe.niveau);
+        const allowedIds: string[] = niveauConfig?.matiere_ids ?? [];
+        if (allowedIds.length > 0 && !allowedIds.includes(assignMatiere)) return true;
+      }
     }
-    return map;
-  }, [assignMatiere, classes, niveaux]);
+    return false;
+  }, [assignMatiere, classes, niveaux, data]);
 
   const handleAddAssignment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -288,17 +292,18 @@ export function ProfesseurDetail() {
               <MatierePills
                 matieres={matieres}
                 selectedIds={assignMatiere ? [assignMatiere] : []}
-                onToggle={(id) => {
-                  setAssignMatiere(id);
-                  // Désélectionner les classes qui ne seraient plus autorisées avec la nouvelle matière
+                onToggle={(matiereId) => {
+                  setAssignMatiere(matiereId);
+                  // Désélectionner les classes qui seraient disabled avec la nouvelle matière
                   setAssignClasses(prev => {
                     const next = new Set(prev);
+                    const existingAssignments: any[] = data?.assignments ?? [];
                     for (const c of classes) {
+                      const alreadyAssigned = existingAssignments.some((a: any) => a.classe_id === c.id && a.matiere_id === matiereId);
                       const niveauConfig = niveaux.find((n: any) => (n.nom ?? n.niveau) === c.niveau);
                       const allowedIds: string[] = niveauConfig?.matiere_ids ?? [];
-                      if (allowedIds.length > 0 && !allowedIds.includes(id)) {
-                        next.delete(c.id);
-                      }
+                      const niveauBloque = allowedIds.length > 0 && !allowedIds.includes(matiereId);
+                      if (alreadyAssigned || niveauBloque) next.delete(c.id);
                     }
                     return next;
                   });
@@ -312,24 +317,30 @@ export function ProfesseurDetail() {
               <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span>Classes *</span>
                 {assignClasses.size > 0 && <span style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '0.1rem 0.5rem', borderRadius: '20px', textTransform: 'none', letterSpacing: 0 }}>{assignClasses.size}</span>}
-                {assignMatiere && <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— grisées = non enseignées dans ce niveau</span>}
+                {assignMatiere && <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— barrées = niveau incompatible · ✓ vert = déjà assigné</span>}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {classes.map((c: any) => {
                   const selected = assignClasses.has(c.id);
-                  const autorisee = assignMatiere ? (classeAutorisee.get(c.id) ?? true) : true;
-                  if (!autorisee) {
+                  const disabled = isClasseDisabled(c.id);
+                  const alreadyAssigned = assignMatiere
+                    ? (data?.assignments ?? []).some((a: any) => a.classe_id === c.id && a.matiere_id === assignMatiere)
+                    : false;
+
+                  if (disabled) {
                     return (
-                      <span key={c.id} style={{
+                      <span key={c.id} title={alreadyAssigned ? 'Déjà assigné' : 'Matière non enseignée dans ce niveau'} style={{
                         padding: '0.3rem 0.7rem', borderRadius: '20px',
-                        border: '1.5px dashed var(--border-color)',
-                        background: 'var(--bg-subtle, #f8f9fa)',
-                        color: 'var(--text-muted)',
+                        border: `1.5px solid ${alreadyAssigned ? '#d1fae5' : 'var(--border-color)'}`,
+                        background: alreadyAssigned ? '#f0fdf4' : 'transparent',
+                        color: alreadyAssigned ? '#6ee7b7' : 'var(--text-muted)',
                         fontSize: '0.8rem', fontWeight: 400,
                         cursor: 'not-allowed', userSelect: 'none',
-                        textDecoration: 'line-through',
-                        opacity: 0.5,
+                        textDecoration: alreadyAssigned ? 'none' : 'line-through',
+                        opacity: alreadyAssigned ? 0.7 : 0.45,
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
                       }}>
+                        {alreadyAssigned && <span style={{ fontSize: '0.65rem' }}>✓</span>}
                         {c.nom}
                       </span>
                     );
@@ -346,9 +357,10 @@ export function ProfesseurDetail() {
                         cursor: 'pointer',
                         transition: 'all 0.12s',
                         boxShadow: selected ? '0 1px 4px rgba(37,99,235,0.18)' : 'none',
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
                       }}
                     >
-                      {selected && <span style={{ marginRight: '0.3rem', fontSize: '0.7rem' }}>✓</span>}
+                      {selected && <span style={{ fontSize: '0.7rem' }}>✓</span>}
                       {c.nom}
                     </button>
                   );
