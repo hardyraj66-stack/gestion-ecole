@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Export — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>📤 Module Export</h1>
+<p class="subtitle">CSV, Excel (XLS) et documents HTML imprimables (bulletin PDF, carte scolaire)</p>
+
+<div class="callout callout-info">
+<p>Aucune dépendance npm externe. Le CSV est généré en pur JS, le XLSX est un fichier XML SpreadsheetML, le bulletin et la carte sont des pages HTML imprimables via <code>window.print()</code>.</p>
+</div>
+
+<h2>Architecture</h2>
+<div class="schema">
+server/src/export/
+├── export.controller.ts   # Routes GET /export/*
+├── export.service.ts      # Logique de génération (CSV, XLSX, HTML)
+└── export.module.ts
+
+src/components/shared/
+└── ExportMenu.tsx         # Bouton dropdown CSV / Excel dans le header des pages
+</div>
+
+<h2>Endpoints</h2>
+
+<h3>Listes — CSV &amp; Excel</h3>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Query params</th><th>Fichier généré</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/eleves/csv</code></td><td><code>classeId?</code>, <code>search?</code></td><td>eleves.csv</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/eleves/xlsx</code></td><td><code>classeId?</code>, <code>search?</code></td><td>eleves.xls</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/classes/csv</code></td><td><code>niveau?</code></td><td>classes.csv</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/classes/xlsx</code></td><td><code>niveau?</code></td><td>classes.xls</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/classes/:id/eleves/csv</code></td><td><code>search?</code></td><td>classe_{id}_eleves.csv</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/classes/:id/eleves/xlsx</code></td><td><code>search?</code></td><td>classe_{id}_eleves.xls</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/matieres/csv</code></td><td><code>niveau?</code></td><td>matieres.csv</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/matieres/xlsx</code></td><td><code>niveau?</code></td><td>matieres.xls</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/salles/csv</code></td><td><code>type?</code></td><td>salles.csv</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/salles/xlsx</code></td><td><code>type?</code></td><td>salles.xls</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/professeurs/csv</code></td><td><code>search?</code></td><td>professeurs.csv</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/professeurs/xlsx</code></td><td><code>search?</code></td><td>professeurs.xls</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/evaluations/csv</code></td><td><code>classeId?</code>, <code>matiereId?</code>, <code>trimestre?</code></td><td>evaluations.csv</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/evaluations/xlsx</code></td><td><code>classeId?</code>, <code>matiereId?</code>, <code>trimestre?</code></td><td>evaluations.xls</td></tr>
+</table>
+
+<h3>Documents imprimables</h3>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Params</th><th>Description</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/bulletin/:eleveId?trimestre=1</code></td><td><code>trimestre</code> (1-3)</td><td>Page HTML bulletin A4, imprimable directement</td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/export/carte/:eleveId</code></td><td>—</td><td>Page HTML carte scolaire recto/verso (340×210 px)</td></tr>
+</table>
+
+<div class="callout callout-warn">
+<p>Le bulletin et la carte retournent <code>text/html</code>, pas un PDF. Le navigateur doit utiliser <strong>Imprimer → Enregistrer en PDF</strong>. Le bouton <em>Imprimer</em> est intégré à la page HTML générée.</p>
+</div>
+
+<h2>Colonnes exportées</h2>
+
+<h3>Élèves</h3>
+<table>
+<tr><th>Colonne</th><th>Source</th></tr>
+<tr><td>Nom, Prénom</td><td><code>ReadEleve.nom / prenom</code></td></tr>
+<tr><td>Genre</td><td>"Garçon" / "Fille" selon <code>genre</code></td></tr>
+<tr><td>Date de naissance</td><td>Formatée <code>dd/mm/yyyy</code></td></tr>
+<tr><td>Classe</td><td>Jointure <code>ReadClasse.nom</code> via <code>classe_id</code></td></tr>
+<tr><td>Email, Téléphone, Adresse, Statut</td><td>Directs</td></tr>
+</table>
+
+<h3>Classes</h3>
+<table>
+<tr><th>Colonne</th><th>Note</th></tr>
+<tr><td>Nom, Niveau, Année scolaire</td><td>Filtre sur l'année active automatiquement</td></tr>
+<tr><td>Capacité, Nb élèves</td><td>Depuis <code>ReadClasse</code></td></tr>
+<tr><td>Type de salle</td><td>"Fixe" / "Variable"</td></tr>
+<tr><td>Salle</td><td>Salle assignée si fixe</td></tr>
+</table>
+
+<h3>Évaluations</h3>
+<table>
+<tr><th>Colonne</th><th>Note</th></tr>
+<tr><td>Titre, Classe, Matière, Trimestre, Date, Type, Statut</td><td>Depuis <code>ReadEvaluation</code></td></tr>
+<tr><td>Nb participants</td><td>Nombre d'élèves avec une note</td></tr>
+<tr><td>Moyenne classe</td><td>2 décimales</td></tr>
+</table>
+
+<h2>Implémentation CSV / XLSX</h2>
+<pre><code>// CSV — RFC 4180, BOM UTF-8 pour Excel Windows
+res.send('﻿' + csv);
+
+// XLSX — SpreadsheetML (XML), aucune dépendance npm
+// Entête : fond #1e40af blanc, texte blanc, gras
+// Cellules : auto-détection Number vs String
+// Feuille nommée selon le domaine ('Élèves', 'Classes', etc.)
+</code></pre>
+
+<h2>Composant frontend — ExportMenu</h2>
+<p>Fichier : <code>src/components/shared/ExportMenu.tsx</code></p>
+<pre><code>interface ExportMenuProps {
+  csvUrl: string;   // chemin relatif, ex: '/export/eleves/csv?classeId=xxx'
+  xlsxUrl: string;  // chemin relatif, ex: '/export/eleves/xlsx?classeId=xxx'
+  label?: string;   // défaut: 'Exporter'
+}
+</code></pre>
+<ul>
+<li>Bouton <code>btn-outline btn-sm</code> avec flèche déroulante</li>
+<li>Dropdown fermé au clic extérieur (via <code>mousedown</code> listener)</li>
+<li>Téléchargement via <code>window.open(API_BASE_URL + path, '_blank')</code></li>
+<li>Classe CSS du dropdown : <code>.export-menu-item</code> dans <code>index.css</code></li>
+</ul>
+
+<h3>Exemple d'usage dans une page</h3>
+<pre><code>// Dans ClassesList, ElevesList, MatieresList, etc.
+&lt;ExportMenu
+  csvUrl={`/export/eleves/csv${classeId ? `?classeId=${classeId}` : ''}`}
+  xlsxUrl={`/export/eleves/xlsx${classeId ? `?classeId=${classeId}` : ''}`}
+/&gt;
+
+// Bulletin — ouvrir dans un nouvel onglet
+window.open(`${API_BASE_URL}/export/bulletin/${eleveId}?trimestre=${trimestre}`, '_blank');
+
+// Carte scolaire
+window.open(`${API_BASE_URL}/export/carte/${eleveId}`, '_blank');
+</code></pre>
+
+<h2>Bulletin HTML — structure</h2>
+<p>La page retournée est un A4 imprimable avec :</p>
+<ul>
+<li>En-tête école + titre + année scolaire</li>
+<li>Carte élève (nom, classe, niveau, date de naissance)</li>
+<li>Badge trimestre</li>
+<li>Tableau des notes : matière, code, coef., DS, évaluation, moyenne, mention</li>
+<li>Ligne de pied : moyenne générale pondérée + mention globale</li>
+<li>Zone de signatures (directeur, professeur principal, parent)</li>
+<li>Barre <code>no-print</code> avec bouton <strong>Imprimer / PDF</strong></li>
+</ul>
+<p>Mentions : Très bien ≥16, Bien ≥14, Assez bien ≥12, Passable ≥10, Insuffisant &lt;10.</p>
+
+<h2>Carte scolaire — structure</h2>
+<p>Deux cartes 340×210 px (format CB) affichées l'une sous l'autre :</p>
+<ul>
+<li><strong>Recto</strong> : fond dégradé bleu — avatar initiales coloré (bleu garçon, rose fille) — nom, prénom, classe, niveau — ID tronqué + année</li>
+<li><strong>Verso</strong> : fond blanc — champs classe, niveau, email, téléphone, adresse — date d'émission</li>
+</ul>
+
+<div class="doc-footer">
+  <a href="index.html">← Sommaire</a>
+  <span>Module Export — GestionÉcole</span>
+  <a href="25-api-professeurs.html">Module Professeurs →</a>
+</div>
+</div>
+</body></html>

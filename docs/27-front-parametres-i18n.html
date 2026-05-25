@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Paramètres & i18n — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>⚙️ Paramètres &amp; Internationalisation</h1>
+<p class="subtitle">Dark mode, couleur d'accentuation, langue d'interface (fr / en / mg) — persistance IndexedDB</p>
+
+<h2>Architecture</h2>
+<div class="schema">
+src/
+├── services/settingsDB.ts         # Persistance IndexedDB (lecture/écriture)
+├── contexts/SettingsContext.tsx   # Provider React — applique thème + langue au DOM
+├── i18n/
+│   ├── index.ts                   # Init i18next + react-i18next
+│   └── locales/
+│       ├── fr.json
+│       ├── en.json
+│       └── mg.json
+└── pages/Parametres/
+    └── Parametres.tsx             # Page de réglages utilisateur
+</div>
+
+<h2>Persistance — settingsDB.ts</h2>
+<p>Base IndexedDB : <code>gestion-ecole-settings</code> v1, store <code>settings</code>, clé <code>'user'</code>.</p>
+<pre><code>interface AppSettings {
+  theme:    'light' | 'dark';
+  color:    'blue' | 'violet' | 'green' | 'red' | 'orange' | 'indigo';
+  language: 'fr' | 'en' | 'mg';
+}
+
+// Défauts
+{ theme: 'light', color: 'blue', language: 'fr' }
+</code></pre>
+<table>
+<tr><th>Fonction</th><th>Description</th></tr>
+<tr><td><code>loadSettings()</code></td><td>Lit depuis IndexedDB, fusionne avec les défauts. Retourne <code>AppSettings</code>.</td></tr>
+<tr><td><code>saveSettings(partial)</code></td><td>Fusionne et persiste. Silently fail — les préférences ne sont pas critiques.</td></tr>
+</table>
+
+<h2>SettingsProvider</h2>
+<p>Doit être le <strong>provider le plus externe</strong> dans <code>AppProviders.tsx</code> — il bloque le rendu de l'app avec un spinner pendant le chargement des préférences pour éviter un flash de mauvais thème.</p>
+<pre><code>// Ordre dans AppProviders.tsx :
+&lt;SettingsProvider&gt;          ← 1er — lit IndexedDB, applique thème/couleur/langue
+  &lt;ConfirmProvider&gt;
+    &lt;AnneeProvider&gt;
+      ...
+    &lt;/AnneeProvider&gt;
+  &lt;/ConfirmProvider&gt;
+&lt;/SettingsProvider&gt;
+</code></pre>
+
+<h3>Application au DOM</h3>
+<pre><code>// Thème → attribut HTML
+document.documentElement.setAttribute('data-theme', 'dark');
+
+// Couleur → attribut HTML
+document.documentElement.setAttribute('data-color', 'violet');
+
+// Langue → i18next
+i18n.changeLanguage('mg');
+</code></pre>
+
+<h3>Interface du contexte</h3>
+<pre><code>interface SettingsContextType {
+  settings: AppSettings;
+  ready: boolean;
+  setTheme(theme: 'light' | 'dark'): void;
+  setColor(color: AppSettings['color']): void;
+  setLanguage(language: AppSettings['language']): void;
+}
+</code></pre>
+
+<h2>Variables CSS — Thème sombre</h2>
+<p>Le dark mode surcharge les variables dans <code>index.css</code> via l'attribut <code>[data-theme="dark"]</code> :</p>
+<table>
+<tr><th>Variable</th><th>Light</th><th>Dark</th></tr>
+<tr><td><code>--bg</code></td><td>#f1f5f9</td><td>#0f172a</td></tr>
+<tr><td><code>--card-bg</code></td><td>#ffffff</td><td>#1e293b</td></tr>
+<tr><td><code>--text</code></td><td>#0f172a</td><td>#f1f5f9</td></tr>
+<tr><td><code>--text-muted</code></td><td>#64748b</td><td>#94a3b8</td></tr>
+<tr><td><code>--border</code></td><td>#e2e8f0</td><td>#334155</td></tr>
+<tr><td><code>--primary-light</code></td><td>#eff6ff</td><td>#1e3a5f</td></tr>
+</table>
+
+<h2>Variables CSS — Couleurs d'accentuation</h2>
+<p>Les couleurs surchargent <code>--primary</code>, <code>--primary-dark</code>, <code>--primary-light</code> via <code>[data-color="..."]</code> :</p>
+<table>
+<tr><th>Valeur</th><th>--primary</th><th>--primary-dark</th><th>--primary-light</th></tr>
+<tr><td>blue <em>(défaut)</em></td><td>#2563eb</td><td>#1d4ed8</td><td>#eff6ff</td></tr>
+<tr><td>violet</td><td>#7c3aed</td><td>#6d28d9</td><td>#ede9fe</td></tr>
+<tr><td>green</td><td>#16a34a</td><td>#15803d</td><td>#f0fdf4</td></tr>
+<tr><td>red</td><td>#dc2626</td><td>#b91c1c</td><td>#fef2f2</td></tr>
+<tr><td>orange</td><td>#ea580c</td><td>#c2410c</td><td>#fff7ed</td></tr>
+<tr><td>indigo</td><td>#4f46e5</td><td>#4338ca</td><td>#eef2ff</td></tr>
+</table>
+<p>En mode sombre, <code>--primary-light</code> est aussi surchargée pour chaque couleur (valeurs plus sombres) afin d'assurer le contraste.</p>
+
+<h2>Internationalisation — i18next</h2>
+<p>Bibliothèques : <code>i18next</code> + <code>react-i18next</code>.</p>
+<pre><code>// src/i18n/index.ts
+i18n.use(initReactI18next).init({
+  resources: { fr: { translation: fr }, en: { translation: en }, mg: { translation: mg } },
+  lng: 'fr',
+  fallbackLng: 'fr',
+  interpolation: { escapeValue: false },
+});
+</code></pre>
+
+<div class="callout callout-info">
+<p><code>./i18n/index</code> est importé dans <code>main.tsx</code> <strong>avant</strong> <code>App</code> pour garantir que i18next est initialisé avant le premier rendu.</p>
+</div>
+
+<h3>Structure des clés de traduction</h3>
+<table>
+<tr><th>Namespace</th><th>Contenu</th></tr>
+<tr><td><code>nav.*</code></td><td>Labels du menu latéral (dashboard, classes, élèves…)</td></tr>
+<tr><td><code>sidebar.*</code></td><td>Éléments du footer sidebar (année, statut, admin)</td></tr>
+<tr><td><code>parametres.*</code></td><td>Tous les textes de la page Paramètres</td></tr>
+<tr><td><code>common.*</code></td><td>Verbes d'action transverses (ajouter, modifier, annuler…)</td></tr>
+</table>
+
+<h3>Langues disponibles</h3>
+<table>
+<tr><th>Code</th><th>Langue</th><th>Flag</th></tr>
+<tr><td><code>fr</code></td><td>Français</td><td>🇫🇷</td></tr>
+<tr><td><code>en</code></td><td>English</td><td>🇬🇧</td></tr>
+<tr><td><code>mg</code></td><td>Malagasy</td><td>🇲🇬</td></tr>
+</table>
+
+<h3>Usage dans les composants</h3>
+<pre><code>import { useTranslation } from 'react-i18next';
+
+function MyComponent() {
+  const { t } = useTranslation();
+  return &lt;h1&gt;{t('parametres.titre')}&lt;/h1&gt;;
+}
+</code></pre>
+
+<h2>Page Paramètres</h2>
+<p>Route : <code>/parametres</code> — Fichier : <code>src/pages/Parametres/Parametres.tsx</code></p>
+<p>Structure de la page :</p>
+<ul>
+<li><strong>Section Apparence</strong>
+  <ul>
+    <li>Toggle dark/light (<code>.toggle-switch</code>) — changement instantané</li>
+    <li>6 swatches de couleur (<code>.color-swatches</code> + <code>.color-swatch</code>) — label dessous</li>
+  </ul>
+</li>
+<li><strong>Section Langue</strong>
+  <ul>
+    <li>3 boutons langue (<code>.lang-buttons</code> + <code>.lang-btn</code>) avec drapeau + label</li>
+    <li>Changement instantané via <code>i18n.changeLanguage()</code></li>
+  </ul>
+</li>
+</ul>
+
+<h3>Classes CSS spécifiques</h3>
+<table>
+<tr><th>Classe</th><th>Usage</th></tr>
+<tr><td><code>.settings-page</code></td><td>Conteneur max-width 720px centré</td></tr>
+<tr><td><code>.settings-section</code></td><td>Carte blanche avec bordure et ombre</td></tr>
+<tr><td><code>.settings-section-title</code></td><td>Titre de section avec séparateur</td></tr>
+<tr><td><code>.settings-row</code></td><td>Ligne flex espace-between pour label + contrôle</td></tr>
+<tr><td><code>.settings-label</code></td><td>Label du contrôle (0.9rem, 500)</td></tr>
+<tr><td><code>.settings-description</code></td><td>Description secondaire (0.8rem, muted)</td></tr>
+<tr><td><code>.toggle-switch</code></td><td>Label englobant le checkbox caché</td></tr>
+<tr><td><code>.toggle-slider</code></td><td>Visuel du toggle (via pseudo-element ::before)</td></tr>
+<tr><td><code>.color-swatches</code></td><td>Grille flex des swatches</td></tr>
+<tr><td><code>.color-swatch</code></td><td>Cercle coloré cliquable, <code>.active</code> = bordure sombre double</td></tr>
+<tr><td><code>.color-swatch-label</code></td><td>Label texte sous chaque swatch</td></tr>
+<tr><td><code>.lang-buttons</code></td><td>Flex row des boutons langue</td></tr>
+<tr><td><code>.lang-btn</code></td><td>Bouton langue, <code>.active</code> = fond primary-light</td></tr>
+</table>
+
+<div class="doc-footer">
+  <a href="26-api-evaluations-periodes.html">← Évaluations &amp; Périodes</a>
+  <span>Paramètres &amp; i18n — GestionÉcole</span>
+  <a href="index.html">Sommaire →</a>
+</div>
+</div>
+</body></html>

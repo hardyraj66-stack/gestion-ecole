@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Module Professeurs — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>👩‍🏫 Module Professeurs</h1>
+<p class="subtitle">Gestion des enseignants et de leurs affectations aux classes/matières</p>
+
+<h2>Schéma Mongoose</h2>
+<p>Collection : <code>professeurs</code></p>
+<table>
+<tr><th>Champ</th><th>Type</th><th>Contraintes</th></tr>
+<tr><td><code>nom</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>prenom</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>email</code></td><td>String</td><td>défaut : ''</td></tr>
+<tr><td><code>telephone</code></td><td>String</td><td>défaut : ''</td></tr>
+<tr><td><code>genre</code></td><td>String</td><td>enum : 'M' | 'F', required</td></tr>
+<tr><td><code>statut</code></td><td>String</td><td>enum : 'actif' | 'inactif', défaut : 'actif'</td></tr>
+<tr><td><code>createdAt</code>, <code>updatedAt</code></td><td>Date</td><td>auto (timestamps)</td></tr>
+</table>
+
+<h2>API REST</h2>
+
+<h3><span class="badge b-get">GET</span> <code>/professeurs</code></h3>
+<p>Retourne la liste de tous les professeurs (actifs et inactifs).</p>
+<pre><code>[
+  {
+    "id": "...",
+    "nom": "Dupont",
+    "prenom": "Marie",
+    "genre": "F",
+    "email": "m.dupont@ecole.mg",
+    "telephone": "034 12 345 67",
+    "statut": "actif"
+  }
+]
+</code></pre>
+
+<h3><span class="badge b-get">GET</span> <code>/professeurs/:id</code></h3>
+<p>Retourne un professeur par son ID. <code>404</code> si introuvable.</p>
+
+<h3><span class="badge b-post">POST</span> <code>/professeurs</code></h3>
+<p>Crée un professeur. Émet l'événement Socket.IO <code>professeur:event</code> et déclenche un rebuild de la vue <code>ReadProfesseur</code>.</p>
+<pre><code>// Body
+{
+  "nom": "Dupont",
+  "prenom": "Marie",
+  "genre": "F",
+  "email": "m.dupont@ecole.mg",
+  "telephone": "034 12 345 67"
+}
+</code></pre>
+
+<h3><span class="badge b-patch">PATCH</span> <code>/professeurs/:id</code></h3>
+<p>Mise à jour partielle. Mêmes événements qu'à la création.</p>
+
+<h3><span class="badge b-patch">PATCH</span> <code>/professeurs/:id/desactiver</code></h3>
+<p>Passe le statut à <code>'inactif'</code>. Le professeur reste dans la base mais n'est plus sélectionnable dans les affectations.</p>
+
+<h3><span class="badge b-patch">PATCH</span> <code>/professeurs/:id/activer</code></h3>
+<p>Repasse le statut à <code>'actif'</code>.</p>
+
+<h2>Affectations professeur–matière–classe</h2>
+<p>Les affectations sont gérées via un module dédié <code>TeacherAssignment</code> (contexte frontend <code>TeacherAssignmentContext</code>). Une affectation lie un professeur, une matière et une classe. Elle permet :</p>
+<ul>
+<li>D'afficher les matières enseignées dans la fiche professeur</li>
+<li>De pré-remplir le champ professeur dans les créneaux de planning</li>
+<li>De griser les matières déjà affectées dans la vue d'affectation</li>
+</ul>
+
+<h2>Pages frontend</h2>
+<div class="schema">
+src/pages/Professeurs/
+├── ProfesseursList.tsx       # Liste paginée + recherche + export CSV/XLSX
+├── ProfesseurDetail.tsx      # Fiche détail : infos + matières affectées
+└── ProfesseurAssignments.tsx # Vue grille : affecter un prof à une matière/classe
+</div>
+
+<h3>Routes</h3>
+<table>
+<tr><th>Route</th><th>Page</th></tr>
+<tr><td><code>/professeurs</code></td><td>ProfesseursList</td></tr>
+<tr><td><code>/professeurs/:id</code></td><td>ProfesseurDetail</td></tr>
+<tr><td><code>/professeurs/affectations</code></td><td>ProfesseurAssignments</td></tr>
+</table>
+
+<h2>Socket.IO</h2>
+<table>
+<tr><th>Événement</th><th>Déclenché par</th><th>Canal frontend</th></tr>
+<tr><td><code>professeur:event</code></td><td>create, update, activer, desactiver</td><td><code>'professeurs'</code></td></tr>
+</table>
+
+<h2>Export</h2>
+<p>Disponible depuis <code>ProfesseursList</code> via <code>&lt;ExportMenu&gt;</code>.</p>
+<pre><code>GET /export/professeurs/csv?search=dupont
+GET /export/professeurs/xlsx
+</code></pre>
+<p>Colonnes : Nom, Prénom, Genre ("M." / "Mme"), Email, Téléphone, Statut.<br>
+Filtre : exclut les professeurs <code>inactif</code> sauf si fourni explicitement dans la recherche.</p>
+
+<div class="doc-footer">
+  <a href="24-api-export.html">← Module Export</a>
+  <span>Module Professeurs — GestionÉcole</span>
+  <a href="26-api-evaluations-periodes.html">Module Évaluations & Périodes →</a>
+</div>
+</div>
+</body></html>

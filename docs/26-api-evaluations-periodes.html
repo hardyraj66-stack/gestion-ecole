@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Évaluations & Périodes — GestionÉcole</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 GestionÉcole</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>📋 Module Évaluations &amp; Périodes</h1>
+<p class="subtitle">Gestion des évaluations (DS, évaluations libres) et des fenêtres de saisie par trimestre</p>
+
+<h2>Vue d'ensemble</h2>
+<p>Deux entités distinctes mais liées :</p>
+<ul>
+<li><strong>Évaluation</strong> — Un devoir ou une évaluation libre pour une classe, une matière et un trimestre. Contient les notes de chaque élève.</li>
+<li><strong>PériodeEvaluation</strong> — Une fenêtre calendaire (date_debut → date_fin) qui contrôle la période de saisie d'un type d'évaluation pour un trimestre donné.</li>
+</ul>
+
+<div class="schema">
+server/src/
+├── evaluations/
+│   ├── evaluation.schema.ts
+│   ├── evaluations.controller.ts
+│   ├── evaluations.service.ts
+│   └── evaluations.module.ts
+└── periodes/
+    ├── periode.schema.ts
+    ├── periodes.controller.ts
+    ├── periodes.service.ts
+    └── periodes.module.ts
+</div>
+
+<h2>Schéma Evaluation</h2>
+<p>Collection : <code>evaluations</code></p>
+<table>
+<tr><th>Champ</th><th>Type</th><th>Contraintes</th></tr>
+<tr><td><code>type</code></td><td>String</td><td>enum : 'ds' | 'evaluation', required</td></tr>
+<tr><td><code>classe_id</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>matiere_id</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>trimestre</code></td><td>Number</td><td>enum : 1 | 2 | 3, required</td></tr>
+<tr><td><code>annee_scolaire</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>date</code></td><td>String</td><td>required (ISO)</td></tr>
+<tr><td><code>statut</code></td><td>String</td><td>enum : 'brouillon' | 'publie', défaut : 'brouillon'</td></tr>
+<tr><td><code>notes</code></td><td>NoteEvaluation[]</td><td>défaut : []</td></tr>
+</table>
+
+<h3>Type NoteEvaluation</h3>
+<pre><code>{
+  eleve_id: string;
+  valeur: number | null;  // null = non saisi
+  absent: boolean;
+}
+</code></pre>
+
+<div class="callout callout-info">
+<p>Index compound unique : <code>(classe_id, matiere_id, trimestre, type)</code> — il ne peut exister qu'<strong>un seul DS et une seule évaluation</strong> par triplet classe/matière/trimestre.</p>
+</div>
+
+<h2>API Évaluations</h2>
+
+<h3><span class="badge b-post">POST</span> <code>/evaluations</code></h3>
+<p>Crée une évaluation. Émet <code>evaluation:created</code>.</p>
+<pre><code>{
+  "type": "ds",
+  "classe_id": "...",
+  "matiere_id": "...",
+  "trimestre": 1,
+  "annee_scolaire": "2024-2025",
+  "date": "2025-01-15"
+}
+</code></pre>
+
+<h3><span class="badge b-patch">PATCH</span> <code>/evaluations/:id/notes</code></h3>
+<p>Saisie ou mise à jour des notes des élèves. Émet <code>evaluation:updated</code>.</p>
+<pre><code>{
+  "notes": [
+    { "eleve_id": "...", "valeur": 14.5, "absent": false },
+    { "eleve_id": "...", "valeur": null, "absent": true }
+  ]
+}
+</code></pre>
+
+<h3><span class="badge b-patch">PATCH</span> <code>/evaluations/:id/publier</code></h3>
+<p>Passe le statut de <code>'brouillon'</code> à <code>'publie'</code>. Une évaluation publiée ne peut plus être modifiée. Émet <code>evaluation:publie</code>.</p>
+
+<h3><span class="badge b-delete">DELETE</span> <code>/evaluations/:id</code></h3>
+<p>Supprime une évaluation (brouillon uniquement recommandé). Émet <code>evaluation:deleted</code>.</p>
+
+<h2>Schéma PériodeEvaluation</h2>
+<p>Collection : <code>periodeevaluations</code></p>
+<table>
+<tr><th>Champ</th><th>Type</th><th>Contraintes</th></tr>
+<tr><td><code>trimestre</code></td><td>Number</td><td>enum : 1 | 2 | 3, required</td></tr>
+<tr><td><code>type</code></td><td>String</td><td>enum : 'ds' | 'evaluation', required</td></tr>
+<tr><td><code>annee_scolaire</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>date_debut</code></td><td>String | null</td><td>défaut : null</td></tr>
+<tr><td><code>date_fin</code></td><td>String | null</td><td>défaut : null</td></tr>
+<tr><td><code>terminee</code></td><td>Boolean</td><td>défaut : false</td></tr>
+</table>
+
+<div class="callout callout-info">
+<p>Index unique : <code>(trimestre, type, annee_scolaire)</code> — 6 périodes max par année scolaire (3 trimestres × 2 types).</p>
+</div>
+
+<h2>API Périodes</h2>
+
+<h3><span class="badge b-get">GET</span> <code>/periodes?annee_scolaire=2024-2025</code></h3>
+<p>Retourne les 6 périodes de l'année scolaire. Crée celles manquantes automatiquement.</p>
+
+<h3><span class="badge b-get">GET</span> <code>/periodes/active</code></h3>
+<p>Retourne la période en cours (date_debut ≤ aujourd'hui ≤ date_fin et non terminée).</p>
+
+<h3><span class="badge b-post">POST</span> <code>/periodes/init</code></h3>
+<p>Initialise les 6 périodes pour une année scolaire si elles n'existent pas encore.</p>
+<pre><code>{ "annee_scolaire": "2024-2025" }
+</code></pre>
+
+<h3><span class="badge b-patch">PATCH</span> <code>/periodes/:id</code></h3>
+<p>Met à jour les dates d'une période. Émet <code>periode:updated</code>.</p>
+<pre><code>{
+  "date_debut": "2025-01-06",
+  "date_fin": "2025-01-20"
+}
+</code></pre>
+
+<h3><span class="badge b-patch">PATCH</span> <code>/periodes/:id/terminer</code></h3>
+<p>Marque la période comme terminée (<code>terminee: true</code>). Émet <code>periode:updated</code>.</p>
+
+<h2>Page frontend — PériodesList</h2>
+<p>Route : <code>/evaluations</code><br>
+Fichier : <code>src/pages/evaluations/PeriodesList.tsx</code></p>
+<p>Affiche une grille des 6 périodes (2 types × 3 trimestres) avec :</p>
+<ul>
+<li>Dates de début et de fin éditables inline</li>
+<li>Statut visuel : à planifier, en cours, terminée</li>
+<li>Bouton <em>Terminer</em> pour clore une période</li>
+<li>Accès rapide aux évaluations de chaque période</li>
+</ul>
+
+<h2>Socket.IO</h2>
+<table>
+<tr><th>Événement</th><th>Déclenché par</th><th>Canal frontend</th></tr>
+<tr><td><code>evaluation:created</code></td><td>POST /evaluations</td><td><code>'evaluations'</code></td></tr>
+<tr><td><code>evaluation:updated</code></td><td>PATCH /evaluations/:id/notes</td><td><code>'evaluations'</code></td></tr>
+<tr><td><code>evaluation:publie</code></td><td>PATCH /evaluations/:id/publier</td><td><code>'evaluations'</code></td></tr>
+<tr><td><code>evaluation:deleted</code></td><td>DELETE /evaluations/:id</td><td><code>'evaluations'</code></td></tr>
+<tr><td><code>periode:updated</code></td><td>init, PATCH, terminer</td><td><code>'periodes'</code></td></tr>
+</table>
+
+<div class="doc-footer">
+  <a href="25-api-professeurs.html">← Module Professeurs</a>
+  <span>Évaluations &amp; Périodes — GestionÉcole</span>
+  <a href="27-front-parametres-i18n.html">Paramètres &amp; i18n →</a>
+</div>
+</div>
+</body></html>
