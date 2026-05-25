@@ -14,17 +14,17 @@ function qs(params: Record<string, string | number | undefined>): string {
 }
 
 export const readApi = {
-  dashboard: (classesPage?: number, classesLimit?: number) =>
-    get<any>(`/dashboard${qs({ classesPage, classesLimit })}`),
+  dashboard: (classesPage?: number, classesLimit?: number, anneeLabel?: string) =>
+    get<any>(`/dashboard${qs({ classesPage, classesLimit, anneeLabel })}`),
 
-  classesList: (page?: number, limit?: number, search?: string, niveau?: string) =>
-    get<any>(`/classes${qs({ page, limit, search, niveau })}`),
+  classesList: (page?: number, limit?: number, search?: string, niveau?: string, anneeLabel?: string) =>
+    get<any>(`/classes${qs({ page, limit, search, niveau, anneeLabel })}`),
 
   classeEleves: (id: string, page?: number, limit?: number, search?: string, eleveId?: string) =>
     get<any>(`/classes/${id}/eleves${qs({ page, limit, search, eleveId })}`),
 
-  elevesList: (page?: number, limit?: number, search?: string, classeId?: string, eleveId?: string) =>
-    get<any>(`/eleves${qs({ page, limit, search, classeId, eleveId })}`),
+  elevesList: (page?: number, limit?: number, search?: string, classeId?: string, eleveId?: string, anneeLabel?: string) =>
+    get<any>(`/eleves${qs({ page, limit, search, classeId, eleveId, anneeLabel })}`),
 
   matieresList: (page?: number, limit?: number, niveau?: string) =>
     get<any>(`/matieres${qs({ page, limit, niveau: niveau || undefined })}`),
@@ -34,12 +34,15 @@ export const readApi = {
 
   salleDetail: (id: string) => get<any>(`/salles/${id}`),
 
-  planningClasses: () => get<any>('/planning/classes'),
+  planningClasses: (anneeLabel?: string) =>
+    get<any>(`/planning/classes${qs({ anneeLabel })}`),
   planningClasse: (id: string) => get<any>(`/planning/classe/${id}`),
+
   notesPage: () => get<any>('/notes'),
-  notesFilters: () => get<any>('/notes/filters'),
-  notesEleves: (classeId: string, matiereId: string, trimestre: number) =>
-    get<any>(`/notes/eleves${qs({ classeId, matiereId, trimestre })}`),
+  notesFilters: (anneeLabel?: string) =>
+    get<any>(`/notes/filters${qs({ anneeLabel })}`),
+  notesEleves: (classeId: string, matiereId: string, trimestre: number, anneeLabel?: string) =>
+    get<any>(`/notes/eleves${qs({ classeId, matiereId, trimestre, anneeLabel })}`),
 
   bulletin: (eleveId: string, trimestre: number) =>
     get<any>(`/bulletin/${eleveId}?trimestre=${trimestre}`),
@@ -48,7 +51,9 @@ export const readApi = {
   eleveFiche: (id: string) => get<any>(`/eleves/${id}/fiche`),
   createClasseData: () => get<any>('/create-classe'),
   createEleveData: () => get<any>('/create-eleve'),
-  niveaux: () => get<any>('/niveaux'),
+
+  niveaux: (anneeLabel?: string) =>
+    get<any>(`/niveaux${qs({ anneeLabel })}`),
   classesParNiveau: (niveau: string, dateNaissance?: string) =>
     get<any>(`/niveaux/${encodeURIComponent(niveau)}/classes${dateNaissance ? `?dateNaissance=${dateNaissance}` : ''}`),
 
@@ -61,4 +66,9 @@ export const readApi = {
     get<any>(`/periodes${qs({ annee_scolaire })}`),
 
   activePeriode: () => get<any>('/periodes/active'),
+
+  evaluationsList: (classeId?: string, matiereId?: string, trimestre?: number, statut?: string, page = 1, anneeLabel?: string) =>
+    get<any>(`/evaluations${qs({ classeId, matiereId, trimestre, statut, page, anneeLabel })}`),
+
+  evaluationDetail: (id: string) => get<any>(`/evaluations/${id}`),
 };

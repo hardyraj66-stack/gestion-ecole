@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Navigate } from 'react-router-dom';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useTeacherAssignments } from '../../contexts/TeacherAssignmentContext';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -14,8 +15,10 @@ import { API_BASE_URL } from '../../config/api';
 
 export function ProfesseurAssignments() {
   const { t } = useTranslation();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = isViewingArchive;
   const { create: upsertAssignment } = useTeacherAssignments();
+  if (isViewingArchive) return <Navigate to="/professeurs" replace />;
 
   const [classes, setClasses] = useState<any[]>([]);
   const [professeurs, setProfesseurs] = useState<any[]>([]);

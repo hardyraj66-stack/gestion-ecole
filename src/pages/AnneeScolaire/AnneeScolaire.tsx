@@ -26,7 +26,7 @@ export function AnneeScolairePage() {
   const { t } = useTranslation();
   const { annees, loading, active, preparation, create, demarrer, terminer, delete: deleteAnnee } = useAnnees();
   const { data: dashData } = useDashboardData();
-  const { viewAnnee } = useViewing();
+  const { viewAnnee, isViewingArchive, viewing } = useViewing();
   const navigate = useNavigate();
   const confirm = useConfirm();
 
@@ -122,13 +122,17 @@ export function AnneeScolairePage() {
   return (
     <div>
       <PageHeader title={t('anneeScolaire.titre')} subtitle={t('anneeScolaire.sousTitre')}>
-        {!showForm && !preparation && <Button variant="primary" onClick={() => setShowForm(true)}>{t('anneeScolaire.preparer')}</Button>}
+        {!isViewingArchive && !showForm && !preparation && <Button variant="primary" onClick={() => setShowForm(true)}>{t('anneeScolaire.preparer')}</Button>}
       </PageHeader>
+
+      {isViewingArchive && (
+        <Alert variant="info">Consultation de l'archive « {viewing?.label} » — lecture seule.</Alert>
+      )}
 
       {error && <Alert variant="error">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
 
-      {showForm && (
+      {!isViewingArchive && showForm && (
         <Card style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('anneeScolaire.preparerTitre')}</h3>
           <form onSubmit={handleCreate}>
@@ -179,7 +183,7 @@ export function AnneeScolairePage() {
                 <StatItem label={t('anneeScolaire.colonnes.notes')} value={activeNotes} />
               </div>
             </div>
-            <Button variant="danger" onClick={() => handleTerminer(active)} disabled={submitting} loading={submitting}>{t('anneeScolaire.actions.terminer')}</Button>
+            {!isViewingArchive && <Button variant="danger" onClick={() => handleTerminer(active)} disabled={submitting} loading={submitting}>{t('anneeScolaire.actions.terminer')}</Button>}
           </div>
         </Card>
       )}
@@ -200,10 +204,12 @@ export function AnneeScolairePage() {
               </div>
               <StatItem label={t('anneeScolaire.colonnes.periode')} value={`${formatDate(preparation.debut)} → ${formatDate(preparation.fin)}`} />
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {!active && <Button variant="primary" onClick={() => handleDemarrer(preparation)} disabled={submitting} loading={submitting}>{t('anneeScolaire.demarrerEmoji')}</Button>}
-              <Button variant="danger" size="sm" onClick={() => handleDelete(preparation)}>{t('anneeScolaire.actions.supprimer')}</Button>
-            </div>
+            {!isViewingArchive && (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {!active && <Button variant="primary" onClick={() => handleDemarrer(preparation)} disabled={submitting} loading={submitting}>{t('anneeScolaire.demarrerEmoji')}</Button>}
+                <Button variant="danger" size="sm" onClick={() => handleDelete(preparation)}>{t('anneeScolaire.actions.supprimer')}</Button>
+              </div>
+            )}
           </div>
           {active && <Alert variant="info" icon={false}>{t('anneeScolaire.attente', { active: active.label, prep: preparation.label })}</Alert>}
         </Card>

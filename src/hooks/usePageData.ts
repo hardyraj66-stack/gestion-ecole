@@ -6,8 +6,9 @@ import { onDataChange, Channel } from '../services/socketService';
 /**
  * Hook de fetch par page.
  * - re-fetch quand le fetcher change (page, search, classeId...)
- * - re-fetch socket ciblé par channel
+ * - re-fetch socket ciblé par channel (mode live uniquement)
  * - possibilité d'un refresh silencieux (sans loader plein écran)
+ * - en mode archive, le fetcher reçoit viewingLabel via le hook spécialisé
  */
 export function usePageFetch<T>(
   fetcher: () => Promise<T | null>,
@@ -31,7 +32,7 @@ export function usePageFetch<T>(
     if (!silent) setLoading(true);
     if (silent) setRefreshing(true);
 
-    // Archive
+    // Archive via snapshot en mémoire (legacy, si extractor fourni)
     if (isViewingArchive && snapshot && extractorRef.current) {
       try {
         setData(extractorRef.current(snapshot));
@@ -46,7 +47,7 @@ export function usePageFetch<T>(
       return;
     }
 
-    // Live
+    // Live ou archive via anneeLabel injecté dans le fetcher
     try {
       const result = await fetcher();
       setData(result);
@@ -68,13 +69,13 @@ export function usePageFetch<T>(
     runFetch(dataRef.current !== null);
   }, [runFetch]);
 
-  // Re-fetch quand un socket notifie un changement ciblé
+  // Re-fetch socket (mode live uniquement — pas en archive)
   useEffect(() => {
     if (isViewingArchive) return;
     const unsub = onDataChange(channel, () => {
       setTimeout(() => {
         isFetchingRef.current = false;
-        runFetch(true); // silent refresh → pas de PageLoader plein écran
+        runFetch(true);
       }, 500);
     });
     return unsub;
@@ -89,38 +90,65 @@ export function usePageFetch<T>(
 }
 
 // ============ HOOKS PAR PAGE ============
+
 export function useDashboardData(classesPage = 1) {
-  return usePageFetch(useCallback(() => readApi.dashboard(classesPage, 5), [classesPage]), undefined, 'classes');
+  const { viewingLabel } = useViewing();
+  return usePageFetch(
+    useCallback(() => readApi.dashboard(classesPage, 5, viewingLabel ?? undefined), [classesPage, viewingLabel]),
+    undefined, 'classes',
+  );
 }
 
 export function useClassesListData(page = 1, search = '', niveau = '') {
-  return usePageFetch(useCallback(() => readApi.classesList(page, 8, search, niveau), [page, search, niveau]), undefined, 'classes');
+  const { viewingLabel } = useViewing();
+  return usePageFetch(
+    useCallback(() => readApi.classesList(page, 8, search, niveau, viewingLabel ?? undefined), [page, search, niveau, viewingLabel]),
+    undefined, 'classes',
+  );
 }
 
 export function useClasseElevesData(classeId: string, page = 1, search = '', eleveId = '') {
-  return usePageFetch(useCallback(() => readApi.classeEleves(classeId, page, 10, search, eleveId), [classeId, page, search, eleveId]), undefined, 'eleves');
+  return usePageFetch(
+    useCallback(() => readApi.classeEleves(classeId, page, 10, search, eleveId), [classeId, page, search, eleveId]),
+    undefined, 'eleves',
+  );
 }
 
 export function useElevesListData(page = 1, search = '', classeId = '', eleveId = '') {
-  return usePageFetch(useCallback(() => readApi.elevesList(page, 12, search, classeId, eleveId), [page, search, classeId, eleveId]), undefined, 'eleves');
+  const { viewingLabel } = useViewing();
+  return usePageFetch(
+    useCallback(() => readApi.elevesList(page, 12, search, classeId, eleveId, viewingLabel ?? undefined), [page, search, classeId, eleveId, viewingLabel]),
+    undefined, 'eleves',
+  );
 }
 
 export function useMatieresListData(page = 1, niveau = '') {
-  return usePageFetch(useCallback(() => readApi.matieresList(page, 8, niveau || undefined), [page, niveau]), undefined, 'matieres');
+  return usePageFetch(
+    useCallback(() => readApi.matieresList(page, 8, niveau || undefined), [page, niveau]),
+    undefined, 'matieres',
+  );
 }
 
 export function useSallesListData(page = 1, type = '', search = '') {
-  return usePageFetch(useCallback(() => readApi.sallesList(page, 10, type || undefined, search || undefined), [page, type, search]), undefined, 'salles');
+  return usePageFetch(
+    useCallback(() => readApi.sallesList(page, 10, type || undefined, search || undefined), [page, type, search]),
+    undefined, 'salles',
+  );
 }
 
-// Liste des niveaux/classes — ne rafraîchit pas sur move d'un créneau
 export function usePlanningClasses() {
-  return usePageFetch(useCallback(() => readApi.planningClasses(), []), undefined, 'classes');
+  const { viewingLabel } = useViewing();
+  return usePageFetch(
+    useCallback(() => readApi.planningClasses(viewingLabel ?? undefined), [viewingLabel]),
+    undefined, 'classes',
+  );
 }
 
-// Détail d'une classe du planning — rafraîchit sur channel planning seulement
 export function usePlanningClasse(classeId: string) {
-  return usePageFetch(useCallback(() => classeId ? readApi.planningClasse(classeId) : Promise.resolve(null), [classeId]), undefined, 'planning');
+  return usePageFetch(
+    useCallback(() => classeId ? readApi.planningClasse(classeId) : Promise.resolve(null), [classeId]),
+    undefined, 'planning',
+  );
 }
 
 export function useNotesPageData() {
@@ -128,25 +156,45 @@ export function useNotesPageData() {
 }
 
 export function useNotesFiltersData() {
-  return usePageFetch(useCallback(() => readApi.notesFilters(), []), undefined, 'notes');
+  const { viewingLabel } = useViewing();
+  return usePageFetch(
+    useCallback(() => readApi.notesFilters(viewingLabel ?? undefined), [viewingLabel]),
+    undefined, 'notes',
+  );
 }
 
 export function useBulletinData(eleveId: string, trimestre: number) {
-  return usePageFetch(useCallback(() => readApi.bulletin(eleveId, trimestre), [eleveId, trimestre]), undefined, 'notes');
+  return usePageFetch(
+    useCallback(() => readApi.bulletin(eleveId, trimestre), [eleveId, trimestre]),
+    undefined, 'notes',
+  );
 }
 
 export function useEleveFicheData(eleveId: string) {
-  return usePageFetch(useCallback(() => readApi.eleveFiche(eleveId), [eleveId]), undefined, 'eleves');
+  return usePageFetch(
+    useCallback(() => readApi.eleveFiche(eleveId), [eleveId]),
+    undefined, 'eleves',
+  );
 }
 
 export function useNiveauxListData() {
-  return usePageFetch(useCallback(() => readApi.niveaux(), []), undefined, 'niveaux');
+  const { viewingLabel } = useViewing();
+  return usePageFetch(
+    useCallback(() => readApi.niveaux(viewingLabel ?? undefined), [viewingLabel]),
+    undefined, 'niveaux',
+  );
 }
 
 export function useProfesseursListData(page = 1, search = '') {
-  return usePageFetch(useCallback(() => readApi.professeurs(page, 20, search), [page, search]), undefined, 'professeurs');
+  return usePageFetch(
+    useCallback(() => readApi.professeurs(page, 20, search), [page, search]),
+    undefined, 'professeurs',
+  );
 }
 
 export function useProfesseurDetailData(id: string) {
-  return usePageFetch(useCallback(() => id ? readApi.professeur(id) : Promise.resolve(null), [id]), undefined, 'professeurs');
+  return usePageFetch(
+    useCallback(() => id ? readApi.professeur(id) : Promise.resolve(null), [id]),
+    undefined, 'professeurs',
+  );
 }
