@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "classes": "Classes",
+    "eleves": "Students",
+    "matieres": "Subjects",
+    "professeurs": "Teachers",
+    "notes": "Grades",
+    "periodes": "Periods",
+    "planning": "Schedule",
+    "salles": "Rooms",
+    "niveaux": "Levels",
+    "cycle": "Academic year",
+    "parametres": "Settings"
+  },
+  "sidebar": {
+    "anneeScolaire": "Academic year",
+    "statut": {
+      "active": "Active",
+      "preparation": "Preparation",
+      "archive": "Archive"
+    },
+    "retourAnneeEnCours": "✕ Click to return to current year",
+    "administrateur": "Administrator",
+    "role": "Admin"
+  },
+  "parametres": {
+    "titre": "Settings",
+    "sousTitre": "Customize the appearance and behavior of the application",
+    "apparence": {
+      "titre": "Appearance",
+      "mode": "Display mode",
+      "clair": "Light mode",
+      "sombre": "Dark mode",
+      "couleur": "Theme color",
+      "couleurs": {
+        "blue": "Blue",
+        "violet": "Violet",
+        "green": "Green",
+        "red": "Red",
+        "orange": "Orange",
+        "indigo": "Indigo"
+      }
+    },
+    "langue": {
+      "titre": "Language",
+      "description": "Choose the display language of the interface",
+      "fr": "Français",
+      "en": "English",
+      "mg": "Malagasy"
+    }
+  },
+  "common": {
+    "nouveau": "New",
+    "nouvelle": "New",
+    "ajouter": "Add",
+    "modifier": "Edit",
+    "supprimer": "Delete",
+    "annuler": "Cancel",
+    "enregistrer": "Save",
+    "confirmer": "Confirm",
+    "fermer": "Close",
+    "rechercher": "Search",
+    "filtrer": "Filter",
+    "exporter": "Export",
+    "chargement": "Loading...",
+    "aucunResultat": "No results"
+  }
+}

@@ -12,9 +12,11 @@ import { ProfesseurProvider } from './ProfesseurContext';
 import { TeacherAssignmentProvider } from './TeacherAssignmentContext';
 import { PeriodeProvider } from './PeriodeContext';
 import { ConfirmProvider } from '../components/shared/ConfirmDialog';
+import { SettingsProvider } from './SettingsContext';
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
+    <SettingsProvider>
     <ConfirmProvider>
       <AnneeProvider>
         <ViewingProvider>
@@ -42,5 +44,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
         </ViewingProvider>
       </AnneeProvider>
     </ConfirmProvider>
+    </SettingsProvider>
   );
 }

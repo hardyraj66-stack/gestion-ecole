@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "classes": "Kilasy",
+    "eleves": "Mpianatra",
+    "matieres": "Lohahevitra",
+    "professeurs": "Mpampianatra",
+    "notes": "Naoty",
+    "periodes": "Vanim-potoana",
+    "planning": "Fandaharana",
+    "salles": "Efitrano",
+    "niveaux": "Ambaratonga",
+    "cycle": "Taom-pianarana",
+    "parametres": "Fikirana"
+  },
+  "sidebar": {
+    "anneeScolaire": "Taom-pianarana",
+    "statut": {
+      "active": "Mavitrika",
+      "preparation": "Fanomanana",
+      "archive": "Tahiry"
+    },
+    "retourAnneeEnCours": "✕ Tsindrio hiverina amin'ny taona ankehitriny",
+    "administrateur": "Mpitantana",
+    "role": "Admin"
+  },
+  "parametres": {
+    "titre": "Fikirana",
+    "sousTitre": "Amboary ny fisehoana sy ny fitondran'ny rindranasa",
+    "apparence": {
+      "titre": "Fisehoana",
+      "mode": "Fomba fampisehoana",
+      "clair": "Fomba mazava",
+      "sombre": "Fomba maizina",
+      "couleur": "Loko fototra",
+      "couleurs": {
+        "blue": "Manga",
+        "violet": "Volom-parasy",
+        "green": "Maitso",
+        "red": "Mena",
+        "orange": "Voasary",
+        "indigo": "Indigo"
+      }
+    },
+    "langue": {
+      "titre": "Fiteny",
+      "description": "Safidio ny fiteny fampisehoana ny interface",
+      "fr": "Français",
+      "en": "English",
+      "mg": "Malagasy"
+    }
+  },
+  "common": {
+    "nouveau": "Vaovao",
+    "nouvelle": "Vaovao",
+    "ajouter": "Hanampy",
+    "modifier": "Hanova",
+    "supprimer": "Hamafa",
+    "annuler": "Hanafoana",
+    "enregistrer": "Hitahiry",
+    "confirmer": "Hanamafy",
+    "fermer": "Hanidy",
+    "rechercher": "Hikaroka",
+    "filtrer": "Hanasitrana",
+    "exporter": "Hamoaka",
+    "chargement": "Ampidirana...",
+    "aucunResultat": "Tsy misy vokatra"
+  }
+}

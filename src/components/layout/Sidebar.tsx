@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { Badge } from '../ui/Badge';
@@ -40,6 +41,7 @@ function renderIconElement(el: IconElement, idx: number) {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const { active, preparation, getAll: fetchAnnees } = useAnnees();
   const { viewing, isViewingArchive, exitView } = useViewing();
 
@@ -51,8 +53,23 @@ export function Sidebar() {
   }, [fetchAnnees]);
 
   const displayLabel = isViewingArchive ? viewing!.label : (active?.label || preparation?.label || '—');
-  const displayStatut = isViewingArchive ? 'Archive' : active ? 'Active' : preparation ? 'Préparation' : '';
+  const displayStatut = isViewingArchive
+    ? t('sidebar.statut.archive')
+    : active ? t('sidebar.statut.active') : preparation ? t('sidebar.statut.preparation') : '';
   const badgeVariant = isViewingArchive ? 'warning' : active ? 'success' : 'warning';
+
+  const navLabels: Record<string, string> = {
+    '/dashboard': t('nav.dashboard'),
+    '/classes': t('nav.classes'),
+    '/eleves': t('nav.eleves'),
+    '/matieres': t('nav.matieres'),
+    '/professeurs': t('nav.professeurs'),
+    '/notes': t('nav.notes'),
+    '/evaluations': t('nav.periodes'),
+    '/planning': t('nav.planning'),
+    '/salles': t('nav.salles'),
+    '/niveaux': t('nav.niveaux'),
+  };
 
   return (
     <aside className={`sidebar ${isViewingArchive ? 'sidebar-archive' : ''}`}>
@@ -74,7 +91,7 @@ export function Sidebar() {
                 : item.iconMultiple?.map((el, idx) => renderIconElement(el, idx))
               }
             </svg>
-            <span>{item.label}</span>
+            <span>{navLabels[item.path] ?? item.label}</span>
           </NavLink>
         ))}
 
@@ -84,12 +101,21 @@ export function Sidebar() {
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>Cycle scolaire</span>
+          <span>{t('nav.cycle')}</span>
+        </NavLink>
+
+        <div style={{ margin: '0.75rem 0', borderTop: '1px solid #1e293b' }} />
+
+        <NavLink to="/parametres" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span>{t('nav.parametres')}</span>
         </NavLink>
       </nav>
 
       <div className="sidebar-footer">
-        {/* Encart année scolaire */}
         <div
           onClick={isViewingArchive ? exitView : undefined}
           style={{
@@ -103,7 +129,7 @@ export function Sidebar() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Année scolaire</span>
+            <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sidebar.anneeScolaire')}</span>
             <Badge label={displayStatut} variant={badgeVariant} />
           </div>
           <div style={{ color: 'white', fontWeight: 600, fontSize: '0.95rem', marginTop: '0.2rem' }}>
@@ -111,7 +137,7 @@ export function Sidebar() {
           </div>
           {isViewingArchive && (
             <div style={{ color: '#fbbf24', fontSize: '0.7rem', marginTop: '0.3rem' }}>
-              ✕ Cliquer pour revenir à l'année en cours
+              {t('sidebar.retourAnneeEnCours')}
             </div>
           )}
         </div>
@@ -119,8 +145,8 @@ export function Sidebar() {
         <div className="sidebar-user">
           <div className="sidebar-avatar">AD</div>
           <div className="sidebar-user-info">
-            <div className="sidebar-user-name">Administrateur</div>
-            <div className="sidebar-user-role">Admin · {displayLabel}</div>
+            <div className="sidebar-user-name">{t('sidebar.administrateur')}</div>
+            <div className="sidebar-user-role">{t('sidebar.role')} · {displayLabel}</div>
           </div>
         </div>
       </div>

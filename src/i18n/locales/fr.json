@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "classes": "Classes",
+    "eleves": "Élèves",
+    "matieres": "Matières",
+    "professeurs": "Professeurs",
+    "notes": "Notes",
+    "periodes": "Périodes",
+    "planning": "Planning",
+    "salles": "Salles",
+    "niveaux": "Niveaux",
+    "cycle": "Cycle scolaire",
+    "parametres": "Paramètres"
+  },
+  "sidebar": {
+    "anneeScolaire": "Année scolaire",
+    "statut": {
+      "active": "Active",
+      "preparation": "Préparation",
+      "archive": "Archive"
+    },
+    "retourAnneeEnCours": "✕ Cliquer pour revenir à l'année en cours",
+    "administrateur": "Administrateur",
+    "role": "Admin"
+  },
+  "parametres": {
+    "titre": "Paramètres",
+    "sousTitre": "Personnalisez l'apparence et le comportement de l'application",
+    "apparence": {
+      "titre": "Apparence",
+      "mode": "Mode d'affichage",
+      "clair": "Mode clair",
+      "sombre": "Mode sombre",
+      "couleur": "Couleur du thème",
+      "couleurs": {
+        "blue": "Bleu",
+        "violet": "Violet",
+        "green": "Vert",
+        "red": "Rouge",
+        "orange": "Orange",
+        "indigo": "Indigo"
+      }
+    },
+    "langue": {
+      "titre": "Langue",
+      "description": "Choisissez la langue d'affichage de l'interface",
+      "fr": "Français",
+      "en": "English",
+      "mg": "Malagasy"
+    }
+  },
+  "common": {
+    "nouveau": "Nouveau",
+    "nouvelle": "Nouvelle",
+    "ajouter": "Ajouter",
+    "modifier": "Modifier",
+    "supprimer": "Supprimer",
+    "annuler": "Annuler",
+    "enregistrer": "Enregistrer",
+    "confirmer": "Confirmer",
+    "fermer": "Fermer",
+    "rechercher": "Rechercher",
+    "filtrer": "Filtrer",
+    "exporter": "Exporter",
+    "chargement": "Chargement...",
+    "aucunResultat": "Aucun résultat"
+  }
+}

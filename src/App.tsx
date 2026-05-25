@@ -22,6 +22,7 @@ import { ProfesseursList } from './pages/Professeurs/ProfesseursList';
 import { ProfesseurDetail } from './pages/Professeurs/ProfesseurDetail';
 import { ProfesseurAssignments } from './pages/Professeurs/ProfesseurAssignments';
 import { PeriodesList } from './pages/evaluations/PeriodesList';
+import { Parametres } from './pages/Parametres/Parametres';
 
 function App() {
   return (
@@ -60,6 +61,8 @@ function App() {
             <Route path="annee-scolaire" element={<AnneeScolairePage />} />
 
             <Route path="evaluations" element={<PeriodesList />} />
+
+            <Route path="parametres" element={<Parametres />} />
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>

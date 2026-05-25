@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "clsx": "2.1.1",
+    "i18next": "^26.2.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "react-i18next": "^17.0.8",
     "react-router-dom": "^7.15.0",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "3.4.0"
