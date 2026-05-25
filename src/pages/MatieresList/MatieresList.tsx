@@ -13,6 +13,7 @@ import { Pagination } from '../../components/shared/Pagination';
 import { Alert } from '../../components/shared/Alert';
 import { Select, SelectOption } from '../../components/shared/Select';
 import { MatiereCard } from './MatiereCard';
+import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function MatieresList() {
   const { isViewingArchive: readOnly } = useViewing();
@@ -70,6 +71,10 @@ export function MatieresList() {
               fullWidth={false}
             />
           </div>
+          <ExportMenu
+            csvUrl={`/export/matieres/csv${niveau ? `?niveau=${encodeURIComponent(niveau)}` : ''}`}
+            xlsxUrl={`/export/matieres/xlsx${niveau ? `?niveau=${encodeURIComponent(niveau)}` : ''}`}
+          />
           {!readOnly && <Button as="link" to="/matieres/nouvelle" variant="primary">+ Nouvelle matière</Button>}
         </div>
       </PageHeader>

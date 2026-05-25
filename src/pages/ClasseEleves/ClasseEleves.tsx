@@ -11,6 +11,7 @@ import { Pagination } from '../../components/shared/Pagination';
 import { Alert } from '../../components/shared/Alert';
 import { ClasseInfoBar } from './ClasseInfoBar';
 import { ElevesTable } from './ElevesTable';
+import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function ClasseEleves() {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +65,10 @@ export function ClasseEleves() {
       <PageHeader title={`${classe.nom} — Liste des élèves`} subtitle={`${classe.niveau} · Année scolaire ${classe.annee_scolaire}`}>
         <Button as="link" to="/classes" variant="secondary">← Classes</Button>
         <Button as="link" to={`/classes/${id}/planning`} variant="outline">Planning</Button>
+        <ExportMenu
+          csvUrl={`/export/classes/${id}/eleves/csv`}
+          xlsxUrl={`/export/classes/${id}/eleves/xlsx`}
+        />
         {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">+ Nouvel élève</Button>}
       </PageHeader>
 

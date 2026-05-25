@@ -13,6 +13,7 @@ import { Alert } from '../../components/shared/Alert';
 import { Select, SelectOption } from '../../components/shared/Select';
 import { Pagination } from '../../components/shared/Pagination';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
+import { ExportMenu } from '../../components/shared/ExportMenu';
 import { Icon, Icons } from '../../components/shared/Icon';
 
 const TYPE_LABELS: Record<string, string> = { ds: 'DS', evaluation: 'Évaluation' };
@@ -87,6 +88,10 @@ export function EvaluationsList() {
   return (
     <div>
       <PageHeader title="Évaluations" subtitle={`${total} évaluation(s)`}>
+        <ExportMenu
+          csvUrl={`/export/evaluations/csv?${[classeId && `classeId=${classeId}`, matiereId && `matiereId=${matiereId}`, trimestre && `trimestre=${trimestre}`].filter(Boolean).join('&')}`}
+          xlsxUrl={`/export/evaluations/xlsx?${[classeId && `classeId=${classeId}`, matiereId && `matiereId=${matiereId}`, trimestre && `trimestre=${trimestre}`].filter(Boolean).join('&')}`}
+        />
         {!readOnly && (
           <Button variant="primary" onClick={() => navigate('/evaluations/nouvelle')}>
             + Nouvelle évaluation

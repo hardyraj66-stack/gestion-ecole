@@ -19,6 +19,7 @@ import { EvaluationsModule } from './evaluations/evaluations.module';
 import { PeriodesModule } from './periodes/periodes.module';
 import { EventsModule } from './events/events.module';
 import { SeederModule } from './data/seeder.module';
+import { ExportModule } from './export/export.module';
 import { ApiLoggerMiddleware } from './common/api-logger.middleware';
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ecole';
@@ -45,6 +46,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ec
     PlanningExecutionsModule,
     EvaluationsModule,
     PeriodesModule,
+    ExportModule,
   ],
 })
 export class AppModule implements NestModule {

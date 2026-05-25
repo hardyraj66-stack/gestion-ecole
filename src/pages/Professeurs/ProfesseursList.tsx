@@ -22,6 +22,7 @@ import { Avatar } from '../../components/shared/Avatar';
 import { Pagination } from '../../components/shared/Pagination';
 import { Icon, Icons } from '../../components/shared/Icon';
 import { Modal } from '../../components/shared/Modal';
+import { ExportMenu } from '../../components/shared/ExportMenu';
 
 const GENRE_OPTIONS = [{ value: 'M', label: 'Masculin (M.)' }, { value: 'F', label: 'Féminin (Mme)' }];
 const STATUT_OPTIONS = [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }];
@@ -101,6 +102,10 @@ export function ProfesseursList() {
   return (
     <div>
       <PageHeader title="Professeurs" subtitle={`${total} professeur(s)`}>
+        <ExportMenu
+          csvUrl={`/export/professeurs/csv${debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : ''}`}
+          xlsxUrl={`/export/professeurs/xlsx${debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : ''}`}
+        />
         {!readOnly && <Button variant="primary" onClick={openCreate}>+ Ajouter un professeur</Button>}
       </PageHeader>
 

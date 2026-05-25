@@ -10,6 +10,7 @@ import { Pagination } from '../../components/shared/Pagination';
 import { Alert } from '../../components/shared/Alert';
 import { ElevesFiltersBar } from './ElevesFiltersBar';
 import { ElevesListTable } from './ElevesListTable';
+import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function ElevesList() {
   const { isViewingArchive: readOnly } = useViewing();
@@ -52,6 +53,10 @@ export function ElevesList() {
   return (
     <div>
       <PageHeader title="Élèves" subtitle={`${totalAll} élève(s) inscrit(s)`}>
+        <ExportMenu
+          csvUrl={`/export/eleves/csv${classeId ? `?classeId=${classeId}` : ''}${search ? `${classeId ? '&' : '?'}search=${encodeURIComponent(search)}` : ''}`}
+          xlsxUrl={`/export/eleves/xlsx${classeId ? `?classeId=${classeId}` : ''}${search ? `${classeId ? '&' : '?'}search=${encodeURIComponent(search)}` : ''}`}
+        />
         {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">+ Nouvel élève</Button>}
       </PageHeader>
 

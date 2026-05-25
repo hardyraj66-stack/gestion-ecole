@@ -10,6 +10,7 @@ import { StudentCard } from './StudentCard';
 import { TrimestreTabs } from './TrimestreTabs';
 import { GradesTable } from './GradesTable';
 import { BulletinMatiere, Trimestre } from '../../types';
+import { API_BASE_URL } from '../../config/api';
 
 export function Bulletin() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +37,13 @@ export function Bulletin() {
       <PageHeader title={`Bulletin de ${eleve.prenom} ${eleve.nom}`} subtitle={`Trimestre ${trimestre} — ${classe?.annee_scolaire || ''}`}>
         {classe && <Button as="link" to={`/classes/${classe.id}/eleves`} variant="secondary">← Classe</Button>}
         <Button as="link" to="/eleves" variant="outline">Tous les élèves</Button>
+        <Button
+          variant="outline"
+          onClick={() => window.open(`${API_BASE_URL}/export/bulletin/${id}?trimestre=${trimestre}`, '_blank')}
+        >
+          <Icon path="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" size={16} />
+          Imprimer / PDF
+        </Button>
       </PageHeader>
 
       <div className="bulletin-layout">

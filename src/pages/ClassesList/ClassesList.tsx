@@ -18,6 +18,7 @@ import { SalleType } from '../../types';
 import { getTypeLabel } from '../../utils/helpers';
 import { Modal } from '../../components/shared/Modal';
 import { ClasseCard } from './ClasseCard';
+import { ExportMenu } from '../../components/shared/ExportMenu';
 
 const SALLE_TYPES: SelectOption[] = [
   { value: 'fixe', label: 'Salle fixe' },
@@ -127,6 +128,10 @@ export function ClassesList() {
   return (
     <div>
       <PageHeader title="Classes" subtitle={`${total} classe(s)`}>
+        <ExportMenu
+          csvUrl={`/export/classes/csv${filterNiveau ? `?niveau=${encodeURIComponent(filterNiveau)}` : ''}`}
+          xlsxUrl={`/export/classes/xlsx${filterNiveau ? `?niveau=${encodeURIComponent(filterNiveau)}` : ''}`}
+        />
         {!readOnly && <Button as="link" to="/classes/nouvelle" variant="primary">+ Nouvelle classe</Button>}
       </PageHeader>
 

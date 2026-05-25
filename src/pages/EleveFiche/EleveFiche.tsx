@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { Button } from '../../components/shared/Button';
 import { Alert } from '../../components/shared/Alert';
+import { API_BASE_URL } from '../../config/api';
 import { FicheIdentite } from './FicheIdentite';
 import { FicheFamille } from './FicheFamille';
 import { FicheShortcuts } from './FicheShortcuts';
@@ -37,6 +38,13 @@ export function EleveFiche() {
         {!readOnly && (
           <Button as="link" to={`/eleves/${id}/bulletin`} variant="outline">Bulletin</Button>
         )}
+        <Button
+          variant="outline"
+          onClick={() => window.open(`${API_BASE_URL}/export/carte/${id}`, '_blank')}
+          title="Imprimer la carte d'identité scolaire"
+        >
+          Carte scolaire
+        </Button>
       </PageHeader>
 
       <div className="fiche-layout">

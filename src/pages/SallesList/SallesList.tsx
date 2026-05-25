@@ -16,6 +16,7 @@ import { SalleDetailModal } from './SalleDetailModal';
 import { Salle, TypeSalle, TYPES_SALLE } from '../../types';
 import { API_BASE_URL } from '../../config/api';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
+import { ExportMenu } from '../../components/shared/ExportMenu';
 
 const typeColors: Record<TypeSalle, string> = {
   standard: '#2563eb',
@@ -85,6 +86,10 @@ export function SallesList() {
   return (
     <div>
       <PageHeader title="Salles" subtitle={`${total} salle(s)`}>
+        <ExportMenu
+          csvUrl={`/export/salles/csv${filterType ? `?type=${filterType}` : ''}`}
+          xlsxUrl={`/export/salles/xlsx${filterType ? `?type=${filterType}` : ''}`}
+        />
         {!readOnly && (
           <Button variant="primary" onClick={() => navigate('/salles/nouvelle')}>
             + Nouvelle salle
