@@ -16,7 +16,7 @@ export function MatierePills({ matieres, selectedIds, onToggle, singleSelect = f
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
       {matieres.map(m => {
         const selected = singleSelect ? selectedIds[0] === m.id : selectedIds.includes(m.id);
-        const couleur = m.couleur || '#2563eb';
+        const couleur = m.couleur || 'var(--primary)';
         return (
           <button
             key={m.id}
@@ -25,7 +25,7 @@ export function MatierePills({ matieres, selectedIds, onToggle, singleSelect = f
             style={{
               padding: '0.3rem 0.75rem',
               borderRadius: '20px',
-              border: `1.5px solid ${selected ? couleur : 'var(--border-color)'}`,
+              border: `1.5px solid ${selected ? couleur : 'var(--border)'}`,
               background: selected ? `${couleur}18` : 'transparent',
               color: selected ? couleur : 'var(--text)',
               fontSize: '0.825rem',

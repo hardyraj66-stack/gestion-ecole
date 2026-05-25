@@ -181,7 +181,7 @@ export function AnneeScolairePage() {
           {annees.map(annee => {
             const cfg = statutConfig[annee.statut];
             return (
-              <div key={annee.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: annee.statut === 'active' ? 'var(--success-light)' : 'white' }}>
+              <div key={annee.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: annee.statut === 'active' ? 'var(--success-light)' : 'var(--card-bg)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <Badge label={cfg.label} variant={cfg.variant} />
                   <span style={{ fontWeight: 600 }}>{annee.label}</span>

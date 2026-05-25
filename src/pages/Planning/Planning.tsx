@@ -211,7 +211,7 @@ export function Planning() {
                       borderRadius: 6, padding: '0.18rem 0.6rem',
                       fontSize: '0.75rem', fontWeight: 700,
                     }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.6)' }} />
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.5)' }} />
                       {typeLabel}
                     </span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: typeColor }}>

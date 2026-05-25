@@ -26,8 +26,8 @@ const STATUT_CONFIG = {
 };
 
 const TYPE_CONFIG = {
-  ds:         { label: 'DS',         variant: 'primary' as const, color: '#2563eb', bg: '#eff6ff', accent: '#bfdbfe' },
-  evaluation: { label: 'Évaluation', variant: 'info'    as const, color: '#0891b2', bg: '#ecfeff', accent: '#a5f3fc' },
+  ds:         { label: 'DS',         variant: 'primary' as const, color: 'var(--primary)', bg: 'var(--primary-light)', accent: 'color-mix(in srgb, var(--primary) 40%, transparent)' },
+  evaluation: { label: 'Évaluation', variant: 'info'    as const, color: 'var(--info)',    bg: 'var(--info-light)',    accent: 'color-mix(in srgb, var(--info) 40%, transparent)' },
 };
 
 function formatDate(d: string | null) {
@@ -64,7 +64,7 @@ function PeriodeCard({
 
   return (
     <div style={{
-      background: 'white',
+      background: 'var(--card-bg)',
       borderRadius: 'var(--radius)',
       boxShadow: statut === 'active'
         ? `0 0 0 2px ${tc.color}, var(--card-shadow)`
@@ -135,7 +135,7 @@ function PeriodeCard({
                 {/* Plage de dates */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  background: '#f8fafc', borderRadius: 8, padding: '0.6rem 0.75rem',
+                  background: 'var(--bg-subtle)', borderRadius: 8, padding: '0.6rem 0.75rem',
                 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tc.color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
@@ -210,7 +210,7 @@ function PeriodeCard({
                         <button
                           onClick={() => setConfirmTerminer(false)}
                           style={{
-                            background: 'white', border: '1px solid #fecaca',
+                            background: 'var(--card-bg)', border: '1px solid #fecaca',
                             borderRadius: 6, padding: '0.3rem 0.65rem',
                             fontSize: '0.75rem', color: '#dc2626',
                             cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
@@ -245,7 +245,7 @@ function PeriodeCard({
             ) : (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
-                background: '#f8fafc', borderRadius: 8, padding: '0.6rem 0.75rem',
+                background: 'var(--bg-subtle)', borderRadius: 8, padding: '0.6rem 0.75rem',
                 color: 'var(--text-muted)',
               }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -330,7 +330,7 @@ export function PeriodesList() {
           {/* ── Stats ── */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto' }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
                 </svg>
@@ -345,7 +345,7 @@ export function PeriodesList() {
 
             {activePeriode ? (
               <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto', border: '1px solid #bbf7d0' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6L9 17l-5-5"/>
                   </svg>
@@ -359,7 +359,7 @@ export function PeriodesList() {
               </div>
             ) : (
               <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#fef9c3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--warning-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
                   </svg>
@@ -408,7 +408,7 @@ export function PeriodesList() {
                   {(isActiveT || isCurrentT) && (
                     <span style={{
                       fontSize: '0.7rem', fontWeight: 600, color: '#16a34a',
-                      background: '#f0fdf4', border: '1px solid #bbf7d0',
+                      background: 'var(--success-light)', border: '1px solid #bbf7d0',
                       borderRadius: 20, padding: '0.12rem 0.55rem',
                     }}>Actif</span>
                   )}
@@ -445,7 +445,7 @@ export function PeriodesList() {
           {/* Règle métier */}
           <div style={{
             marginTop: '0.5rem', padding: '0.75rem 1rem',
-            background: '#f8fafc', border: '1px solid var(--border)',
+            background: 'var(--bg-subtle)', border: '1px solid var(--border)',
             borderRadius: 'var(--radius-sm)',
           }}>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>

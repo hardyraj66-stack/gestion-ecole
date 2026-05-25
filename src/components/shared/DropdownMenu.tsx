@@ -39,12 +39,12 @@ export function DropdownMenu({ items, open, onOpenChange, align = 'right', trigg
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
-        style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.6rem', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, fontSize: '1.1rem' }}
+        style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.6rem', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, fontSize: '1.1rem' }}
       >
         {triggerLabel}
       </button>
       {open && (
-        <div style={{ position: 'absolute', [align]: 0, top: 'calc(100% + 4px)', background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)', boxShadow: 'var(--card-shadow)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', [align]: 0, top: 'calc(100% + 4px)', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', boxShadow: 'var(--card-shadow)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
           {items.map((item, i) => (
             <button
               key={i}
@@ -53,7 +53,7 @@ export function DropdownMenu({ items, open, onOpenChange, align = 'right', trigg
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
                 padding: '0.65rem 1rem', background: 'none', border: 'none',
-                borderBottom: item.separator || i < items.length - 1 ? '1px solid var(--border-color)' : 'none',
+                borderBottom: item.separator || i < items.length - 1 ? '1px solid var(--border)' : 'none',
                 cursor: 'pointer',
                 color: item.variant === 'danger' ? 'var(--danger)' : 'var(--text)',
                 fontSize: '0.875rem', textAlign: 'left',

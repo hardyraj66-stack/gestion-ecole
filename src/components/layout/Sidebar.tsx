@@ -95,7 +95,7 @@ export function Sidebar() {
           </NavLink>
         ))}
 
-        <div style={{ margin: '0.75rem 0', borderTop: '1px solid #1e293b' }} />
+        <div style={{ margin: '0.75rem 0', borderTop: '1px solid var(--sidebar-border)' }} />
 
         <NavLink to="/annee-scolaire" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -120,7 +120,7 @@ export function Sidebar() {
           style={{
             padding: '0.6rem 0.75rem',
             borderRadius: '8px',
-            background: isViewingArchive ? '#78350f' : '#1e293b',
+            background: isViewingArchive ? 'color-mix(in srgb, var(--warning) 30%, #000)' : 'var(--sidebar-hover)',
             marginBottom: '0.75rem',
             cursor: isViewingArchive ? 'pointer' : 'default',
             transition: 'background 0.15s',
@@ -128,14 +128,14 @@ export function Sidebar() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sidebar.anneeScolaire')}</span>
+            <span style={{ color: 'var(--sidebar-text)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sidebar.anneeScolaire')}</span>
             <Badge label={displayStatut} variant={badgeVariant} />
           </div>
-          <div style={{ color: 'white', fontWeight: 600, fontSize: '0.95rem', marginTop: '0.2rem' }}>
+          <div style={{ color: 'var(--sidebar-text-active)', fontWeight: 600, fontSize: '0.95rem', marginTop: '0.2rem' }}>
             {displayLabel}
           </div>
           {isViewingArchive && (
-            <div style={{ color: '#fbbf24', fontSize: '0.7rem', marginTop: '0.3rem' }}>
+            <div style={{ color: 'var(--warning)', fontSize: '0.7rem', marginTop: '0.3rem' }}>
               {t('sidebar.retourAnneeEnCours')}
             </div>
           )}
