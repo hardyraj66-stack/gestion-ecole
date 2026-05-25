@@ -21,6 +21,7 @@ import { AnneeScolairePage } from './pages/AnneeScolaire/AnneeScolaire';
 import { ProfesseursList } from './pages/Professeurs/ProfesseursList';
 import { ProfesseurDetail } from './pages/Professeurs/ProfesseurDetail';
 import { ProfesseurAssignments } from './pages/Professeurs/ProfesseurAssignments';
+import { PeriodesList } from './pages/evaluations/PeriodesList';
 
 function App() {
   return (
@@ -57,6 +58,8 @@ function App() {
             <Route path="professeurs/:id" element={<ProfesseurDetail />} />
 
             <Route path="annee-scolaire" element={<AnneeScolairePage />} />
+
+            <Route path="evaluations" element={<PeriodesList />} />
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>

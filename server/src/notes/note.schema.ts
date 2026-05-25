@@ -22,6 +22,9 @@ export class Note extends Document {
   @Prop({ required: true, enum: [1, 2, 3], default: 1 })
   trimestre: number;
 
+  @Prop({ enum: ['ds', 'evaluation'], default: null })
+  type: string | null;
+
   @Prop({ required: true })
   date: string;
 

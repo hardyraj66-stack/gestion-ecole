@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePlanningClasses, usePlanningClasse } from '../../hooks/usePageData';
+import { useActivePeriodeData } from '../../hooks/usePeriodesData';
 import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
@@ -43,6 +44,7 @@ export function Planning() {
 
   const { data: classesData, loading: classesLoading, readOnly } = usePlanningClasses();
   const { data: classeData, loading: classeLoading, refreshing: classeRefreshing } = usePlanningClasse(selectedClasseId);
+  const { data: activePeriode } = useActivePeriodeData();
 
   const allClasses = classesData?.classes || [];
   const selectedClasse = classeData?.classe || allClasses.find((c: any) => c.id === selectedClasseId) || null;
@@ -190,6 +192,41 @@ export function Planning() {
             <Card><EmptyState icon={<Icon path={Icons.warning} size={28} />} message="Classe introuvable" /></Card>
           ) : (
             <>
+              {/* Bandeau période active */}
+              {activePeriode && (() => {
+                const ap = activePeriode as any;
+                const typeLabel = ap.type === 'ds' ? 'DS' : 'Évaluation';
+                const typeColor = ap.type === 'ds' ? '#2563eb' : '#0891b2';
+                const typeBg   = ap.type === 'ds' ? '#eff6ff' : '#ecfeff';
+                return (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    background: typeBg, border: `1px solid ${typeColor}30`,
+                    borderRadius: 'var(--radius-sm)', padding: '0.55rem 1rem',
+                    marginBottom: '1rem',
+                  }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                      background: typeColor, color: 'white',
+                      borderRadius: 6, padding: '0.18rem 0.6rem',
+                      fontSize: '0.75rem', fontWeight: 700,
+                    }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.6)' }} />
+                      {typeLabel}
+                    </span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: typeColor }}>
+                      Période {typeLabel} — Trimestre {ap.trimestre} en cours
+                    </span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      {ap.date_debut} → {ap.date_fin}
+                    </span>
+                    <span style={{ marginLeft: 'auto', fontSize: '0.73rem', color: '#16a34a', fontWeight: 600 }}>
+                      Saisie des notes active
+                    </span>
+                  </div>
+                );
+              })()}
+
               <Card style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
                   <StatItem label="Classe" value={selectedClasse.nom} />

@@ -136,8 +136,20 @@ export interface BulletinMatiere {
   matiere_nom: string;
   code: string;
   coefficient: number;
-  notes: number[];
+  ds: number | null;
+  evaluation: number | null;
   moyenne: number;
+}
+
+export type PeriodeType = 'ds' | 'evaluation';
+
+export interface PeriodeEvaluation {
+  id: string;
+  trimestre: Trimestre;
+  type: PeriodeType;
+  annee_scolaire: string;
+  date_debut: string | null;
+  date_fin: string | null;
 }
 
 export type JourSemaine = 'Lundi' | 'Mardi' | 'Mercredi' | 'Jeudi' | 'Vendredi' | 'Samedi';

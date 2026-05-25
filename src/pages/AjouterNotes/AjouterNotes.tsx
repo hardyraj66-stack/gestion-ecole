@@ -1,19 +1,23 @@
 import { useState, useMemo } from 'react';
 import { useNotes } from '../../contexts/NoteContext';
 import { useNotesFiltersData } from '../../hooks/usePageData';
+import { useActivePeriodeData } from '../../hooks/usePeriodesData';
 import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { Alert } from '../../components/shared/Alert';
+import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/shared/Button';
 import { NotesFilters } from './NotesFilters';
 import { NotesStatsBar } from './NotesStatsBar';
 import { NotesTable, NoteRow } from './NotesTable';
-import { Trimestre } from '../../types';
 import { useViewing } from '../../contexts/ViewingContext';
+
+const TYPE_LABELS: Record<string, string> = { ds: 'DS', evaluation: 'Évaluation' };
 
 export function AjouterNotes() {
   const { data, loading } = useNotesFiltersData();
+  const { data: activePeriode, loading: loadingPeriode } = useActivePeriodeData();
   const { isViewingArchive: readOnly } = useViewing();
   const { create: createNote, update: updateNote } = useNotes();
 
@@ -22,7 +26,6 @@ export function AjouterNotes() {
   const [selectedNiveau, setSelectedNiveau] = useState('');
   const [selectedMatiereId, setSelectedMatiereId] = useState('');
   const [selectedMatiereName, setSelectedMatiereName] = useState('');
-  const [selectedTrimestre, setSelectedTrimestre] = useState<Trimestre>(1);
   const [rows, setRows] = useState<NoteRow[]>([]);
   const [loadingEleves, setLoadingEleves] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -45,7 +48,11 @@ export function AjouterNotes() {
     return { filled: wv.length, total: rows.length, average: wv.length > 0 ? wv.reduce((s, r) => s + (r.note || 0), 0) / wv.length : null };
   }, [rows]);
 
-  if (loading) return <PageLoader />;
+  // La période active détermine le trimestre et le type automatiquement
+  const periode = activePeriode as any;
+  const trimestre = periode?.trimestre ?? null;
+
+  if (loading || loadingPeriode) return <PageLoader />;
 
   const handleNiveauClasseChange = (niveau: string, classeId: string, classeNom: string) => {
     setSelectedNiveau(niveau);
@@ -67,11 +74,11 @@ export function AjouterNotes() {
   };
 
   const loadEleves = async () => {
-    if (!selectedClasseId || !selectedMatiereId) return;
+    if (!selectedClasseId || !selectedMatiereId || !trimestre) return;
     setLoadingEleves(true);
     setSuccess(false);
     setError('');
-    const res = await readApi.notesEleves(selectedClasseId, selectedMatiereId, selectedTrimestre);
+    const res = await readApi.notesEleves(selectedClasseId, selectedMatiereId, trimestre);
     if (!res) {
       setError('Erreur lors du chargement des élèves.');
       setLoadingEleves(false);
@@ -79,7 +86,12 @@ export function AjouterNotes() {
     }
     const { eleves, notes } = res;
     const newRows: NoteRow[] = eleves.map((eleve: any) => {
-      const existing = notes.find((n: any) => n.eleve_id === eleve.id && n.matiere_id === selectedMatiereId && n.trimestre === selectedTrimestre);
+      const existing = notes.find((n: any) =>
+        n.eleve_id === eleve.id &&
+        n.matiere_id === selectedMatiereId &&
+        n.trimestre === trimestre &&
+        n.type === periode?.type,
+      );
       return { eleve, note: existing?.valeur ?? null, commentaire: existing?.commentaire ?? '', existingId: existing?.id ?? null };
     });
     setRows(newRows);
@@ -97,7 +109,7 @@ export function AjouterNotes() {
   };
 
   const handleSave = async () => {
-    if (readOnly) return;
+    if (readOnly || !trimestre) return;
     setSaving(true); setError(''); setSuccess(false);
     const today = new Date().toISOString().split('T')[0];
     const invalid = rows.find(r => r.note !== null && (r.note < 0 || r.note > 20));
@@ -112,10 +124,11 @@ export function AjouterNotes() {
       for (let i = 0; i < updatedRows.length; i++) {
         const r = updatedRows[i];
         if (r.note !== null) {
-          const d = { eleve_id: r.eleve.id, matiere_id: selectedMatiereId, valeur: r.note, trimestre: selectedTrimestre, date: today, commentaire: r.commentaire || undefined };
-          if (r.existingId) {
+          // trimestre et type seront auto-taggés par le backend depuis la période active
+          const d = { eleve_id: r.eleve.id, matiere_id: selectedMatiereId, valeur: r.note, trimestre, date: today, commentaire: r.commentaire || undefined };
+          if (r.existingId && r.existingId !== 'saved') {
             await updateNote(r.existingId, d);
-          } else {
+          } else if (!r.existingId) {
             const ok = await createNote(d);
             if (ok) updatedRows[i] = { ...r, existingId: 'saved' };
           }
@@ -128,9 +141,10 @@ export function AjouterNotes() {
   };
 
   const subtitle = selectedMatiereName && selectedClasseNom
-    ? `${selectedClasseNom} · ${selectedMatiereName} — Trimestre ${selectedTrimestre}`
+    ? `${selectedClasseNom} · ${selectedMatiereName}`
     : 'Sélectionnez niveau, classe et matière';
 
+  // Mode archive : lecture seule
   if (readOnly) {
     return (
       <div>
@@ -143,10 +157,8 @@ export function AjouterNotes() {
           selectedNiveau={selectedNiveau}
           selectedMatiereId={selectedMatiereId}
           selectedMatiereName={selectedMatiereName}
-          selectedTrimestre={selectedTrimestre}
           onNiveauClasseChange={handleNiveauClasseChange}
           onMatiereChange={handleMatiereChange}
-          onTrimestreChange={setSelectedTrimestre}
           onLoad={loadEleves}
           loading={loadingEleves}
         />
@@ -160,9 +172,38 @@ export function AjouterNotes() {
     );
   }
 
+  // Aucune période active : blocage
+  if (!periode) {
+    return (
+      <div>
+        <PageHeader title="Saisie des notes" subtitle="Aucune période active" />
+        <Alert variant="warning">
+          La saisie des notes est bloquée. Aucune période d'évaluation n'est en cours.
+          Rendez-vous dans <strong>Périodes</strong> pour définir les dates des périodes DS et Évaluation.
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Saisie des notes" subtitle={subtitle} />
+
+      {/* Bandeau période active */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '0.75rem',
+        background: 'var(--color-surface)', border: '1px solid var(--color-success)',
+        borderRadius: 8, padding: '0.6rem 1rem', marginBottom: '1.25rem',
+      }}>
+        <Badge variant="success" label="Période active" />
+        <strong style={{ fontSize: '0.9rem' }}>
+          {TYPE_LABELS[periode.type]} — Trimestre {periode.trimestre}
+        </strong>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+          {periode.date_debut} → {periode.date_fin}
+        </span>
+      </div>
+
       <NotesFilters
         matieres={matieres}
         selectedClasseId={selectedClasseId}
@@ -170,15 +211,15 @@ export function AjouterNotes() {
         selectedNiveau={selectedNiveau}
         selectedMatiereId={selectedMatiereId}
         selectedMatiereName={selectedMatiereName}
-        selectedTrimestre={selectedTrimestre}
         onNiveauClasseChange={handleNiveauClasseChange}
         onMatiereChange={handleMatiereChange}
-        onTrimestreChange={setSelectedTrimestre}
         onLoad={loadEleves}
         loading={loadingEleves}
       />
+
       {success && <Alert variant="success">Notes enregistrées !</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
+
       {rows.length > 0 && (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

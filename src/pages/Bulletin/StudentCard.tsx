@@ -12,7 +12,7 @@ interface StudentCardProps {
 }
 
 export function StudentCard({ eleve, classe, bulletinMatieres, moyenneGenerale }: StudentCardProps) {
-  const hasNotes = bulletinMatieres.some(m => m.notes.length > 0);
+  const hasNotes = bulletinMatieres.some(m => m.ds !== null || m.evaluation !== null);
   const mention = moyenneGenerale !== null ? getMention(moyenneGenerale) : null;
 
   return (

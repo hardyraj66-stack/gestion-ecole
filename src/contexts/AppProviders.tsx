@@ -10,6 +10,7 @@ import { ViewingProvider } from './ViewingContext';
 import { NiveauProvider } from './NiveauContext';
 import { ProfesseurProvider } from './ProfesseurContext';
 import { TeacherAssignmentProvider } from './TeacherAssignmentContext';
+import { PeriodeProvider } from './PeriodeContext';
 import { ConfirmProvider } from '../components/shared/ConfirmDialog';
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -23,13 +24,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 <MatiereProvider>
                   <NiveauProvider>
                     <NoteProvider>
-                      <ProfesseurProvider>
-                        <TeacherAssignmentProvider>
-                          <PlanningProvider>
-                            {children}
-                          </PlanningProvider>
-                        </TeacherAssignmentProvider>
-                      </ProfesseurProvider>
+                      <PeriodeProvider>
+                        <ProfesseurProvider>
+                          <TeacherAssignmentProvider>
+                            <PlanningProvider>
+                              {children}
+                            </PlanningProvider>
+                          </TeacherAssignmentProvider>
+                        </ProfesseurProvider>
+                      </PeriodeProvider>
                     </NoteProvider>
                   </NiveauProvider>
                 </MatiereProvider>

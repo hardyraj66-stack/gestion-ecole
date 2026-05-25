@@ -9,6 +9,15 @@ interface GradesTableProps {
   moyenneGenerale: number | null;
 }
 
+function NoteCell({ valeur }: { valeur: number | null }) {
+  if (valeur === null) return <span style={{ color: 'var(--text-muted)' }}>—</span>;
+  return (
+    <span className="note-chip" style={{ backgroundColor: getNoteColor(valeur) }}>
+      {valeur}
+    </span>
+  );
+}
+
 export function GradesTable({ bulletinMatieres, moyenneGenerale }: GradesTableProps) {
   return (
     <Card padding="none">
@@ -18,15 +27,17 @@ export function GradesTable({ bulletinMatieres, moyenneGenerale }: GradesTablePr
             <TableCell header>Matière</TableCell>
             <TableCell header>Code</TableCell>
             <TableCell header>Coef.</TableCell>
-            <TableCell header>Notes</TableCell>
+            <TableCell header>DS</TableCell>
+            <TableCell header>Évaluation</TableCell>
             <TableCell header>Moyenne</TableCell>
             <TableCell header>Mention</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {bulletinMatieres.map((matiere) => {
-            const mention = matiere.notes.length > 0 ? getMention(matiere.moyenne) : null;
-            
+            const hasNote = matiere.ds !== null || matiere.evaluation !== null;
+            const mention = hasNote ? getMention(matiere.moyenne) : null;
+
             return (
               <TableRow key={matiere.matiere_id}>
                 <TableCell><strong>{matiere.matiere_nom}</strong></TableCell>
@@ -34,29 +45,11 @@ export function GradesTable({ bulletinMatieres, moyenneGenerale }: GradesTablePr
                   <Badge label={matiere.code} variant="default" />
                 </TableCell>
                 <TableCell>{matiere.coefficient}</TableCell>
+                <TableCell><NoteCell valeur={matiere.ds} /></TableCell>
+                <TableCell><NoteCell valeur={matiere.evaluation} /></TableCell>
                 <TableCell>
-                  <div className="notes-chips">
-                    {matiere.notes.length > 0 ? (
-                      matiere.notes.map((note, idx) => (
-                        <span
-                          key={idx}
-                          className="note-chip"
-                          style={{ backgroundColor: getNoteColor(note) }}
-                        >
-                          {note}
-                        </span>
-                      ))
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>—</span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {matiere.notes.length > 0 ? (
-                    <span 
-                      className="note-moyenne"
-                      style={{ color: getNoteColor(matiere.moyenne) }}
-                    >
+                  {hasNote ? (
+                    <span className="note-moyenne" style={{ color: getNoteColor(matiere.moyenne) }}>
                       {matiere.moyenne.toFixed(1)}/20
                     </span>
                   ) : (
@@ -74,28 +67,21 @@ export function GradesTable({ bulletinMatieres, moyenneGenerale }: GradesTablePr
             );
           })}
         </TableBody>
-        {moyenneGenerale !== null && bulletinMatieres.some(m => m.notes.length > 0) && (
+        {moyenneGenerale !== null && bulletinMatieres.some(m => m.ds !== null || m.evaluation !== null) && (
           <TableFooter>
             <TableRow>
+              <TableCell><strong>Moyenne générale (pondérée)</strong></TableCell>
+              <TableCell></TableCell>
+              <TableCell></TableCell>
+              <TableCell></TableCell>
+              <TableCell></TableCell>
               <TableCell>
-                <strong>Moyenne générale (pondérée)</strong>
-              </TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell>
-                <span 
-                  className="note-moyenne"
-                  style={{ color: getNoteColor(moyenneGenerale), fontSize: '1.1rem' }}
-                >
+                <span className="note-moyenne" style={{ color: getNoteColor(moyenneGenerale), fontSize: '1.1rem' }}>
                   {moyenneGenerale.toFixed(1)}/20
                 </span>
               </TableCell>
               <TableCell>
-                <Badge 
-                  label={getMention(moyenneGenerale).label} 
-                  variant={getMention(moyenneGenerale).variant} 
-                />
+                <Badge label={getMention(moyenneGenerale).label} variant={getMention(moyenneGenerale).variant} />
               </TableCell>
             </TableRow>
           </TableFooter>

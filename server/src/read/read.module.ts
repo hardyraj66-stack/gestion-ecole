@@ -17,6 +17,9 @@ import { ReadNote, ReadNoteSchema } from './schemas/read-note.schema';
 import { ReadCreneau, ReadCreneauSchema } from './schemas/read-creneau.schema';
 import { ReadSalle, ReadSalleSchema } from './schemas/read-salle.schema';
 import { Niveau, NiveauSchema } from '../niveaux/niveau.schema';
+import { Evaluation, EvaluationSchema } from '../evaluations/evaluation.schema';
+import { ReadEvaluation, ReadEvaluationSchema } from './schemas/read-evaluation.schema';
+import { PeriodeEvaluation, PeriodeEvaluationSchema } from '../periodes/periode.schema';
 import { ReadController } from './read.controller';
 import { ReadService } from './read.service';
 import { ViewBuilderService } from './view-builder.service';
@@ -42,6 +45,9 @@ import { ViewBuilderService } from './view-builder.service';
       { name: Niveau.name, schema: NiveauSchema },
       { name: Professeur.name, schema: ProfesseurSchema },
       { name: TeacherAssignment.name, schema: TeacherAssignmentSchema },
+      { name: Evaluation.name, schema: EvaluationSchema },
+      { name: ReadEvaluation.name, schema: ReadEvaluationSchema },
+      { name: PeriodeEvaluation.name, schema: PeriodeEvaluationSchema },
     ]),
   ],
   controllers: [ReadController],

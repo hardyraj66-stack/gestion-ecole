@@ -56,4 +56,9 @@ export const readApi = {
     get<any>(`/professeurs${qs({ page, limit, search: search || undefined })}`),
   professeursActifs: () => get<any>('/professeurs/actifs'),
   professeur: (id: string) => get<any>(`/professeurs/${id}`),
+
+  periodes: (annee_scolaire: string) =>
+    get<any>(`/periodes${qs({ annee_scolaire })}`),
+
+  activePeriode: () => get<any>('/periodes/active'),
 };

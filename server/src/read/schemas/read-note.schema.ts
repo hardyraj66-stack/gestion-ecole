@@ -14,6 +14,7 @@ export class ReadNote extends Document {
   @Prop() matiere_id: string;
   @Prop() valeur: number;
   @Prop() trimestre: number;
+  @Prop({ default: null }) type: string | null;
   @Prop() date: string;
   @Prop() commentaire: string;
   @Prop({ default: '' }) eleve_nom: string;

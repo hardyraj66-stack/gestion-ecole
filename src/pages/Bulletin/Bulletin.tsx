@@ -20,11 +20,12 @@ export function Bulletin() {
 
   const { eleve, classe, bulletin } = data;
 
-  // Compute moyenne
   const getMoyenneGenerale = (bm: BulletinMatiere[]): number => {
     if (!bm.length) return 0;
     let tc = 0, s = 0;
-    for (const m of bm) { if (m.notes.length > 0) { s += m.moyenne * m.coefficient; tc += m.coefficient; } }
+    for (const m of bm) {
+      if (m.ds !== null || m.evaluation !== null) { s += m.moyenne * m.coefficient; tc += m.coefficient; }
+    }
     return tc === 0 ? 0 : Math.round((s / tc) * 10) / 10;
   };
 
@@ -41,9 +42,9 @@ export function Bulletin() {
         <StudentCard eleve={eleve} classe={classe} bulletinMatieres={bulletin} moyenneGenerale={moyenneGenerale} />
         <div>
           <TrimestreTabs selected={trimestre} onChange={setTrimestre} />
-          {bulletin.length === 0 || !bulletin.some((m: any) => m.notes.length > 0) ? (
-            <EmptyState icon={<Icon path={Icons.document} size={28} />} message={`Aucune note pour le trimestre ${trimestre}`}
-              action={!readOnly ? <Button as="link" to="/notes" variant="primary">Saisir des notes</Button> : undefined} />
+          {bulletin.length === 0 || !bulletin.some((m: any) => m.ds !== null || m.evaluation !== null) ? (
+            <EmptyState icon={<Icon path={Icons.document} size={28} />} message={`Aucune évaluation pour le trimestre ${trimestre}`}
+              action={!readOnly ? <Button as="link" to="/evaluations/nouvelle" variant="primary">Créer une évaluation</Button> : undefined} />
           ) : (
             <GradesTable bulletinMatieres={bulletin} moyenneGenerale={moyenneGenerale} />
           )}

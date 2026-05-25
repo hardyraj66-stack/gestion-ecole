@@ -7,6 +7,7 @@ import { Eleve } from '../eleves/eleve.schema';
 import { Matiere } from '../matieres/matiere.schema';
 import { Note } from '../notes/note.schema';
 import { Creneau } from '../planning/creneau.schema';
+import { PeriodesService } from '../periodes/periodes.service';
 
 @Injectable()
 export class AnneesService {
@@ -17,6 +18,7 @@ export class AnneesService {
     @InjectModel(Matiere.name) private matiereModel: Model<Matiere>,
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
+    private readonly periodesService: PeriodesService,
   ) {}
 
   findAll() {
@@ -104,7 +106,9 @@ export class AnneesService {
       details: `Année scolaire "${annee.label}" démarrée officiellement`,
     });
 
-    return annee.save();
+    await annee.save();
+    await this.periodesService.initForAnnee(annee.label, annee.debut);
+    return annee;
   }
 
   async terminer(id: string): Promise<{ terminee: AnneeScolaire; nouvelle: AnneeScolaire }> {

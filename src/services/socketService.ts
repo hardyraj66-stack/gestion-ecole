@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_URL } from '../config/api';
 
-type Channel = 'classes' | 'eleves' | 'matieres' | 'notes' | 'planning' | 'salles' | 'annees' | 'niveaux' | 'professeurs' | 'all';
+type Channel = 'classes' | 'eleves' | 'matieres' | 'notes' | 'planning' | 'salles' | 'annees' | 'niveaux' | 'professeurs' | 'evaluations' | 'periodes' | 'all';
 type Listener = () => void;
 
 class SocketService {
@@ -20,6 +20,8 @@ class SocketService {
     this.refreshListeners.set('annees', new Set());
     this.refreshListeners.set('niveaux', new Set());
     this.refreshListeners.set('professeurs', new Set());
+    this.refreshListeners.set('evaluations', new Set());
+    this.refreshListeners.set('periodes', new Set());
     this.refreshListeners.set('all', new Set());
   }
 

@@ -7,6 +7,8 @@ import { ReadMatiere } from './schemas/read-matiere.schema';
 import { ReadNote } from './schemas/read-note.schema';
 import { ReadCreneau } from './schemas/read-creneau.schema';
 import { ReadSalle } from './schemas/read-salle.schema';
+import { ReadEvaluation } from './schemas/read-evaluation.schema';
+import { PeriodeEvaluation } from '../periodes/periode.schema';
 import { AnneeScolaire } from '../annees/annee.schema';
 import { Convocation } from '../suivi/convocation.schema';
 import { Niveau } from '../niveaux/niveau.schema';
@@ -35,6 +37,8 @@ export class ReadService {
     @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
     @InjectModel(Professeur.name) private professeurModel: Model<Professeur>,
     @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
+    @InjectModel(ReadEvaluation.name) private readEvaluationModel: Model<ReadEvaluation>,
+    @InjectModel(PeriodeEvaluation.name) private periodeModel: Model<PeriodeEvaluation>,
   ) {}
 
   // ============ HELPERS ============
@@ -365,30 +369,98 @@ export class ReadService {
     const eleve = await this.readEleveModel.findOne({ source_id: eleveId }).exec();
     if (!eleve) return null;
     const classe = await this.readClasseModel.findOne({ source_id: eleve.classe_id }).exec();
-    const eleveNotes = await this.readNoteModel.find({ eleve_id: eleveId, trimestre }).exec();
+
+    // Lire les notes tagées par type (ds/evaluation) pour ce trimestre
+    const notes = await this.readNoteModel.find({
+      eleve_id: eleveId,
+      trimestre,
+    }).exec();
+
     const matieres = await this.readMatiereModel.find().exec();
-
-    const map = new Map<string, number[]>();
-    for (const n of eleveNotes) { if (!map.has(n.matiere_id)) map.set(n.matiere_id, []); map.get(n.matiere_id)!.push(n.valeur); }
-
     const niveau = (classe?.toJSON() as any)?.niveau;
-    const bulletin = Array.from(map).map(([mid, vals]) => {
+
+    const matiereMap = new Map<string, { ds: number | null; evaluation: number | null; matiere_nom: string; matiere_code: string }>();
+    for (const n of notes) {
+      const nj = n.toJSON() as any;
+      if (!matiereMap.has(nj.matiere_id)) {
+        matiereMap.set(nj.matiere_id, { ds: null, evaluation: null, matiere_nom: nj.matiere_nom, matiere_code: nj.matiere_code });
+      }
+      const entry = matiereMap.get(nj.matiere_id)!;
+      if (nj.type === 'ds') entry.ds = nj.valeur;
+      else if (nj.type === 'evaluation') entry.evaluation = nj.valeur;
+    }
+
+    const bulletin = Array.from(matiereMap).map(([mid, data]) => {
       const mat = matieres.find(m => m.source_id === mid);
-      if (!mat) return null;
-      const moy = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
-      const matJson = mat.toJSON() as any;
-      const coefficients: Array<{ niveau: string; coefficient: number }> = matJson.coefficients || [];
-      let coeff = matJson.coefficient ?? 1;
+      const matJson = mat?.toJSON() as any;
+      const coefficients: Array<{ niveau: string; coefficient: number }> = matJson?.coefficients || [];
+      let coeff = matJson?.coefficient ?? 1;
       if (niveau && coefficients.length > 0) {
         const found = coefficients.find((c: any) => c.niveau === niveau);
         if (found) coeff = found.coefficient;
       } else if (coefficients.length === 1) {
         coeff = coefficients[0].coefficient;
       }
-      return { matiere_id: mid, matiere_nom: mat.nom, code: mat.code, coefficient: coeff, notes: vals, moyenne: moy };
-    }).filter(Boolean);
+      const vals = [data.ds, data.evaluation].filter(v => v !== null) as number[];
+      const moyenne = vals.length > 0 ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : 0;
+      return { matiere_id: mid, matiere_nom: data.matiere_nom, code: data.matiere_code, coefficient: coeff, ds: data.ds, evaluation: data.evaluation, moyenne };
+    });
 
     return { eleve: eleve.toJSON(), classe: classe?.toJSON() || null, bulletin };
+  }
+
+  // ============ PÉRIODES D'ÉVALUATION ============
+  async getPeriodes(annee_scolaire: string) {
+    const periodes = await this.periodeModel.find({ annee_scolaire }).sort({ trimestre: 1, type: 1 }).exec();
+    const today = new Date().toISOString().slice(0, 10);
+    return periodes.map(p => {
+      const json = p.toJSON() as any;
+      if (json.terminee) json.statut = 'terminee';
+      else if (!json.date_debut || !json.date_fin) json.statut = 'non-planifiee';
+      else if (today >= json.date_debut && today <= json.date_fin) json.statut = 'active';
+      else if (today < json.date_debut) json.statut = 'future';
+      else json.statut = 'terminee';
+      return json;
+    });
+  }
+
+  async getActivePeriode() {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.periodeModel.findOne({
+      terminee: { $ne: true },
+      date_debut: { $lte: today },
+      date_fin: { $gte: today },
+    }).exec();
+  }
+
+  // ============ EVALUATIONS ============
+  async getEvaluationsList(
+    classeId?: string, matiereId?: string, trimestre?: number, statut?: string, page = 1, limit = 10
+  ) {
+    const filter: any = {};
+    if (classeId) filter.classe_id = classeId;
+    if (matiereId) filter.matiere_id = matiereId;
+    if (trimestre) filter.trimestre = trimestre;
+    if (statut) filter.statut = statut;
+
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      this.readEvaluationModel.find(filter).sort({ date: -1 }).skip(skip).limit(limit).exec(),
+      this.readEvaluationModel.countDocuments(filter).exec(),
+    ]);
+
+    return {
+      items: items.map(e => e.toJSON()),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getEvaluationDetail(id: string) {
+    const evaluation = await this.readEvaluationModel.findOne({ source_id: id }).exec();
+    return evaluation ? evaluation.toJSON() : null;
   }
 
   // ============ SNAPSHOT ARCHIVE ============

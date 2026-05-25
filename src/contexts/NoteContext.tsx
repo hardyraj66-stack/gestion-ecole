@@ -37,7 +37,7 @@ export function NoteProvider({ children }: { children: ReactNode }) {
   const getMoyenneGenerale = useCallback((bm: BulletinMatiere[]): number => {
     if (!bm.length) return 0;
     let tc = 0, s = 0;
-    for (const m of bm) { if (m.notes.length > 0) { s += m.moyenne * m.coefficient; tc += m.coefficient; } }
+    for (const m of bm) { if (m.ds !== null || m.evaluation !== null) { s += m.moyenne * m.coefficient; tc += m.coefficient; } }
     return tc === 0 ? 0 : Math.round((s / tc) * 10) / 10;
   }, []);
 

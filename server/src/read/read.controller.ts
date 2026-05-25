@@ -85,6 +85,39 @@ export class ReadController {
     return data;
   }
 
+  @Get('evaluations')
+  getEvaluationsList(
+    @Query('classeId') classeId?: string,
+    @Query('matiereId') matiereId?: string,
+    @Query('trimestre') trimestre?: string,
+    @Query('statut') statut?: string,
+    @Query('page') p?: string,
+    @Query('limit') l?: string,
+  ) {
+    return this.service.getEvaluationsList(
+      classeId, matiereId,
+      trimestre ? parseInt(trimestre) : undefined,
+      statut,
+      parseInt(p!) || 1,
+      parseInt(l!) || 10,
+    );
+  }
+
+  @Get('evaluations/:id')
+  async getEvaluationDetail(@Param('id') id: string) {
+    const data = await this.service.getEvaluationDetail(id);
+    if (!data) throw new NotFoundException();
+    return data;
+  }
+
+  @Get('periodes/active')
+  getActivePeriode() { return this.service.getActivePeriode(); }
+
+  @Get('periodes')
+  getPeriodes(@Query('annee_scolaire') annee_scolaire: string) {
+    return this.service.getPeriodes(annee_scolaire || '');
+  }
+
   @Get('annees/:id/snapshot')
   async getAnneeSnapshot(@Param('id') id: string) {
     const data = await this.service.getAnneeSnapshot(id);

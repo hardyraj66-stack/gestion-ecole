@@ -9,12 +9,14 @@ import { Creneau } from '../planning/creneau.schema';
 import { Salle } from '../salles/salle.schema';
 import { Professeur } from '../professeurs/professeur.schema';
 import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
+import { Evaluation } from '../evaluations/evaluation.schema';
 import { ReadClasse } from './schemas/read-classe.schema';
 import { ReadEleve } from './schemas/read-eleve.schema';
 import { ReadMatiere } from './schemas/read-matiere.schema';
 import { ReadNote } from './schemas/read-note.schema';
 import { ReadCreneau } from './schemas/read-creneau.schema';
 import { ReadSalle } from './schemas/read-salle.schema';
+import { ReadEvaluation } from './schemas/read-evaluation.schema';
 
 @Injectable()
 export class ViewBuilderService implements OnModuleInit {
@@ -37,6 +39,8 @@ export class ViewBuilderService implements OnModuleInit {
     @InjectModel(ReadNote.name) private readNoteModel: Model<ReadNote>,
     @InjectModel(ReadCreneau.name) private readCreneauModel: Model<ReadCreneau>,
     @InjectModel(ReadSalle.name) private readSalleModel: Model<ReadSalle>,
+    @InjectModel(Evaluation.name) private evaluationModel: Model<Evaluation>,
+    @InjectModel(ReadEvaluation.name) private readEvaluationModel: Model<ReadEvaluation>,
   ) {}
 
   async onModuleInit() {
@@ -45,7 +49,7 @@ export class ViewBuilderService implements OnModuleInit {
   }
 
   private tryChangeStreams() {
-    const collections = ['classes', 'eleves', 'matieres', 'notes', 'creneaux', 'salles'];
+    const collections = ['classes', 'eleves', 'matieres', 'notes', 'creneaux', 'salles', 'evaluations'];
     let ok = 0;
     for (const name of collections) {
       try {
@@ -112,6 +116,11 @@ export class ViewBuilderService implements OnModuleInit {
     this.logger.log('Read sync: matieres (niveau updated)');
   }
 
+  async onEvaluationWrite() {
+    await this.rebuildEvaluations();
+    this.logger.log('Read sync: evaluations');
+  }
+
   // ============ CHANGE STREAM HANDLER ============
   private async onWriteChange(collection: string) {
     try {
@@ -122,6 +131,7 @@ export class ViewBuilderService implements OnModuleInit {
         case 'notes': await this.onNoteWrite(); break;
         case 'creneaux': await this.onCreneauWrite(); break;
         case 'salles': await this.onSalleWrite(); break;
+        case 'evaluations': await this.onEvaluationWrite(); break;
       }
     } catch (e: any) {
       this.logger.error(`ChangeStream rebuild error: ${e.message}`);
@@ -134,6 +144,7 @@ export class ViewBuilderService implements OnModuleInit {
     await Promise.all([
       this.rebuildClasses(), this.rebuildEleves(), this.rebuildMatieres(),
       this.rebuildNotes(), this.rebuildCreneaux(), this.rebuildSalles(),
+      this.rebuildEvaluations(),
     ]);
     this.logger.log(`Read models reconstruits en ${Date.now() - t}ms`);
   }
@@ -206,7 +217,8 @@ export class ViewBuilderService implements OnModuleInit {
       const el = em.get(n.eleve_id); const mat = mm.get(n.matiere_id);
       return { updateOne: { filter: { source_id: sid }, update: { $set: {
         source_id: sid, eleve_id: n.eleve_id, matiere_id: n.matiere_id,
-        valeur: n.valeur, trimestre: n.trimestre, date: n.date, commentaire: n.commentaire || '',
+        valeur: n.valeur, trimestre: n.trimestre, type: (n as any).type ?? null,
+        date: n.date, commentaire: n.commentaire || '',
         eleve_nom: el?.nom || '', eleve_prenom: el?.prenom || '',
         matiere_nom: mat?.nom || '', matiere_code: mat?.code || '',
       }}, upsert: true }};
@@ -272,5 +284,73 @@ export class ViewBuilderService implements OnModuleInit {
     const ids = salles.map(s => s._id.toString());
     await this.readSalleModel.deleteMany({ source_id: { $nin: ids } }).exec();
     if (ops.length > 0) await this.readSalleModel.bulkWrite(ops);
+  }
+
+  private async rebuildEvaluations() {
+    const [evaluations, classes, matieres, eleves] = await Promise.all([
+      this.evaluationModel.find().lean().exec(),
+      this.classeModel.find().lean().exec(),
+      this.matiereModel.find().lean().exec(),
+      this.eleveModel.find().lean().exec(),
+    ]);
+
+    const cm = new Map(classes.map(c => [c._id.toString(), c]));
+    const mm = new Map(matieres.map(m => [m._id.toString(), m]));
+    const em = new Map(eleves.map(e => [e._id.toString(), e]));
+
+    const ops = (evaluations as any[]).map(ev => {
+      const sid = ev._id.toString();
+      const classe = cm.get(ev.classe_id);
+      const matiere = mm.get(ev.matiere_id);
+
+      const notesEnrichies = (ev.notes || []).map((n: any) => {
+        const eleve = em.get(n.eleve_id);
+        return {
+          eleve_id: n.eleve_id,
+          eleve_nom: eleve?.nom || '',
+          eleve_prenom: eleve?.prenom || '',
+          valeur: n.valeur ?? null,
+          absent: n.absent ?? false,
+        };
+      });
+
+      const notesSaisies = notesEnrichies.filter((n: any) => !n.absent && n.valeur !== null);
+      const nb_notes_saisies = notesSaisies.length;
+      const nb_eleves = notesEnrichies.length;
+      const moyenne_classe = nb_notes_saisies > 0
+        ? Math.round((notesSaisies.reduce((acc: number, n: any) => acc + n.valeur, 0) / nb_notes_saisies) * 10) / 10
+        : null;
+
+      return {
+        updateOne: {
+          filter: { source_id: sid },
+          update: {
+            $set: {
+              source_id: sid,
+              type: ev.type,
+              classe_id: ev.classe_id,
+              classe_nom: classe?.nom || '',
+              classe_niveau: (classe as any)?.niveau || '',
+              matiere_id: ev.matiere_id,
+              matiere_nom: matiere?.nom || '',
+              matiere_code: matiere?.code || '',
+              trimestre: ev.trimestre,
+              annee_scolaire: ev.annee_scolaire,
+              date: ev.date,
+              statut: ev.statut,
+              notes: notesEnrichies,
+              nb_notes_saisies,
+              nb_eleves,
+              moyenne_classe,
+            },
+          },
+          upsert: true,
+        },
+      };
+    });
+
+    const ids = (evaluations as any[]).map(ev => ev._id.toString());
+    await this.readEvaluationModel.deleteMany({ source_id: { $nin: ids } }).exec();
+    if (ops.length > 0) await this.readEvaluationModel.bulkWrite(ops);
   }
 }
