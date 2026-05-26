@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useEvaluations } from '../../contexts/EvaluationContext';
 import { useAnnees } from '../../contexts/AnneeContext';
@@ -13,6 +14,7 @@ import { Select, SelectOption } from '../../components/shared/Select';
 import { FormGrid, FormActions } from '../../components/shared/FormGrid';
 
 export function CreateEvaluation() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isViewingArchive } = useViewing();
   const { create } = useEvaluations();
@@ -39,7 +41,6 @@ export function CreateEvaluation() {
     });
   }, []);
 
-  // Vérifie côté frontend si DS publié existe pour le triplet (information uniquement — la validation réelle est backend)
   useEffect(() => {
     if (type !== 'evaluation' || !classeId || !matiereId || !trimestre) {
       setDsManquant(false);
@@ -57,7 +58,7 @@ export function CreateEvaluation() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!classeId || !matiereId || !date) {
-      setError('Veuillez remplir tous les champs obligatoires.');
+      setError(t('evaluations.champsObligatoires'));
       return;
     }
     setSubmitting(true);
@@ -75,31 +76,31 @@ export function CreateEvaluation() {
     } else {
       setError(
         type === 'evaluation'
-          ? 'Erreur : vérifiez que le DS est bien publié pour cette classe, matière et trimestre.'
-          : 'Erreur lors de la création. Un DS existe peut-être déjà pour ce triplet.',
+          ? t('evaluations.erreurEvaluation')
+          : t('evaluations.erreurDS'),
       );
       setSubmitting(false);
     }
   };
 
   const classesOptions: SelectOption[] = [
-    { value: '', label: 'Sélectionner une classe' },
+    { value: '', label: t('evaluations.form.classeSelect') },
     ...classes.map((c: any) => ({ value: c.id, label: c.nom })),
   ];
   const matieresOptions: SelectOption[] = [
-    { value: '', label: 'Sélectionner une matière' },
+    { value: '', label: t('evaluations.form.matiereSelect') },
     ...matieres.map((m: any) => ({ value: m.id, label: m.nom })),
   ];
   const trimestreOptions: SelectOption[] = [
-    { value: '1', label: 'Trimestre 1' },
-    { value: '2', label: 'Trimestre 2' },
-    { value: '3', label: 'Trimestre 3' },
+    { value: '1', label: t('evaluations.form.trimestreOpt', { t: 1 }) },
+    { value: '2', label: t('evaluations.form.trimestreOpt', { t: 2 }) },
+    { value: '3', label: t('evaluations.form.trimestreOpt', { t: 3 }) },
   ];
 
   return (
     <div>
-      <PageHeader title="Nouvelle évaluation" subtitle="Créer un DS ou une évaluation">
-        <Button as="link" to="/evaluations" variant="secondary">← Retour</Button>
+      <PageHeader title={t('evaluations.creerTitre')} subtitle={t('evaluations.creerSousTitre')}>
+        <Button as="link" to="/evaluations" variant="secondary">{t('evaluations.retour')}</Button>
       </PageHeader>
 
       <div style={{ maxWidth: 600 }}>
@@ -107,7 +108,7 @@ export function CreateEvaluation() {
           {error && <Alert variant="error">{error}</Alert>}
           {dsManquant && (
             <Alert variant="warning">
-              Aucun DS publié pour cette classe, matière et trimestre. Créez et publiez le DS avant de créer l'évaluation.
+              {t('evaluations.dsManquantAlert')}
             </Alert>
           )}
 
@@ -115,37 +116,37 @@ export function CreateEvaluation() {
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: type === 'ds' ? 600 : 400 }}>
                 <input type="radio" value="ds" checked={type === 'ds'} onChange={() => setType('ds')} />
-                DS
+                {t('evaluations.types.ds')}
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: type === 'evaluation' ? 600 : 400 }}>
                 <input type="radio" value="evaluation" checked={type === 'evaluation'} onChange={() => setType('evaluation')} />
-                Évaluation
+                {t('evaluations.types.evaluation')}
               </label>
             </div>
 
             <FormGrid>
               <Select
-                label="Classe *"
+                label={t('evaluations.form.classe')}
                 options={classesOptions}
                 value={classeId}
                 onChange={e => setClasseId(e.target.value)}
                 required
               />
               <Select
-                label="Matière *"
+                label={t('evaluations.form.matiere')}
                 options={matieresOptions}
                 value={matiereId}
                 onChange={e => setMatiereId(e.target.value)}
                 required
               />
               <Select
-                label="Trimestre *"
+                label={t('evaluations.form.trimestre')}
                 options={trimestreOptions}
                 value={trimestre}
                 onChange={e => setTrimestre(e.target.value as '1' | '2' | '3')}
               />
               <Input
-                label="Date *"
+                label={t('evaluations.form.date')}
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
@@ -154,14 +155,14 @@ export function CreateEvaluation() {
             </FormGrid>
 
             <FormActions>
-              <Button as="link" to="/evaluations" variant="secondary">Annuler</Button>
+              <Button as="link" to="/evaluations" variant="secondary">{t('evaluations.annuler')}</Button>
               <Button
                 type="submit"
                 variant="primary"
                 disabled={submitting || (type === 'evaluation' && dsManquant)}
                 loading={submitting}
               >
-                Créer
+                {t('evaluations.creerBtn')}
               </Button>
             </FormActions>
           </form>

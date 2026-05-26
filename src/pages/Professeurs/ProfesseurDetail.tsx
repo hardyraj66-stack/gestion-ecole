@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
 import { useTeacherAssignments } from '../../contexts/TeacherAssignmentContext';
@@ -23,6 +24,7 @@ import { DropdownMenu } from '../../components/shared/DropdownMenu';
 import { readApi } from '../../services/readApi';
 
 export function ProfesseurDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isViewingArchive: readOnly } = useViewing();
@@ -56,10 +58,8 @@ export function ProfesseurDetail() {
 
   const isClasseDisabled = useCallback((classeId: string): boolean => {
     if (!assignMatiere) return false;
-    // Déjà assigné pour cette matière → grisé
     const existingAssignments: any[] = data?.assignments ?? [];
     if (existingAssignments.some((a: any) => a.classe_id === classeId && a.matiere_id === assignMatiere)) return true;
-    // Niveau n'autorise pas cette matière → grisé
     if (niveaux.length > 0) {
       const classe = classes.find((c: any) => c.id === classeId);
       if (classe) {
@@ -73,7 +73,7 @@ export function ProfesseurDetail() {
 
   const handleAddAssignment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (assignClasses.size === 0 || !assignMatiere) { setAssignError('Sélectionnez au moins une classe et une matière.'); return; }
+    if (assignClasses.size === 0 || !assignMatiere) { setAssignError(t('professeurs.detail.erreurAffectation')); return; }
     setAssignSubmitting(true); setAssignError('');
     for (const classeId of assignClasses) {
       await createAssignment(
@@ -84,10 +84,15 @@ export function ProfesseurDetail() {
     }
     setShowAssignForm(false); setAssignClasses(new Set()); setAssignMatiere(''); refresh();
     setAssignSubmitting(false);
-  }, [id, assignClasses, assignMatiere, createAssignment, refresh]);
+  }, [id, assignClasses, assignMatiere, createAssignment, refresh, t]);
 
   const handleDeleteAssignment = async (a: any) => {
-    const ok = await confirm({ title: 'Retirer affectation', message: `Retirer ${a.matiere_nom} — ${a.classe_nom} ?`, confirmText: 'Retirer', variant: 'danger' });
+    const ok = await confirm({
+      title: t('professeurs.detail.retireTitre'),
+      message: t('professeurs.detail.retirerMsg', { matiere: a.matiere_nom, classe: a.classe_nom }),
+      confirmText: t('professeurs.detail.retirerBtn'),
+      variant: 'danger',
+    });
     if (!ok) return;
     await deleteAssignment(a.id);
     refresh();
@@ -112,7 +117,7 @@ export function ProfesseurDetail() {
   }, [id, editForm, updateProfesseur, refresh]);
 
   if (loading || !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Professeur introuvable.</Alert>;
+  if (error) return <Alert variant="error">{t('professeurs.erreur')}</Alert>;
 
   const { professeur: p, assignments } = data;
 
@@ -138,35 +143,47 @@ export function ProfesseurDetail() {
   };
 
   const handleDesactiverProfesseur = async () => {
-    const ok = await confirm({ title: 'Désactiver le professeur', message: `Désactiver ${p.prenom} ${p.nom} ? Il ne sera plus disponible pour les affectations, mais ses données sont conservées.`, confirmText: 'Désactiver', variant: 'danger' });
+    const ok = await confirm({
+      title: t('professeurs.detail.confirmDesactiver'),
+      message: t('professeurs.detail.confirmDesactiverMsg', { prenom: p.prenom, nom: p.nom }),
+      confirmText: t('professeurs.detail.confirmDesactiverBtn'),
+      variant: 'danger',
+    });
     if (!ok) return;
     await desactiverProfesseur(id!);
     navigate('/professeurs');
   };
 
   const handleActiverProfesseur = async () => {
-    const ok = await confirm({ title: 'Réactiver le professeur', message: `Réactiver ${p.prenom} ${p.nom} ? Il redeviendra disponible pour les affectations.`, confirmText: 'Réactiver', variant: 'warning' });
+    const ok = await confirm({
+      title: t('professeurs.detail.confirmReactiver'),
+      message: t('professeurs.detail.confirmReactiverMsg', { prenom: p.prenom, nom: p.nom }),
+      confirmText: t('professeurs.detail.confirmReactiverBtn'),
+      variant: 'warning',
+    });
     if (!ok) return;
     await activerProfesseur(id!);
     refresh();
   };
 
+  const prefixe = p.genre === 'F' ? t('professeurs.genres.prefixMme') : t('professeurs.genres.prefixM');
+
   return (
     <div>
       <PageHeader
-        title={`${p.genre === 'F' ? 'Mme' : 'M.'} ${p.prenom} ${p.nom}`}
-        subtitle={p.statut === 'actif' ? 'Actif' : 'Inactif'}
+        title={`${prefixe} ${p.prenom} ${p.nom}`}
+        subtitle={p.statut === 'actif' ? t('professeurs.statuts.actif') : t('professeurs.statuts.inactif')}
       >
-        <Button variant="secondary" onClick={() => navigate('/professeurs')}>← Retour</Button>
+        <Button variant="secondary" onClick={() => navigate('/professeurs')}>{t('professeurs.retour')}</Button>
         {!readOnly && (
           <DropdownMenu
             open={menuOpen}
             onOpenChange={setMenuOpen}
             items={p.statut === 'actif' ? [
-              { label: 'Modifier', icon: Icons.edit, onClick: openEdit },
-              { label: 'Désactiver', icon: Icons.trash, onClick: handleDesactiverProfesseur, variant: 'danger' },
+              { label: t('professeurs.actions.modifier'), icon: Icons.edit, onClick: openEdit },
+              { label: t('professeurs.actions.desactiver'), icon: Icons.trash, onClick: handleDesactiverProfesseur, variant: 'danger' },
             ] : [
-              { label: 'Réactiver', icon: Icons.edit, onClick: handleActiverProfesseur },
+              { label: t('professeurs.actions.reactiver'), icon: Icons.edit, onClick: handleActiverProfesseur },
             ]}
           />
         )}
@@ -180,13 +197,13 @@ export function ProfesseurDetail() {
             <Avatar initiales={initials} genre={p.genre} size="lg" />
             <div style={{ marginTop: '0.75rem', fontWeight: 600, fontSize: '1rem' }}>{p.prenom} {p.nom}</div>
             <div style={{ marginTop: '0.25rem' }}>
-              <Badge label={p.statut === 'actif' ? 'Actif' : 'Inactif'} variant={p.statut === 'actif' ? 'success' : 'default'} />
+              <Badge label={p.statut === 'actif' ? t('professeurs.statuts.actif') : t('professeurs.statuts.inactif')} variant={p.statut === 'actif' ? 'success' : 'default'} />
             </div>
           </div>
           {[
-            { label: 'Genre', value: p.genre === 'F' ? 'Féminin' : 'Masculin' },
-            { label: 'Email', value: p.email || '—' },
-            { label: 'Téléphone', value: p.telephone || '—' },
+            { label: t('professeurs.detail.genre'), value: p.genre === 'F' ? t('professeurs.genres.feminin') : t('professeurs.genres.masculin') },
+            { label: t('professeurs.detail.email'), value: p.email || '—' },
+            { label: t('professeurs.detail.telephone'), value: p.telephone || '—' },
           ].map(item => (
             <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>{item.label}</span>
@@ -194,7 +211,7 @@ export function ProfesseurDetail() {
             </div>
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', fontSize: '0.875rem' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Affectations</span>
+            <span style={{ color: 'var(--text-muted)' }}>{t('professeurs.detail.affectations')}</span>
             <span style={{ fontWeight: 600 }}>{assignments.length}</span>
           </div>
         </Card>
@@ -203,27 +220,27 @@ export function ProfesseurDetail() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
             <h3 style={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Affectations ({assignments.length})
+              {t('professeurs.detail.affectationsCount', { count: assignments.length })}
             </h3>
             {!readOnly && (
               <Button variant="primary" size="sm" onClick={() => { setShowAssignForm(true); setAssignError(''); setAssignClasses(new Set()); setAssignMatiere(''); }}>
-                + Ajouter
+                {t('professeurs.detail.ajouter')}
               </Button>
             )}
           </div>
 
           {assignments.length === 0 ? (
             <Card>
-              <EmptyState icon={<Icon path={Icons.calendar} size={24} />} message="Aucune affectation" />
+              <EmptyState icon={<Icon path={Icons.calendar} size={24} />} message={t('professeurs.detail.aucuneAffectation')} />
             </Card>
           ) : (
             <Card padding="none">
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell header>Matière</TableCell>
-                    <TableCell header>Classe</TableCell>
-                    {!readOnly && <TableCell header>Actions</TableCell>}
+                    <TableCell header>{t('professeurs.detail.colonnes.matiere')}</TableCell>
+                    <TableCell header>{t('professeurs.detail.colonnes.classe')}</TableCell>
+                    {!readOnly && <TableCell header>{t('professeurs.detail.colonnes.actions')}</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -238,7 +255,7 @@ export function ProfesseurDetail() {
                       <TableCell>{a.classe_nom}</TableCell>
                       {!readOnly && (
                         <TableCell>
-                          <Button variant="danger" size="sm" onClick={() => handleDeleteAssignment(a)}>Retirer</Button>
+                          <Button variant="danger" size="sm" onClick={() => handleDeleteAssignment(a)}>{t('professeurs.detail.retirer')}</Button>
                         </TableCell>
                       )}
                     </TableRow>
@@ -252,21 +269,21 @@ export function ProfesseurDetail() {
 
       {/* Popup modification professeur */}
       {showEditForm && (
-        <Modal title="Modifier le professeur" onClose={() => setShowEditForm(false)} maxWidth={480}
+        <Modal title={t('professeurs.actions.modifierTitre')} onClose={() => setShowEditForm(false)} maxWidth={480}
           footer={
             <>
-              <Button type="button" variant="secondary" onClick={() => setShowEditForm(false)}>Annuler</Button>
-              <Button type="submit" form="edit-prof-form" variant="primary" disabled={editSubmitting} loading={editSubmitting}>Enregistrer</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowEditForm(false)}>{t('common.annuler')}</Button>
+              <Button type="submit" form="edit-prof-form" variant="primary" disabled={editSubmitting} loading={editSubmitting}>{t('common.enregistrer')}</Button>
             </>
           }
         >
           {editError && <Alert variant="error">{editError}</Alert>}
           <form id="edit-prof-form" onSubmit={handleEditSubmit}>
             <FormGrid columns={2}>
-              <Input label="Nom *" value={editForm.nom} onChange={e => handleEditField('nom', e.target.value)} placeholder="Dupont" error={editFieldErrors.nom} />
-              <Input label="Prénom *" value={editForm.prenom} onChange={e => handleEditField('prenom', e.target.value)} placeholder="Jean" error={editFieldErrors.prenom} />
-              <Input label="Email" type="email" value={editForm.email} onChange={e => handleEditField('email', e.target.value)} placeholder="jean.dupont@ecole.fr" error={editFieldErrors.email} />
-              <Input label="Téléphone" value={editForm.telephone} onChange={e => handleEditField('telephone', e.target.value)} placeholder="06 00 00 00 00" error={editFieldErrors.telephone} />
+              <Input label={t('professeurs.form.nom')} value={editForm.nom} onChange={e => handleEditField('nom', e.target.value)} placeholder={t('professeurs.form.nomPlaceholder')} error={editFieldErrors.nom} />
+              <Input label={t('professeurs.form.prenom')} value={editForm.prenom} onChange={e => handleEditField('prenom', e.target.value)} placeholder={t('professeurs.form.prenomPlaceholder')} error={editFieldErrors.prenom} />
+              <Input label={t('professeurs.form.email')} type="email" value={editForm.email} onChange={e => handleEditField('email', e.target.value)} placeholder={t('professeurs.form.emailPlaceholder')} error={editFieldErrors.email} />
+              <Input label={t('professeurs.form.telephone')} value={editForm.telephone} onChange={e => handleEditField('telephone', e.target.value)} placeholder={t('professeurs.form.telephonePlaceholder')} error={editFieldErrors.telephone} />
             </FormGrid>
           </form>
         </Modal>
@@ -274,12 +291,14 @@ export function ProfesseurDetail() {
 
       {/* Popup ajout affectation */}
       {showAssignForm && (
-        <Modal title="Nouvelle affectation" onClose={() => setShowAssignForm(false)} maxWidth={560}
+        <Modal title={t('professeurs.detail.nouvelleAffectation')} onClose={() => setShowAssignForm(false)} maxWidth={560}
           footer={
             <>
-              <Button type="button" variant="secondary" onClick={() => setShowAssignForm(false)}>Annuler</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowAssignForm(false)}>{t('common.annuler')}</Button>
               <Button type="submit" form="assign-form" variant="primary" disabled={assignSubmitting || assignClasses.size === 0 || !assignMatiere} loading={assignSubmitting}>
-                Ajouter {assignClasses.size > 1 ? `(${assignClasses.size})` : ''}
+                {assignClasses.size > 1
+                  ? t('professeurs.detail.ajouterAffectationCount', { count: assignClasses.size })
+                  : t('professeurs.detail.ajouterAffectation')}
               </Button>
             </>
           }
@@ -288,13 +307,12 @@ export function ProfesseurDetail() {
           <form id="assign-form" onSubmit={handleAddAssignment}>
             {/* Matière */}
             <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Matière *</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('professeurs.detail.affectationMatiere')}</div>
               <MatierePills
                 matieres={matieres}
                 selectedIds={assignMatiere ? [assignMatiere] : []}
                 onToggle={(matiereId) => {
                   setAssignMatiere(matiereId);
-                  // Désélectionner les classes qui seraient disabled avec la nouvelle matière
                   setAssignClasses(prev => {
                     const next = new Set(prev);
                     const existingAssignments: any[] = data?.assignments ?? [];
@@ -315,9 +333,9 @@ export function ProfesseurDetail() {
             {/* Classes */}
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span>Classes *</span>
+                <span>{t('professeurs.detail.affectationClasses')}</span>
                 {assignClasses.size > 0 && <span style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '0.1rem 0.5rem', borderRadius: '20px', textTransform: 'none', letterSpacing: 0 }}>{assignClasses.size}</span>}
-                {assignMatiere && <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— barrées = niveau incompatible · ✓ vert = déjà assigné</span>}
+                {assignMatiere && <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— {t('professeurs.detail.affectationAide')}</span>}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {classes.map((c: any) => {

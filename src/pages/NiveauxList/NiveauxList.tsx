@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useNiveaux as useNiveauxCtx } from '../../contexts/NiveauContext';
 import { useNiveauxListData } from '../../hooks/usePageData';
@@ -26,6 +27,7 @@ interface EditForm {
 }
 
 export function NiveauxList() {
+  const { t } = useTranslation();
   const { isViewingArchive: readOnly } = useViewing();
   const { create, update, delete: deleteNiveau } = useNiveauxCtx();
   const confirm = useConfirm();
@@ -48,6 +50,8 @@ export function NiveauxList() {
     if (data) setLocalNiveaux(Array.isArray(data) ? data : []);
   }, [data]);
 
+  const niveaux: any[] = localNiveaux ?? (Array.isArray(data) ? data : []);
+
   const openEdit = (n: any) => {
     const nom = n.nom ?? n.niveau ?? '';
     setEditNiveau({ ...n, nom });
@@ -66,17 +70,16 @@ export function NiveauxList() {
 
   const handleSave = async () => {
     if (!editNiveau) return;
-    if (!form.nom.trim()) { setFormError('Le nom est requis'); return; }
+    if (!form.nom.trim()) { setFormError(t('niveaux.erreurs.nomRequis')); return; }
     const ordreVal = parseInt(form.ordre) || 0;
     const maxOrdre = editNiveau.id ? niveaux.length - 1 : niveaux.length;
     if (ordreVal < 0 || ordreVal > maxOrdre) {
-      setFormError(`L'ordre doit être entre 0 et ${maxOrdre}`);
+      setFormError(t('niveaux.erreurs.ordreInvalide', { max: maxOrdre }));
       return;
     }
     setSubmitting(true);
     setFormError('');
 
-    // Niveau orphelin (pas encore en base) → créer d'abord
     if (!editNiveau.id) {
       const result = await create({
         nom: form.nom.trim(),
@@ -86,10 +89,10 @@ export function NiveauxList() {
       });
       setSubmitting(false);
       if (result.ok) {
-        setLocalNiveaux(null); // force re-fetch via data
+        setLocalNiveaux(null);
         closeEdit();
       } else {
-        setFormError(result.error || 'Erreur lors de la création');
+        setFormError(result.error || t('niveaux.erreurCreation'));
       }
       return;
     }
@@ -109,15 +112,19 @@ export function NiveauxList() {
       ) : prev);
       closeEdit();
     } else {
-      setFormError(result.error || 'Erreur lors de la modification');
+      setFormError(result.error || t('niveaux.erreurModification'));
     }
   };
 
   const handleDelete = async (n: any) => {
     const nomAffiche = n.nom ?? n.niveau ?? '';
-    const ok = await confirm({ title: 'Supprimer le niveau ?', message: `Le niveau « ${nomAffiche} » sera supprimé. Les classes existantes gardent leur valeur de niveau, mais celui-ci ne sera plus configurable.`, confirmText: 'Supprimer', variant: 'danger' });
+    const ok = await confirm({
+      title: t('niveaux.supprimerTitre'),
+      message: t('niveaux.supprimerMsg', { nom: nomAffiche }),
+      confirmText: t('niveaux.supprimerBtn'),
+      variant: 'danger',
+    });
     if (!ok) return;
-    // Niveau orphelin → rien à supprimer en base, juste retirer de la liste locale
     if (!n.id) {
       setLocalNiveaux(prev => prev ? prev.filter(x => (x.nom ?? x.niveau) !== nomAffiche) : prev);
       return;
@@ -127,24 +134,23 @@ export function NiveauxList() {
   };
 
   if (loading) return <PageLoader />;
-  if (error) return <Alert variant="error">Problème de chargement des niveaux.</Alert>;
-
-  const niveaux: any[] = localNiveaux ?? (Array.isArray(data) ? data : []);
+  if (error) return <Alert variant="error">{t('niveaux.erreurChargementMsg')}</Alert>;
 
   return (
     <div>
       <PageHeader
-        title="Niveaux"
-        subtitle={`${niveaux.length} niveau${niveaux.length !== 1 ? 'x' : ''} configuré${niveaux.length !== 1 ? 's' : ''}`}
-        action={!readOnly ? <Link to="/niveaux/nouveau"><Button variant="primary" size="sm">+ Nouveau niveau</Button></Link> : undefined}
-      />
+        title={t('niveaux.titre')}
+        subtitle={t('niveaux.nbNiveaux', { count: niveaux.length })}
+      >
+        {!readOnly && <Link to="/niveaux/nouveau"><Button variant="primary" size="sm">{t('niveaux.nouveauNiveau')}</Button></Link>}
+      </PageHeader>
 
       {niveaux.length === 0 ? (
         <Card>
           <EmptyState
             icon={<Icon path={Icons.building} size={28} />}
-            message="Aucun niveau configuré"
-            action={!readOnly ? <Link to="/niveaux/nouveau"><Button variant="primary">Créer le premier niveau</Button></Link> : undefined}
+            message={t('niveaux.aucunNiveau')}
+            action={!readOnly ? <Link to="/niveaux/nouveau"><Button variant="primary">{t('niveaux.creerPremierNiveau')}</Button></Link> : undefined}
           />
         </Card>
       ) : (
@@ -163,7 +169,7 @@ export function NiveauxList() {
             <Link to="/niveaux/nouveau" style={{ textDecoration: 'none' }}>
               <div className="add-card">
                 <div className="add-card-icon">+</div>
-                <span className="add-card-text">Nouveau niveau</span>
+                <span className="add-card-text">{t('niveaux.nouveauNiveau')}</span>
               </div>
             </Link>
           )}
@@ -197,6 +203,7 @@ function NiveauCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   const matiereNames = (niveau.matiere_ids || [])
     .map((id: string) => allMatieres.find(m => m.id === id)?.nom)
     .filter(Boolean);
@@ -207,11 +214,11 @@ function NiveauCard({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{niveau.nom ?? niveau.niveau}</span>
           {niveau.count !== undefined && (
-            <Badge label={`${niveau.count} classe${niveau.count !== 1 ? 's' : ''}`} variant="default" />
+            <Badge label={t('niveaux.nbClasses', { count: niveau.count })} variant="default" />
           )}
         </div>
         {niveau.ordre !== undefined && (
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>ordre {niveau.ordre}</span>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('niveaux.ordre')} {niveau.ordre}</span>
         )}
       </div>
 
@@ -227,16 +234,16 @@ function NiveauCard({
         </div>
       ) : (
         <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          Toutes les matières autorisées
+          {t('niveaux.toutesMatieresAutorisees')}
         </p>
       )}
 
       {!readOnly && (
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
-          <Button variant="ghost" size="sm" onClick={onEdit} style={{ flex: 1 }}>Modifier</Button>
+          <Button variant="secondary" size="sm" onClick={onEdit} style={{ flex: 1 }}>{t('niveaux.modifier')}</Button>
           {(niveau.count ?? 0) === 0
-            ? <Button variant="ghost" size="sm" onClick={onDelete} style={{ color: 'var(--danger)' }}>Supprimer</Button>
-            : <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', alignSelf: 'center', paddingRight: '0.25rem' }}>Non supprimable</span>
+            ? <Button variant="danger" size="sm" onClick={onDelete}>{t('niveaux.supprimer')}</Button>
+            : <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', alignSelf: 'center', paddingRight: '0.25rem' }}>{t('niveaux.nonSupprimable')}</span>
           }
         </div>
       )}
@@ -259,16 +266,17 @@ function EditNiveauModal({
   onSave: () => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Modal
-      title={`Modifier le niveau — ${niveau.nom}`}
+      title={t('niveaux.modifierTitre', { nom: niveau.nom })}
       onClose={onClose}
       maxWidth={560}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={submitting}>Annuler</Button>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>{t('niveaux.annuler')}</Button>
           <Button variant="primary" onClick={onSave} disabled={submitting || !form.nom.trim()}>
-            {submitting ? 'Enregistrement…' : 'Enregistrer'}
+            {submitting ? t('niveaux.enregistrement') : t('niveaux.enregistrer')}
           </Button>
         </>
       }
@@ -276,13 +284,13 @@ function EditNiveauModal({
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem' }}>
           <Input
-            label="Nom du niveau *"
+            label={t('niveaux.form.nom')}
             value={form.nom}
             onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-            placeholder="Ex: 6ème, CE1..."
+            placeholder={t('niveaux.form.nomPlaceholder')}
           />
           <Input
-            label={`Ordre (0–${maxOrdre})`}
+            label={t('niveaux.form.ordre', { max: maxOrdre })}
             type="number"
             value={form.ordre}
             onChange={e => setForm(f => ({ ...f, ordre: e.target.value }))}
@@ -293,17 +301,20 @@ function EditNiveauModal({
         </div>
 
         <Input
-          label="Description (optionnel)"
+          label={t('niveaux.form.description')}
           value={form.description}
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-          placeholder="Description courte du niveau"
+          placeholder={t('niveaux.form.descriptionPlaceholder')}
         />
 
         <div>
-          <label className="form-label">Matières autorisées <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(vide = toutes autorisées)</span></label>
+          <label className="form-label">
+            {t('niveaux.form.matieres')}
+            {' '}<span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({t('niveaux.creer.form.matieresInfo')})</span>
+          </label>
           <div style={{ marginTop: '0.4rem', maxHeight: 200, overflowY: 'auto', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 8 }}>
             {allMatieres.length === 0 ? (
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Aucune matière disponible</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{t('niveaux.form.aucuneMatiere')}</span>
             ) : (
               <MatierePills
                 matieres={allMatieres}
@@ -314,7 +325,7 @@ function EditNiveauModal({
           </div>
           {form.matiere_ids.length > 0 && (
             <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              {form.matiere_ids.length} matière{form.matiere_ids.length > 1 ? 's' : ''} sélectionnée{form.matiere_ids.length > 1 ? 's' : ''}
+              {t('niveaux.nbMatieres', { count: form.matiere_ids.length })}
             </p>
           )}
         </div>

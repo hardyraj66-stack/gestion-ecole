@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from '../shared/Avatar';
 
 interface NoteRow {
@@ -16,6 +17,8 @@ interface NotesGridProps {
 }
 
 export function NotesGrid({ notes, readOnly = false, onChange }: NotesGridProps) {
+  const { t } = useTranslation();
+
   const { nbNotes, moyenne } = useMemo(() => {
     const valeurs = notes.filter(n => !n.absent && n.valeur !== null).map(n => n.valeur as number);
     const nb = valeurs.length;
@@ -40,16 +43,16 @@ export function NotesGrid({ notes, readOnly = false, onChange }: NotesGridProps)
       <table className="notes-grid-table">
         <thead>
           <tr>
-            <th className="notes-grid-th notes-grid-th-eleve">Élève</th>
-            <th className="notes-grid-th notes-grid-th-note">Note /20</th>
-            <th className="notes-grid-th notes-grid-th-absent">Absent</th>
+            <th className="notes-grid-th notes-grid-th-eleve">{t('notesGrid.eleve')}</th>
+            <th className="notes-grid-th notes-grid-th-note">{t('notesGrid.noteSur')}</th>
+            <th className="notes-grid-th notes-grid-th-absent">{t('notesGrid.absent')}</th>
           </tr>
         </thead>
         <tbody>
           {notes.map(n => (
             <tr key={n.eleve_id} className={`notes-grid-row${n.absent ? ' notes-grid-row-absent' : ''}`}>
               <td className="notes-grid-td notes-grid-td-eleve">
-                <Avatar nom={n.eleve_nom} prenom={n.eleve_prenom} genre="M" size="sm" />
+                <Avatar initiales={`${n.eleve_prenom[0] || ''}${n.eleve_nom[0] || ''}`.toUpperCase()} genre="M" size="sm" />
                 <span className="notes-grid-nom">{n.eleve_prenom} {n.eleve_nom}</span>
               </td>
               <td className="notes-grid-td notes-grid-td-note">
@@ -79,7 +82,7 @@ export function NotesGrid({ notes, readOnly = false, onChange }: NotesGridProps)
                     onChange={e => handleAbsent(n.eleve_id, e.target.checked)}
                   />
                 )}
-                {readOnly && n.absent && <span className="notes-grid-absent-badge">Absent</span>}
+                {readOnly && n.absent && <span className="notes-grid-absent-badge">{t('notesGrid.absente')}</span>}
               </td>
             </tr>
           ))}
@@ -87,8 +90,8 @@ export function NotesGrid({ notes, readOnly = false, onChange }: NotesGridProps)
       </table>
 
       <div className="notes-grid-footer">
-        <span>{nbNotes}/{notes.length} élèves notés</span>
-        {moyenne !== null && <span>Moyenne provisoire : <strong>{moyenne}/20</strong></span>}
+        <span>{t('notesGrid.notesCount', { nb: nbNotes, total: notes.length })}</span>
+        {moyenne !== null && <span>{t('notesGrid.moyenneProvisoire')} <strong>{moyenne}/20</strong></span>}
       </div>
     </div>
   );

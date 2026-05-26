@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { API_BASE_URL } from '../../config/api';
 import { usePeriodes } from '../../contexts/PeriodeContext';
@@ -17,18 +18,6 @@ function getStatut(p: PeriodeRow): Statut {
   if (!p.date_debut || !p.date_fin) return 'non-planifiee';
   return 'non-planifiee';
 }
-
-const STATUT_CONFIG = {
-  active:          { label: 'En cours',     variant: 'success' as const },
-  future:          { label: 'À venir',       variant: 'warning' as const },
-  terminee:        { label: 'Terminée',      variant: 'default' as const },
-  'non-planifiee': { label: 'Non planifiée', variant: 'default' as const },
-};
-
-const TYPE_CONFIG = {
-  ds:         { label: 'DS',         variant: 'primary' as const, color: 'var(--primary)', bg: 'var(--primary-light)', accent: 'color-mix(in srgb, var(--primary) 40%, transparent)' },
-  evaluation: { label: 'Évaluation', variant: 'info'    as const, color: 'var(--info)',    bg: 'var(--info-light)',    accent: 'color-mix(in srgb, var(--info) 40%, transparent)' },
-};
 
 function formatDate(d: string | null) {
   if (!d) return null;
@@ -55,10 +44,19 @@ function PeriodeCard({
   onSave: () => void; onCancel: () => void; saving: boolean; saveError: string;
   onTerminer: () => void; terminating: boolean;
 }) {
+  const { t } = useTranslation();
   const [confirmTerminer, setConfirmTerminer] = useState(false);
   const statut  = getStatut(periode);
-  const sc      = STATUT_CONFIG[statut];
-  const tc      = TYPE_CONFIG[periode.type as 'ds' | 'evaluation'];
+  const sc      = {
+    active:          { label: t('periodes.statuts.enCours'),       variant: 'success' as const },
+    future:          { label: t('periodes.statuts.aVenir'),        variant: 'warning' as const },
+    terminee:        { label: t('periodes.statuts.terminee'),      variant: 'default' as const },
+    'non-planifiee': { label: t('periodes.statuts.nonPlanifiee'),  variant: 'default' as const },
+  }[statut];
+  const tc      = {
+    ds:         { label: t('periodes.types.ds'),         variant: 'primary' as const, color: 'var(--primary)', bg: 'var(--primary-light)', accent: 'color-mix(in srgb, var(--primary) 40%, transparent)' },
+    evaluation: { label: t('periodes.types.evaluation'), variant: 'info'    as const, color: 'var(--info)',    bg: 'var(--info-light)',    accent: 'color-mix(in srgb, var(--info) 40%, transparent)' },
+  }[periode.type as 'ds' | 'evaluation'];
   const dStart  = statut === 'future'  ? daysUntil(periode.date_debut) : null;
   const dEnd    = statut === 'active'  ? daysUntil(periode.date_fin)   : null;
 
@@ -73,12 +71,10 @@ function PeriodeCard({
       overflow: 'hidden',
       transition: 'box-shadow 0.2s',
     }}>
-      {/* Barre colorée */}
       <div style={{ height: 3, background: tc.color, opacity: statut === 'terminee' ? 0.3 : 1 }} />
 
       <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
 
-        {/* Type + statut + bouton modifier */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <span style={{
@@ -104,35 +100,33 @@ function PeriodeCard({
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
-              Modifier
+              {t('periodes.actions.modifier')}
             </button>
           )}
         </div>
 
-        {/* Contenu */}
         {isEditing && editState ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
               <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Début</label>
+                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('periodes.form.debut')}</label>
                 <input type="date" value={editState.date_debut} onChange={e => onEditChange('date_debut', e.target.value)} className="input" />
               </div>
               <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fin</label>
+                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('periodes.form.fin')}</label>
                 <input type="date" value={editState.date_fin} onChange={e => onEditChange('date_fin', e.target.value)} className="input" />
               </div>
             </div>
             {saveError && <p style={{ fontSize: '0.75rem', color: 'var(--danger)', margin: 0, lineHeight: 1.4 }}>{saveError}</p>}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Button variant="primary" size="sm" onClick={onSave} loading={saving}>Enregistrer</Button>
-              <Button variant="secondary" size="sm" onClick={onCancel}>Annuler</Button>
+              <Button variant="primary" size="sm" onClick={onSave} loading={saving}>{t('periodes.actions.enregistrer')}</Button>
+              <Button variant="secondary" size="sm" onClick={onCancel}>{t('periodes.actions.annuler')}</Button>
             </div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {periode.date_debut && periode.date_fin ? (
               <>
-                {/* Plage de dates */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
                   background: 'var(--bg-subtle)', borderRadius: 8, padding: '0.6rem 0.75rem',
@@ -150,15 +144,14 @@ function PeriodeCard({
                     {formatDate(periode.date_fin)}
                   </span>
                 </div>
-                {/* Contexte temporel */}
                 {dStart !== null && dStart >= 0 && (
                   <p style={{ fontSize: '0.77rem', color: '#d97706', margin: 0, fontWeight: 600 }}>
-                    {dStart === 0 ? "Commence aujourd'hui" : `Commence dans ${dStart} jour${dStart > 1 ? 's' : ''}`}
+                    {dStart === 0 ? t('periodes.commenceAujourdhui') : t('periodes.commenceDans', { count: dStart })}
                   </p>
                 )}
                 {dEnd !== null && (
                   <p style={{ fontSize: '0.77rem', color: '#16a34a', margin: 0, fontWeight: 600 }}>
-                    {dEnd > 0 ? `Se termine dans ${dEnd} jour${dEnd > 1 ? 's' : ''}` : "Se termine aujourd'hui"}
+                    {dEnd > 0 ? t('periodes.termineDans', { count: dEnd }) : t('periodes.termineAujourdhui')}
                   </p>
                 )}
                 {statut === 'terminee' && (
@@ -166,11 +159,10 @@ function PeriodeCard({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6L9 17l-5-5"/>
                     </svg>
-                    <p style={{ fontSize: '0.77rem', color: '#16a34a', margin: 0, fontWeight: 600 }}>Période terminée</p>
+                    <p style={{ fontSize: '0.77rem', color: '#16a34a', margin: 0, fontWeight: 600 }}>{t('periodes.periodTerminee')}</p>
                   </div>
                 )}
 
-                {/* Bouton Terminer — visible si active ou future planifiée */}
                 {(statut === 'active' || statut === 'future') && (
                   confirmTerminer ? (
                     <div style={{
@@ -180,10 +172,10 @@ function PeriodeCard({
                       marginTop: '0.25rem',
                     }}>
                       <p style={{ margin: 0, fontSize: '0.78rem', color: '#991b1b', fontWeight: 600 }}>
-                        Confirmer la clôture de cette période ?
+                        {t('periodes.confirmCloture')}
                       </p>
                       <p style={{ margin: 0, fontSize: '0.73rem', color: '#dc2626', lineHeight: 1.4 }}>
-                        La date de fin sera fixée à aujourd'hui. Cette action ne peut pas être annulée.
+                        {t('periodes.confirmClotureMsg')}
                       </p>
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
                         <button
@@ -205,7 +197,7 @@ function PeriodeCard({
                               <path d="M20 6L9 17l-5-5"/>
                             </svg>
                           )}
-                          Confirmer
+                          {t('periodes.confirmerBtn')}
                         </button>
                         <button
                           onClick={() => setConfirmTerminer(false)}
@@ -216,7 +208,7 @@ function PeriodeCard({
                             cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
                           }}
                         >
-                          Annuler
+                          {t('periodes.actions.annuler')}
                         </button>
                       </div>
                     </div>
@@ -237,7 +229,7 @@ function PeriodeCard({
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 6L9 17l-5-5"/>
                       </svg>
-                      Terminer la période
+                      {t('periodes.actions.terminerPeriode')}
                     </button>
                   )
                 )}
@@ -251,7 +243,7 @@ function PeriodeCard({
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
                 </svg>
-                <span style={{ fontSize: '0.82rem' }}>Dates non définies</span>
+                <span style={{ fontSize: '0.82rem' }}>{t('periodes.datesNonDefinies')}</span>
               </div>
             )}
           </div>
@@ -262,6 +254,7 @@ function PeriodeCard({
 }
 
 export function PeriodesList() {
+  const { t } = useTranslation();
   const { active, preparation, loading: anneeLoading } = useAnnees();
   const { updatePeriode, terminerPeriode } = usePeriodes();
   const annee = active || preparation;
@@ -269,7 +262,6 @@ export function PeriodesList() {
 
   const { data, loading, error } = usePeriodesData(annee_scolaire);
 
-  // Auto-init : si l'année est active et les périodes manquent, les créer automatiquement
   const initDoneRef = useRef<string>('');
   useEffect(() => {
     if (!anneeLoading && !loading && annee_scolaire && active && Array.isArray(data) && data.length === 0 && initDoneRef.current !== annee_scolaire) {
@@ -288,7 +280,7 @@ export function PeriodesList() {
   const [terminating, setTerminating] = useState<string | null>(null);
 
   if (anneeLoading || loading) return <PageLoader />;
-  if (error) return <Alert variant="error">Erreur lors du chargement des périodes.</Alert>;
+  if (error) return <Alert variant="error">{t('periodes.erreurChargement')}</Alert>;
 
   const periodes: PeriodeRow[] = (Array.isArray(data) ? data : []).sort(
     (a: PeriodeRow, b: PeriodeRow) => a.trimestre !== b.trimestre ? a.trimestre - b.trimestre : a.type === 'ds' ? -1 : 1,
@@ -303,7 +295,7 @@ export function PeriodesList() {
     const result = await updatePeriode(editing.id, { date_debut: editing.date_debut || null, date_fin: editing.date_fin || null });
     setSaving(false);
     if (result.ok) setEditing(null);
-    else setSaveError(result.message || 'Erreur lors de la mise à jour.');
+    else setSaveError(result.message || t('periodes.erreurMaj'));
   };
 
   const handleTerminer = async (periode: PeriodeRow) => {
@@ -315,19 +307,18 @@ export function PeriodesList() {
   return (
     <div>
       <PageHeader
-        title="Périodes d'évaluation"
-        subtitle={annee_scolaire ? `Année scolaire ${annee_scolaire}` : 'Aucune année active'}
+        title={t('periodes.titre')}
+        subtitle={annee_scolaire ? t('periodes.soustitre', { annee: annee_scolaire }) : t('periodes.aucuneAnnee')}
       />
 
-      {!annee_scolaire && <Alert variant="warning">Aucune année scolaire active ou en préparation.</Alert>}
+      {!annee_scolaire && <Alert variant="warning">{t('periodes.aucuneAnnee')}</Alert>}
 
       {periodes.length === 0 && annee_scolaire && (
-        <Alert variant="info">Les 6 périodes seront créées automatiquement au démarrage de l'année scolaire.</Alert>
+        <Alert variant="info">{t('periodes.periodesAuto')}</Alert>
       )}
 
       {periodes.length > 0 && (
         <>
-          {/* ── Stats ── */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto' }}>
               <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -339,7 +330,7 @@ export function PeriodesList() {
                 <div style={{ fontSize: '1.35rem', fontWeight: 700, lineHeight: 1, color: 'var(--text)' }}>
                   {planned}<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>/6</span>
                 </div>
-                <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>Périodes planifiées</div>
+                <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{t('periodes.periodesPlannifiees')}</div>
               </div>
             </div>
 
@@ -352,9 +343,9 @@ export function PeriodesList() {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16a34a', lineHeight: 1 }}>
-                    {TYPE_CONFIG[activePeriode.type as 'ds' | 'evaluation'].label} T{activePeriode.trimestre} en cours
+                    {activePeriode.type === 'ds' ? t('periodes.types.ds') : t('periodes.types.evaluation')} T{activePeriode.trimestre} {t('periodes.enCours', { t: activePeriode.trimestre })}
                   </div>
-                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>Saisie des notes active</div>
+                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{t('periodes.saisieActive')}</div>
                 </div>
               </div>
             ) : (
@@ -365,23 +356,21 @@ export function PeriodesList() {
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, lineHeight: 1 }}>Aucune période active</div>
-                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>Saisie des notes bloquée</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, lineHeight: 1 }}>{t('periodes.aucunePeriode')}</div>
+                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{t('periodes.saisieBloquee')}</div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* ── Grille par trimestre — 2 colonnes DS | Évaluation ── */}
-          {[1, 2, 3].map(t => {
-            const ds   = periodes.find(p => p.trimestre === t && p.type === 'ds');
-            const eval_ = periodes.find(p => p.trimestre === t && p.type === 'evaluation');
+          {[1, 2, 3].map(tr => {
+            const ds    = periodes.find(p => p.trimestre === tr && p.type === 'ds');
+            const eval_ = periodes.find(p => p.trimestre === tr && p.type === 'evaluation');
             if (!ds && !eval_) return null;
             const isActiveT = [ds, eval_].some(p => p && getStatut(p) === 'active');
             const anyActive = periodes.some(p => getStatut(p) === 'active');
-            // Trimestre verrouillé si le trimestre précédent n'est pas entièrement terminé
-            const locked = t > 1 && (() => {
-              const prev = periodes.filter(p => p.trimestre === t - 1);
+            const locked = tr > 1 && (() => {
+              const prev = periodes.filter(p => p.trimestre === tr - 1);
               return prev.length === 0 || !prev.every(p => getStatut(p) === 'terminee');
             })();
             const isCurrentT = !anyActive && !isActiveT && (() => {
@@ -389,33 +378,31 @@ export function PeriodesList() {
                 const tds   = periodes.find(p => p.trimestre === i && p.type === 'ds');
                 const teval = periodes.find(p => p.trimestre === i && p.type === 'evaluation');
                 const allDone = [tds, teval].every(p => p && getStatut(p) === 'terminee');
-                if (!allDone) return i === t;
+                if (!allDone) return i === tr;
               }
               return false;
             })();
 
             return (
-              <div key={t} style={{ marginBottom: '1.75rem' }}>
-                {/* Header trimestre */}
+              <div key={tr} style={{ marginBottom: '1.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.875rem' }}>
                   <div style={{
                     width: 30, height: 30, borderRadius: 7, flexShrink: 0,
                     background: (isActiveT || isCurrentT) ? '#16a34a' : 'var(--text)',
                     color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '0.78rem', fontWeight: 700,
-                  }}>T{t}</div>
-                  <h3 style={{ fontWeight: 700, fontSize: '0.97rem', margin: 0, color: 'var(--text)' }}>Trimestre {t}</h3>
+                  }}>T{tr}</div>
+                  <h3 style={{ fontWeight: 700, fontSize: '0.97rem', margin: 0, color: 'var(--text)' }}>{t('periodes.trimestre', { t: tr })}</h3>
                   {(isActiveT || isCurrentT) && (
                     <span style={{
                       fontSize: '0.7rem', fontWeight: 600, color: '#16a34a',
                       background: 'var(--success-light)', border: '1px solid #bbf7d0',
                       borderRadius: 20, padding: '0.12rem 0.55rem',
-                    }}>Actif</span>
+                    }}>{t('periodes.actif')}</span>
                   )}
                   <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
                 </div>
 
-                {/* 2 colonnes fixes : DS à gauche, Évaluation à droite */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   {[ds, eval_].map((p) => {
                     if (!p) return null;
@@ -442,16 +429,13 @@ export function PeriodesList() {
             );
           })}
 
-          {/* Règle métier */}
           <div style={{
             marginTop: '0.5rem', padding: '0.75rem 1rem',
             background: 'var(--bg-subtle)', border: '1px solid var(--border)',
             borderRadius: 'var(--radius-sm)',
           }}>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
-              <strong style={{ color: 'var(--text)' }}>Règles :</strong> La période Évaluation doit commencer après la fin du DS du même trimestre.
-              Le Trimestre 2 ne peut être planifié qu'après la clôture complète du Trimestre 1 (idem T3 après T2).
-              La saisie des notes est automatiquement bloquée en dehors de toute période active.
+              {t('periodes.regles')}
             </p>
           </div>
         </>

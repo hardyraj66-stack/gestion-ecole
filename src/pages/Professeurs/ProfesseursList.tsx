@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
 import { useProfesseursListData } from '../../hooks/usePageData';
@@ -24,9 +25,6 @@ import { Icon, Icons } from '../../components/shared/Icon';
 import { Modal } from '../../components/shared/Modal';
 import { ExportMenu } from '../../components/shared/ExportMenu';
 
-const GENRE_OPTIONS = [{ value: 'M', label: 'Masculin (M.)' }, { value: 'F', label: 'Féminin (Mme)' }];
-const STATUT_OPTIONS = [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }];
-
 const empty = { nom: '', prenom: '', email: '', telephone: '', genre: 'M', statut: 'actif' };
 
 function getInitialsProf(p: Professeur) {
@@ -34,9 +32,19 @@ function getInitialsProf(p: Professeur) {
 }
 
 export function ProfesseursList() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isViewingArchive: readOnly } = useViewing();
   const { create, update } = useProfesseurs();
+
+  const GENRE_OPTIONS = [
+    { value: 'M', label: `${t('professeurs.genres.masculin')} (${t('professeurs.genres.prefixM')})` },
+    { value: 'F', label: `${t('professeurs.genres.feminin')} (${t('professeurs.genres.prefixMme')})` },
+  ];
+  const STATUT_OPTIONS = [
+    { value: 'actif', label: t('professeurs.statuts.actif') },
+    { value: 'inactif', label: t('professeurs.statuts.inactif') },
+  ];
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -49,9 +57,9 @@ export function ProfesseursList() {
     return (data.items as any[]).map((p: any) => ({
       id: p.id,
       label: `${p.prenom} ${p.nom}`,
-      sublabel: p.statut === 'actif' ? 'Actif' : 'Inactif',
+      sublabel: p.statut === 'actif' ? t('professeurs.statuts.actif') : t('professeurs.statuts.inactif'),
     }));
-  }, []);
+  }, [t]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -60,8 +68,8 @@ export function ProfesseursList() {
   const [formSubmitting, setFormSubmitting] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
+    return () => clearTimeout(timer);
   }, [search]);
 
   const { data, loading, error } = useProfesseursListData(page, debouncedSearch);
@@ -76,7 +84,7 @@ export function ProfesseursList() {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nom.trim() || !form.prenom.trim()) { setFormError('Nom et prénom sont requis.'); return; }
+    if (!form.nom.trim() || !form.prenom.trim()) { setFormError(t('professeurs.erreurNomPrenom')); return; }
     setFormSubmitting(true); setFormError('');
     if (editingId) {
       await update(editingId, form,
@@ -90,28 +98,27 @@ export function ProfesseursList() {
       );
     }
     setFormSubmitting(false);
-  }, [form, editingId, create, update]);
-
+  }, [form, editingId, create, update, t]);
 
   if (loading && !localItems) return <PageLoader />;
-  if (error && !localItems) return <Alert variant="error">Problème de chargement des professeurs.</Alert>;
+  if (error && !localItems) return <Alert variant="error">{t('professeurs.erreur')}</Alert>;
 
   const items = localItems ?? data?.items ?? [];
   const total = data?.total ?? 0;
 
   return (
     <div>
-      <PageHeader title="Professeurs" subtitle={`${total} professeur(s)`}>
+      <PageHeader title={t('professeurs.titre')} subtitle={t('professeurs.nbProfesseurs', { count: total })}>
         <ExportMenu
           csvUrl={`/export/professeurs/csv${debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : ''}`}
           xlsxUrl={`/export/professeurs/xlsx${debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : ''}`}
         />
-        {!readOnly && <Button variant="primary" onClick={openCreate}>+ Ajouter un professeur</Button>}
+        {!readOnly && <Button variant="primary" onClick={openCreate}>{t('professeurs.ajouter')}</Button>}
       </PageHeader>
 
-      <FilterBar count={total} countLabel="professeur(s)">
+      <FilterBar count={total} countLabel={t('professeurs.nbProfesseurs', { count: total })}>
         <SearchInputSuggestions
-          placeholder="Rechercher un professeur…"
+          placeholder={t('professeurs.rechercher')}
           value={search}
           onChange={setSearch}
           onSelect={s => navigate(`/professeurs/${s.id}`)}
@@ -119,17 +126,16 @@ export function ProfesseursList() {
         />
       </FilterBar>
 
-      {/* Modal formulaire */}
       {showForm && (
         <Modal
-          title={editingId ? 'Modifier le professeur' : 'Nouveau professeur'}
+          title={editingId ? t('professeurs.actions.modifierTitre') : t('professeurs.actions.nouveauTitre')}
           onClose={() => setShowForm(false)}
           maxWidth={520}
           footer={
             <>
-              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Annuler</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>{t('common.annuler')}</Button>
               <Button type="submit" form="prof-form" variant="primary" disabled={formSubmitting} loading={formSubmitting}>
-                {editingId ? 'Enregistrer' : 'Créer'}
+                {editingId ? t('common.enregistrer') : t('common.creer')}
               </Button>
             </>
           }
@@ -137,16 +143,16 @@ export function ProfesseursList() {
           {formError && <Alert variant="error">{formError}</Alert>}
           <form id="prof-form" onSubmit={handleSubmit}>
             <FormGrid columns={2}>
-              <Input label="Nom *" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} placeholder="Dupont" />
-              <Input label="Prénom *" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} placeholder="Jean" />
+              <Input label={t('professeurs.form.nom')} value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} placeholder={t('professeurs.form.nomPlaceholder')} />
+              <Input label={t('professeurs.form.prenom')} value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} placeholder={t('professeurs.form.prenomPlaceholder')} />
             </FormGrid>
             <FormGrid columns={2}>
-              <Input label="Email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="jean.dupont@ecole.fr" />
-              <Input label="Téléphone" value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} placeholder="06 00 00 00 00" />
+              <Input label={t('professeurs.form.email')} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder={t('professeurs.form.emailPlaceholder')} />
+              <Input label={t('professeurs.form.telephone')} value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} placeholder={t('professeurs.form.telephonePlaceholder')} />
             </FormGrid>
             <FormGrid columns={2}>
-              <Select label="Genre" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))} options={GENRE_OPTIONS} />
-              <Select label="Statut" value={form.statut} onChange={e => setForm(f => ({ ...f, statut: e.target.value }))} options={STATUT_OPTIONS} />
+              <Select label={t('professeurs.form.genre')} value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))} options={GENRE_OPTIONS} />
+              <Select label={t('professeurs.form.statut')} value={form.statut} onChange={e => setForm(f => ({ ...f, statut: e.target.value }))} options={STATUT_OPTIONS} />
             </FormGrid>
           </form>
         </Modal>
@@ -155,8 +161,8 @@ export function ProfesseursList() {
       {items.length === 0 ? (
         <EmptyState
           icon={<Icon path={Icons.user} size={28} />}
-          message={search ? 'Aucun résultat' : 'Aucun professeur'}
-          action={!search && !readOnly ? <Button variant="primary" onClick={openCreate}>Ajouter un professeur</Button> : undefined}
+          message={search ? t('professeurs.aucunResultat') : t('professeurs.aucunProfesseur')}
+          action={!search && !readOnly ? <Button variant="primary" onClick={openCreate}>{t('professeurs.ajouterProfesseur')}</Button> : undefined}
         />
       ) : (
         <>
@@ -164,12 +170,12 @@ export function ProfesseursList() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell header>Professeur</TableCell>
-                  <TableCell header>Genre</TableCell>
-                  <TableCell header>Email</TableCell>
-                  <TableCell header>Téléphone</TableCell>
-                  <TableCell header>Statut</TableCell>
-                  <TableCell header>Actions</TableCell>
+                  <TableCell header>{t('professeurs.colonnes.professeur')}</TableCell>
+                  <TableCell header>{t('professeurs.colonnes.genre')}</TableCell>
+                  <TableCell header>{t('professeurs.colonnes.email')}</TableCell>
+                  <TableCell header>{t('professeurs.colonnes.telephone')}</TableCell>
+                  <TableCell header>{t('professeurs.colonnes.statut')}</TableCell>
+                  <TableCell header>{t('professeurs.colonnes.actions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -179,22 +185,22 @@ export function ProfesseursList() {
                       <div className="eleve-info">
                         <Avatar initiales={getInitialsProf(p)} genre={p.genre} />
                         <span className="eleve-name eleve-name-link">
-                          {p.genre === 'F' ? 'Mme' : 'M.'} {p.prenom} {p.nom}
+                          {p.genre === 'F' ? t('professeurs.genres.prefixMme') : t('professeurs.genres.prefixM')} {p.prenom} {p.nom}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge label={p.genre === 'F' ? 'Féminin' : 'Masculin'} variant={p.genre === 'F' ? 'warning' : 'info'} />
+                      <Badge label={p.genre === 'F' ? t('professeurs.genres.feminin') : t('professeurs.genres.masculin')} variant={p.genre === 'F' ? 'warning' : 'info'} />
                     </TableCell>
                     <TableCell>{p.email || '—'}</TableCell>
                     <TableCell>{p.telephone || '—'}</TableCell>
                     <TableCell>
-                      <Badge label={p.statut === 'actif' ? 'Actif' : 'Inactif'} variant={p.statut === 'actif' ? 'success' : 'default'} />
+                      <Badge label={p.statut === 'actif' ? t('professeurs.statuts.actif') : t('professeurs.statuts.inactif')} variant={p.statut === 'actif' ? 'success' : 'default'} />
                     </TableCell>
                     <TableCell>
                       <div onClick={e => e.stopPropagation()}>
                         {!readOnly && (
-                          <Button variant="secondary" size="sm" onClick={() => openEdit(p)}>Modifier</Button>
+                          <Button variant="secondary" size="sm" onClick={() => openEdit(p)}>{t('professeurs.actions.modifier')}</Button>
                         )}
                       </div>
                     </TableCell>

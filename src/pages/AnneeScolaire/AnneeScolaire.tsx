@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useDashboardData } from '../../hooks/usePageData';
@@ -19,20 +20,21 @@ import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { AnneeScolaire as AnneeScolaireType, AnneeStatut, BadgeVariant } from '../../types';
 import { formatDate } from '../../utils/helpers';
 
-const statutConfig: Record<AnneeStatut, { label: string; variant: BadgeVariant; icon: string }> = {
-  active: { label: 'Active', variant: 'success', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-  preparation: { label: 'En préparation', variant: 'warning', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
-  terminee: { label: 'Terminée', variant: 'default', icon: 'M5 13l4 4L19 7' },
-};
-
 const auditColor = (action: string) => action === 'cloture' ? 'var(--danger)' : action === 'demarrage' ? 'var(--success)' : 'var(--primary)';
 
 export function AnneeScolairePage() {
+  const { t } = useTranslation();
   const { annees, loading, active, preparation, create, demarrer, terminer, delete: deleteAnnee } = useAnnees();
   const { data: dashData } = useDashboardData();
   const { viewAnnee } = useViewing();
   const navigate = useNavigate();
   const confirm = useConfirm();
+
+  const statutConfig: Record<AnneeStatut, { label: string; variant: BadgeVariant; icon: string }> = {
+    active: { label: t('anneeScolaire.statuts.active'), variant: 'success', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+    preparation: { label: t('anneeScolaire.statuts.preparation'), variant: 'warning', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
+    terminee: { label: t('anneeScolaire.statuts.terminee'), variant: 'default', icon: 'M5 13l4 4L19 7' },
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [formLabel, setFormLabel] = useState('');
@@ -46,36 +48,69 @@ export function AnneeScolairePage() {
 
   const handleTerminer = async (annee: AnneeScolaireType) => {
     clearMessages();
-    const ok = await confirm({ title: 'Terminer l\'année', message: `Clôturer « ${annee.label} » ? Irréversible.`, confirmText: 'Terminer', variant: 'warning' });
+    const ok = await confirm({
+      title: t('anneeScolaire.terminerTitre'),
+      message: t('anneeScolaire.terminerMsg', { label: annee.label }),
+      confirmText: t('anneeScolaire.terminerBtn'),
+      variant: 'warning',
+    });
     if (!ok) return;
-    const ok2 = await confirm({ title: 'Confirmation', message: `Confirmer la clôture de « ${annee.label} » ?`, confirmText: 'Confirmer', variant: 'danger' });
+    const ok2 = await confirm({
+      title: t('anneeScolaire.confirmerTitre'),
+      message: t('anneeScolaire.confirmerMsg', { label: annee.label }),
+      confirmText: t('anneeScolaire.confirmerBtn'),
+      variant: 'danger',
+    });
     if (!ok2) return;
     setSubmitting(true);
-    await terminer(annee.id, (n) => { setSuccess(`Année « ${annee.label} » terminée. « ${n.label} » prête.`); setSubmitting(false); }, (err) => { setError(err); setSubmitting(false); });
+    await terminer(
+      annee.id,
+      (n) => { setSuccess(t('anneeScolaire.successTerminer', { label: annee.label, next: n.label })); setSubmitting(false); },
+      (err) => { setError(err); setSubmitting(false); },
+    );
   };
 
   const handleDemarrer = async (annee: AnneeScolaireType) => {
     clearMessages();
-    const ok = await confirm({ title: 'Démarrer l\'année', message: `Démarrer « ${annee.label} » ?`, confirmText: 'Démarrer', variant: 'info' });
+    const ok = await confirm({
+      title: t('anneeScolaire.demarrerTitre'),
+      message: t('anneeScolaire.demarrerMsg', { label: annee.label }),
+      confirmText: t('anneeScolaire.demarrerBtn'),
+      variant: 'info',
+    });
     if (!ok) return;
     setSubmitting(true);
-    await demarrer(annee.id, () => { setSuccess(`Année « ${annee.label} » démarrée !`); setSubmitting(false); }, (err) => { setError(err); setSubmitting(false); });
+    await demarrer(
+      annee.id,
+      () => { setSuccess(t('anneeScolaire.successDemarrer', { label: annee.label })); setSubmitting(false); },
+      (err) => { setError(err); setSubmitting(false); },
+    );
   };
 
   const handleDelete = async (annee: AnneeScolaireType) => {
     clearMessages();
-    const ok = await confirm({ title: 'Supprimer', message: `Supprimer « ${annee.label} » ?`, confirmText: 'Supprimer', variant: 'danger' });
+    const ok = await confirm({
+      title: t('anneeScolaire.supprimerTitre'),
+      message: t('anneeScolaire.confirmSupprimer', { label: annee.label }),
+      confirmText: t('anneeScolaire.actions.supprimer'),
+      variant: 'danger',
+    });
     if (!ok) return;
     await deleteAnnee(annee.id, (err) => setError(err));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault(); clearMessages();
-    if (!formLabel || !formDebut || !formFin) { setError('Tous les champs sont requis'); return; }
+    if (!formLabel || !formDebut || !formFin) { setError(t('anneeScolaire.champsRequis')); return; }
     setSubmitting(true);
-    await create({ label: formLabel, debut: formDebut, fin: formFin },
-      () => { setSuccess(`Année « ${formLabel} » créée`); setShowForm(false); setFormLabel(''); setFormDebut(''); setFormFin(''); setSubmitting(false); },
-      (err) => { setError(err); setSubmitting(false); });
+    await create(
+      { label: formLabel, debut: formDebut, fin: formFin },
+      () => {
+        setSuccess(t('anneeScolaire.successCreer', { label: formLabel }));
+        setShowForm(false); setFormLabel(''); setFormDebut(''); setFormFin(''); setSubmitting(false);
+      },
+      (err) => { setError(err); setSubmitting(false); },
+    );
   };
 
   if (loading) return <PageLoader />;
@@ -86,8 +121,8 @@ export function AnneeScolairePage() {
 
   return (
     <div>
-      <PageHeader title="Cycle scolaire" subtitle="Gestion des années scolaires">
-        {!showForm && !preparation && <Button variant="primary" onClick={() => setShowForm(true)}>+ Préparer une année</Button>}
+      <PageHeader title={t('anneeScolaire.titre')} subtitle={t('anneeScolaire.sousTitre')}>
+        {!showForm && !preparation && <Button variant="primary" onClick={() => setShowForm(true)}>{t('anneeScolaire.preparer')}</Button>}
       </PageHeader>
 
       {error && <Alert variant="error">{error}</Alert>}
@@ -95,16 +130,16 @@ export function AnneeScolairePage() {
 
       {showForm && (
         <Card style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Préparer une nouvelle année</h3>
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('anneeScolaire.preparerTitre')}</h3>
           <form onSubmit={handleCreate}>
             <FormGrid columns={3}>
-              <Input label="Label *" value={formLabel} onChange={e => setFormLabel(e.target.value)} placeholder="2025-2026" required />
-              <Input label="Début *" type="date" value={formDebut} onChange={e => setFormDebut(e.target.value)} required />
-              <Input label="Fin *" type="date" value={formFin} onChange={e => setFormFin(e.target.value)} required />
+              <Input label={t('anneeScolaire.form.label')} value={formLabel} onChange={e => setFormLabel(e.target.value)} placeholder={t('anneeScolaire.form.labelPlaceholder')} required />
+              <Input label={t('anneeScolaire.form.debut')} type="date" value={formDebut} onChange={e => setFormDebut(e.target.value)} required />
+              <Input label={t('anneeScolaire.form.fin')} type="date" value={formFin} onChange={e => setFormFin(e.target.value)} required />
             </FormGrid>
             <FormActions>
-              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Annuler</Button>
-              <Button type="submit" variant="primary" loading={submitting}>Créer en préparation</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>{t('common.annuler')}</Button>
+              <Button type="submit" variant="primary" loading={submitting}>{t('anneeScolaire.form.creerBtn')}</Button>
             </FormActions>
           </form>
         </Card>
@@ -112,7 +147,7 @@ export function AnneeScolairePage() {
 
       {/* Pipeline */}
       <Card style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
-        <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Cycle de transition</h3>
+        <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>{t('anneeScolaire.cycleTransition')}</h3>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
           {(['active', 'terminee', 'preparation'] as AnneeStatut[]).map((s, i) => (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -134,17 +169,17 @@ export function AnneeScolairePage() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{active.label}</h3>
-                  <Badge label="Année active" variant="success" />
+                  <Badge label={t('anneeScolaire.anneeActive')} variant="success" />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                <StatItem label="Période" value={`${formatDate(active.debut)} → ${formatDate(active.fin)}`} />
-                <StatItem label="Classes" value={activeClasses} />
-                <StatItem label="Élèves" value={activeEleves} />
-                <StatItem label="Notes" value={activeNotes} />
+                <StatItem label={t('anneeScolaire.colonnes.periode')} value={`${formatDate(active.debut)} → ${formatDate(active.fin)}`} />
+                <StatItem label={t('anneeScolaire.colonnes.classes')} value={activeClasses} />
+                <StatItem label={t('anneeScolaire.colonnes.eleves')} value={activeEleves} />
+                <StatItem label={t('anneeScolaire.colonnes.notes')} value={activeNotes} />
               </div>
             </div>
-            <Button variant="danger" onClick={() => handleTerminer(active)} disabled={submitting} loading={submitting}>Terminer l'année</Button>
+            <Button variant="danger" onClick={() => handleTerminer(active)} disabled={submitting} loading={submitting}>{t('anneeScolaire.actions.terminer')}</Button>
           </div>
         </Card>
       )}
@@ -160,23 +195,23 @@ export function AnneeScolairePage() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{preparation.label}</h3>
-                  <Badge label="En préparation" variant="warning" />
+                  <Badge label={t('anneeScolaire.enPreparation')} variant="warning" />
                 </div>
               </div>
-              <StatItem label="Période" value={`${formatDate(preparation.debut)} → ${formatDate(preparation.fin)}`} />
+              <StatItem label={t('anneeScolaire.colonnes.periode')} value={`${formatDate(preparation.debut)} → ${formatDate(preparation.fin)}`} />
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {!active && <Button variant="primary" onClick={() => handleDemarrer(preparation)} disabled={submitting} loading={submitting}>🚀 Démarrer</Button>}
-              <Button variant="danger" size="sm" onClick={() => handleDelete(preparation)}>Supprimer</Button>
+              {!active && <Button variant="primary" onClick={() => handleDemarrer(preparation)} disabled={submitting} loading={submitting}>{t('anneeScolaire.demarrerEmoji')}</Button>}
+              <Button variant="danger" size="sm" onClick={() => handleDelete(preparation)}>{t('anneeScolaire.actions.supprimer')}</Button>
             </div>
           </div>
-          {active && <Alert variant="info" icon={false}>Terminez « {active.label} » avant de démarrer « {preparation.label} ».</Alert>}
+          {active && <Alert variant="info" icon={false}>{t('anneeScolaire.attente', { active: active.label, prep: preparation.label })}</Alert>}
         </Card>
       )}
 
       {/* Historique */}
       <Card>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Historique</h3>
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('anneeScolaire.historique')}</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {annees.map(annee => {
             const cfg = statutConfig[annee.statut];
@@ -188,9 +223,9 @@ export function AnneeScolairePage() {
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatDate(annee.debut)} → {formatDate(annee.fin)}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{annee.historique.length} action(s)</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('anneeScolaire.nbActions', { count: annee.historique.length })}</span>
                   {annee.statut === 'terminee' && (
-                    <Button variant="outline" size="sm" onClick={async () => { await viewAnnee(annee); navigate('/dashboard'); }}>📂 Consulter</Button>
+                    <Button variant="outline" size="sm" onClick={async () => { await viewAnnee(annee); navigate('/dashboard'); }}>{t('anneeScolaire.actions.consulter')}</Button>
                   )}
                 </div>
               </div>
@@ -201,13 +236,13 @@ export function AnneeScolairePage() {
 
       {/* Journal d'audit */}
       <Card style={{ marginTop: '1rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Journal d'audit</h3>
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('anneeScolaire.journalAudit')}</h3>
         <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
           {annees.flatMap(a => a.historique.map(h => ({ ...h, anneeLabel: a.label }))).sort((a, b) => b.date.localeCompare(a.date)).map((entry, i) => (
             <AuditEntry key={i} details={entry.details} date={entry.date} context={entry.anneeLabel} color={auditColor(entry.action)} />
           ))}
           {annees.every(a => a.historique.length === 0) && (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>Aucun événement</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>{t('anneeScolaire.aucunEvenement')}</p>
           )}
         </div>
       </Card>

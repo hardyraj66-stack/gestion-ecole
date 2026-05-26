@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useEvaluations } from '../../contexts/EvaluationContext';
 import { useEvaluationsListData } from '../../hooks/useEvaluationData';
@@ -16,11 +17,8 @@ import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { ExportMenu } from '../../components/shared/ExportMenu';
 import { Icon, Icons } from '../../components/shared/Icon';
 
-const TYPE_LABELS: Record<string, string> = { ds: 'DS', evaluation: 'Évaluation' };
-const STATUT_VARIANT: Record<string, 'warning' | 'success'> = { brouillon: 'warning', publie: 'success' };
-const STATUT_LABELS: Record<string, string> = { brouillon: 'Brouillon', publie: 'Publié' };
-
 export function EvaluationsList() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isViewingArchive: readOnly } = useViewing();
   const { deleteEvaluation } = useEvaluations();
@@ -56,45 +54,45 @@ export function EvaluationsList() {
   };
 
   const handleDelete = async (id: string) => {
-    const ok = await confirm('Supprimer cette évaluation ? Cette action est irréversible.');
+    const ok = await confirm(t('evaluations.actions.confirmerSuppr'));
     if (ok) await deleteEvaluation(id);
   };
 
   if (loading || !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Problème de chargement des évaluations.</Alert>;
+  if (error) return <Alert variant="error">{t('evaluations.erreur')}</Alert>;
 
-  const { items, total, totalPages } = data;
+  const { items, total } = data;
 
   const classesOptions: SelectOption[] = [
-    { value: '', label: 'Toutes les classes' },
+    { value: '', label: t('evaluations.toutesClasses') },
     ...classes.map((c: any) => ({ value: c.id, label: c.nom })),
   ];
   const matieresOptions: SelectOption[] = [
-    { value: '', label: 'Toutes les matières' },
+    { value: '', label: t('evaluations.toutesMatieres') },
     ...matieres.map((m: any) => ({ value: m.id, label: m.nom })),
   ];
   const trimestreOptions: SelectOption[] = [
-    { value: '', label: 'Tous les trimestres' },
-    { value: '1', label: 'Trimestre 1' },
-    { value: '2', label: 'Trimestre 2' },
-    { value: '3', label: 'Trimestre 3' },
+    { value: '', label: t('evaluations.tousTrimestres') },
+    { value: '1', label: t('evaluations.form.trimestreOpt', { t: 1 }) },
+    { value: '2', label: t('evaluations.form.trimestreOpt', { t: 2 }) },
+    { value: '3', label: t('evaluations.form.trimestreOpt', { t: 3 }) },
   ];
   const statutOptions: SelectOption[] = [
-    { value: '', label: 'Tous les statuts' },
-    { value: 'brouillon', label: 'Brouillon' },
-    { value: 'publie', label: 'Publié' },
+    { value: '', label: t('evaluations.tousStatuts') },
+    { value: 'brouillon', label: t('evaluations.statuts.brouillon') },
+    { value: 'publie', label: t('evaluations.statuts.publie') },
   ];
 
   return (
     <div>
-      <PageHeader title="Évaluations" subtitle={`${total} évaluation(s)`}>
+      <PageHeader title={t('evaluations.titre')} subtitle={t('evaluations.nbEvaluations', { count: total })}>
         <ExportMenu
           csvUrl={`/export/evaluations/csv?${[classeId && `classeId=${classeId}`, matiereId && `matiereId=${matiereId}`, trimestre && `trimestre=${trimestre}`].filter(Boolean).join('&')}`}
           xlsxUrl={`/export/evaluations/xlsx?${[classeId && `classeId=${classeId}`, matiereId && `matiereId=${matiereId}`, trimestre && `trimestre=${trimestre}`].filter(Boolean).join('&')}`}
         />
         {!readOnly && (
           <Button variant="primary" onClick={() => navigate('/evaluations/nouvelle')}>
-            + Nouvelle évaluation
+            {t('evaluations.nouvelleEval')}
           </Button>
         )}
       </PageHeader>
@@ -117,9 +115,9 @@ export function EvaluationsList() {
       {items.length === 0 ? (
         <EmptyState
           icon={<Icon path={Icons.book} size={28} />}
-          message="Aucune évaluation trouvée"
+          message={t('evaluations.aucuneEvaluation')}
           action={!readOnly ? (
-            <Button variant="primary" onClick={() => navigate('/evaluations/nouvelle')}>Créer</Button>
+            <Button variant="primary" onClick={() => navigate('/evaluations/nouvelle')}>{t('evaluations.creer')}</Button>
           ) : undefined}
         />
       ) : (
@@ -128,14 +126,14 @@ export function EvaluationsList() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Type</th>
-                  <th>Matière</th>
-                  <th>Classe</th>
-                  <th>Trimestre</th>
-                  <th>Date</th>
-                  <th>Progression</th>
-                  <th>Moyenne</th>
-                  <th>Statut</th>
+                  <th>{t('evaluations.colonnes.type')}</th>
+                  <th>{t('evaluations.colonnes.matiere')}</th>
+                  <th>{t('evaluations.colonnes.classe')}</th>
+                  <th>{t('evaluations.colonnes.trimestre')}</th>
+                  <th>{t('evaluations.colonnes.date')}</th>
+                  <th>{t('evaluations.colonnes.progression')}</th>
+                  <th>{t('evaluations.colonnes.moyenne')}</th>
+                  <th>{t('evaluations.colonnes.statut')}</th>
                   {!readOnly && <th></th>}
                 </tr>
               </thead>
@@ -148,9 +146,10 @@ export function EvaluationsList() {
                     style={{ cursor: 'pointer' }}
                   >
                     <td>
-                      <Badge variant={ev.type === 'ds' ? 'primary' : 'info'}>
-                        {TYPE_LABELS[ev.type]}
-                      </Badge>
+                      <Badge
+                        variant={ev.type === 'ds' ? 'primary' : 'info'}
+                        label={ev.type === 'ds' ? t('evaluations.types.ds') : t('evaluations.types.evaluation')}
+                      />
                     </td>
                     <td>
                       <strong>{ev.matiere_nom}</strong>
@@ -176,9 +175,10 @@ export function EvaluationsList() {
                     </td>
                     <td>{ev.moyenne_classe !== null ? `${ev.moyenne_classe}/20` : '—'}</td>
                     <td>
-                      <Badge variant={STATUT_VARIANT[ev.statut] || 'default'}>
-                        {STATUT_LABELS[ev.statut] || ev.statut}
-                      </Badge>
+                      <Badge
+                        variant={ev.statut === 'brouillon' ? 'warning' : 'success'}
+                        label={ev.statut === 'brouillon' ? t('evaluations.statuts.brouillon') : t('evaluations.statuts.publie')}
+                      />
                     </td>
                     {!readOnly && (
                       <td onClick={e => e.stopPropagation()}>
@@ -188,7 +188,7 @@ export function EvaluationsList() {
                             size="sm"
                             onClick={() => handleDelete(ev.id)}
                           >
-                            Supprimer
+                            {t('evaluations.actions.supprimer')}
                           </Button>
                         )}
                       </td>
@@ -201,7 +201,6 @@ export function EvaluationsList() {
           <Pagination currentPage={page} totalItems={total} pageSize={10} onPageChange={setPage} />
         </>
       )}
-
     </div>
   );
 }

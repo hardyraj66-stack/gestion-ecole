@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 
 export function ArchiveBanner() {
+  const { t } = useTranslation();
   const { viewing, exitView, isViewingArchive } = useViewing();
 
   if (!isViewingArchive || !viewing) return null;
@@ -12,10 +14,10 @@ export function ArchiveBanner() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span className="archive-banner-text">
-          Consultation de l'année <strong>{viewing.label}</strong> (archivée · lecture seule)
+          {t('archiveBanner.texte', { label: viewing.label })}
         </span>
         <span className="archive-banner-action">
-          ✕ Revenir à l'année en cours
+          {t('archiveBanner.revenir')}
         </span>
       </div>
     </div>

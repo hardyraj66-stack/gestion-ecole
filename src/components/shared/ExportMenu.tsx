@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '../../config/api';
 
 interface ExportMenuProps {
@@ -7,7 +8,9 @@ interface ExportMenuProps {
   label?: string;
 }
 
-export function ExportMenu({ csvUrl, xlsxUrl, label = 'Exporter' }: ExportMenuProps) {
+export function ExportMenu({ csvUrl, xlsxUrl, label }: ExportMenuProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t('common.exporter');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -30,12 +33,12 @@ export function ExportMenu({ csvUrl, xlsxUrl, label = 'Exporter' }: ExportMenuPr
         className="btn btn-outline btn-sm"
         onClick={() => setOpen(o => !o)}
         type="button"
-        title="Exporter"
+        title={resolvedLabel}
       >
         <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ marginRight: 6 }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
-        {label}
+        {resolvedLabel}
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ marginLeft: 4 }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // ============ TYPES ============
 interface ConfirmOptions {
@@ -9,8 +10,10 @@ interface ConfirmOptions {
   variant?: 'danger' | 'warning' | 'info';
 }
 
+type ConfirmArg = ConfirmOptions | string;
+
 interface ConfirmContextType {
-  confirm: (options: ConfirmOptions) => Promise<boolean>;
+  confirm: (options: ConfirmArg) => Promise<boolean>;
 }
 
 // ============ CONTEXT ============
@@ -36,7 +39,8 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     resolve: null,
   });
 
-  const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
+  const confirm = useCallback((arg: ConfirmArg): Promise<boolean> => {
+    const options: ConfirmOptions = typeof arg === 'string' ? { message: arg } : arg;
     return new Promise((resolve) => {
       setState({ open: true, options, resolve });
     });
@@ -94,21 +98,23 @@ const variantConfig = {
 function ConfirmDialogUI({
   title,
   message,
-  confirmText = 'Confirmer',
-  cancelText = 'Annuler',
+  confirmText,
+  cancelText,
   variant = 'danger',
   onConfirm,
   onCancel,
 }: ConfirmDialogUIProps) {
+  const { t } = useTranslation();
   const config = variantConfig[variant];
   const confirmRef = useRef<HTMLButtonElement>(null);
 
-  // Focus le bouton confirmer à l'ouverture
+  const resolvedConfirmText = confirmText ?? t('common.confirmer');
+  const resolvedCancelText = cancelText ?? t('common.annuler');
+
   useEffect(() => {
     confirmRef.current?.focus();
   }, []);
 
-  // Fermer avec Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel();
@@ -140,7 +146,7 @@ function ConfirmDialogUI({
         </div>
         <div className="confirm-actions">
           <button className="confirm-btn confirm-btn-cancel" onClick={onCancel}>
-            {cancelText}
+            {resolvedCancelText}
           </button>
           <button
             ref={confirmRef}
@@ -148,7 +154,7 @@ function ConfirmDialogUI({
             style={{ background: config.btnBg }}
             onClick={onConfirm}
           >
-            {confirmText}
+            {resolvedConfirmText}
           </button>
         </div>
       </div>

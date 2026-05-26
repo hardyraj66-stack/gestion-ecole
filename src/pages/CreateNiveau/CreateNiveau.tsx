@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useNiveaux as useNiveauxCtx } from '../../contexts/NiveauContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { readApi } from '../../services/readApi';
@@ -12,6 +13,7 @@ import { FormGrid, FormActions } from '../../components/shared/FormGrid';
 import { MatierePills } from '../../components/shared/MatierePills';
 
 export function CreateNiveau() {
+  const { t } = useTranslation();
   const { isViewingArchive } = useViewing();
   const navigate = useNavigate();
   const { create } = useNiveauxCtx();
@@ -44,10 +46,10 @@ export function CreateNiveau() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nom.trim()) { setError('Le nom est requis'); return; }
+    if (!nom.trim()) { setError(t('niveaux.erreurs.nomRequis')); return; }
     const ordreVal = parseInt(ordre) || 0;
     if (ordreVal < 0 || ordreVal > niveauxCount) {
-      setError(`L'ordre doit être entre 0 et ${niveauxCount}`);
+      setError(t('niveaux.erreurs.ordreInvalide', { max: niveauxCount }));
       return;
     }
     setSubmitting(true);
@@ -63,59 +65,59 @@ export function CreateNiveau() {
       setSuccess(true);
       setTimeout(() => navigate('/niveaux'), 1200);
     } else {
-      setError(result.error || 'Erreur lors de la création');
+      setError(result.error || t('niveaux.erreurCreation'));
     }
   };
 
   return (
     <div>
-      <PageHeader title="Nouveau niveau" subtitle="Définir un cycle scolaire et ses matières autorisées" />
+      <PageHeader title={t('niveaux.creer.titre')} subtitle={t('niveaux.creer.sousTitre')} />
 
       <Card style={{ maxWidth: 600 }}>
-        {success && <Alert variant="success" style={{ marginBottom: '1rem' }}>Niveau créé avec succès ! Redirection…</Alert>}
+        {success && <Alert variant="success">{t('niveaux.creer.succes')}</Alert>}
 
         <form onSubmit={handleSubmit}>
           <FormGrid>
             <div style={{ gridColumn: '1 / -1' }}>
               <Input
-                label="Nom du niveau *"
+                label={t('niveaux.creer.form.nom')}
                 value={nom}
                 onChange={e => setNom(e.target.value)}
-                placeholder="Ex: 6ème, CE1, Terminale…"
+                placeholder={t('niveaux.creer.form.nomPlaceholder')}
                 required
               />
             </div>
 
             <Input
-              label="Ordre d'affichage"
+              label={t('niveaux.creer.form.ordre')}
               type="number"
               value={ordre}
               onChange={e => setOrdre(e.target.value)}
               placeholder="0"
               min={0}
               max={niveauxCount}
-              hint={`Entre 0 et ${niveauxCount}`}
+              hint={t('niveaux.creer.ordreEntre', { max: niveauxCount })}
             />
 
             <div style={{ gridColumn: '1 / -1' }}>
               <Input
-                label="Description (optionnel)"
+                label={t('niveaux.creer.form.description')}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Collège, Lycée, Primaire…"
+                placeholder={t('niveaux.creer.form.descriptionPlaceholder')}
               />
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label className="form-label">
-                Matières autorisées
+                {t('niveaux.creer.form.matieres')}
                 <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
-                  (vide = toutes autorisées)
+                  {t('niveaux.creer.form.matieresInfo')}
                 </span>
               </label>
               <div style={{ marginTop: '0.4rem', maxHeight: 220, overflowY: 'auto', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 8 }}>
                 {allMatieres.length === 0 ? (
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Chargement des matières…</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{t('niveaux.creer.form.chargementMatieres')}</span>
                 ) : (
                   <MatierePills
                     matieres={allMatieres}
@@ -126,21 +128,21 @@ export function CreateNiveau() {
               </div>
               {matiereIds.length > 0 && (
                 <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  {matiereIds.length} matière{matiereIds.length > 1 ? 's' : ''} sélectionnée{matiereIds.length > 1 ? 's' : ''}
-                  {' — '}seules ces matières seront autorisées en planning pour ce niveau
+                  {t('niveaux.creer.form.nbMatieres', { count: matiereIds.length })}
+                  {' — '}{t('niveaux.creer.matieresInfo')}
                 </p>
               )}
             </div>
           </FormGrid>
 
-          {error && <Alert variant="error" style={{ marginTop: '1rem' }}>{error}</Alert>}
+          {error && <Alert variant="error">{error}</Alert>}
 
           <FormActions>
-            <Button type="button" variant="ghost" onClick={() => navigate('/niveaux')} disabled={submitting}>
-              Annuler
+            <Button type="button" variant="secondary" onClick={() => navigate('/niveaux')} disabled={submitting}>
+              {t('common.annuler')}
             </Button>
             <Button type="submit" variant="primary" disabled={submitting || !nom.trim()}>
-              {submitting ? 'Création…' : 'Créer le niveau'}
+              {submitting ? t('niveaux.creation') : t('niveaux.creer.creerBtn')}
             </Button>
           </FormActions>
         </form>

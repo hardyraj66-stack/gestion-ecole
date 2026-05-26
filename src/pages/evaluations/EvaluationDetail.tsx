@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useEvaluations } from '../../contexts/EvaluationContext';
 import { useEvaluationDetailData } from '../../hooks/useEvaluationData';
@@ -11,9 +12,6 @@ import { Alert } from '../../components/shared/Alert';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { NotesGrid } from '../../components/evaluations/NotesGrid';
 
-const TYPE_LABELS: Record<string, string> = { ds: 'DS', evaluation: 'Évaluation' };
-const STATUT_VARIANT: Record<string, 'warning' | 'success'> = { brouillon: 'warning', publie: 'success' };
-
 interface NoteRow {
   eleve_id: string;
   eleve_nom: string;
@@ -23,6 +21,7 @@ interface NoteRow {
 }
 
 export function EvaluationDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isViewingArchive } = useViewing();
@@ -60,12 +59,12 @@ export function EvaluationDetail() {
         absent: n.absent,
       })));
       setSaving(false);
-      setSaveMessage(ok ? 'Enregistré.' : 'Erreur lors de l\'enregistrement.');
+      setSaveMessage(ok ? t('evaluations.detail.enregistre') : t('evaluations.detail.erreurEnregistrement'));
     }, 1500);
-  }, [id, saisirNotes]);
+  }, [id, saisirNotes, t]);
 
   const handlePublier = async () => {
-    const ok2 = await confirm('Une fois publiée, l\'évaluation sera verrouillée et les notes visibles dans les bulletins. Continuer ?');
+    const ok2 = await confirm(t('evaluations.detail.confirmPublier'));
     if (!ok2) return;
     setPublishing(true);
     const ok = await publier(id!);
@@ -74,34 +73,36 @@ export function EvaluationDetail() {
   };
 
   if (loading || !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Évaluation introuvable.</Alert>;
+  if (error) return <Alert variant="error">{t('evaluations.detail.introuvable')}</Alert>;
 
   const readOnly = isViewingArchive || data.statut === 'publie';
+  const typeLabel = data.type === 'ds' ? t('evaluations.types.ds') : t('evaluations.types.evaluation');
 
   return (
     <div>
       <PageHeader
-        title={`${TYPE_LABELS[data.type] || data.type} — ${data.matiere_nom}`}
+        title={`${typeLabel} — ${data.matiere_nom}`}
         subtitle={`${data.classe_nom} · T${data.trimestre} · ${data.date}`}
       >
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <Badge variant={STATUT_VARIANT[data.statut] || 'default'}>
-            {data.statut === 'publie' ? 'Publié' : 'Brouillon'}
-          </Badge>
-          <Button as="link" to="/evaluations" variant="secondary">← Retour</Button>
+          <Badge
+            variant={data.statut === 'brouillon' ? 'warning' : 'success'}
+            label={data.statut === 'publie' ? t('evaluations.detail.statuts.publie') : t('evaluations.detail.statuts.brouillon')}
+          />
+          <Button as="link" to="/evaluations" variant="secondary">{t('evaluations.retour')}</Button>
         </div>
       </PageHeader>
 
       <div style={{ maxWidth: 720 }}>
         {saveMessage && (
-          <Alert variant={saveMessage.startsWith('Erreur') ? 'error' : 'success'} style={{ marginBottom: '1rem' }}>
+          <Alert variant={saveMessage === t('evaluations.detail.erreurEnregistrement') ? 'error' : 'success'}>
             {saveMessage}
           </Alert>
         )}
 
         {data.statut === 'publie' && (
-          <Alert variant="info" style={{ marginBottom: '1rem' }}>
-            Cette évaluation est publiée et en lecture seule.
+          <Alert variant="info">
+            {t('evaluations.detail.publiee')}
           </Alert>
         )}
 
@@ -113,19 +114,18 @@ export function EvaluationDetail() {
 
         {!readOnly && (
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
-            {saving && <span style={{ alignSelf: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Enregistrement…</span>}
+            {saving && <span style={{ alignSelf: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{t('evaluations.detail.enregistrement')}</span>}
             <Button
               variant="primary"
               onClick={handlePublier}
               disabled={publishing}
               loading={publishing}
             >
-              Publier →
+              {t('evaluations.detail.publierBtn')}
             </Button>
           </div>
         )}
       </div>
-
     </div>
   );
 }
