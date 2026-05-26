@@ -156,11 +156,17 @@ export class ReadService {
   }
 
   // ============ CLASSE ELEVES ============
-  async getClasseEleves(classeId: string, page = 1, limit = 10, search = '', eleveId = '') {
-    const classe = await this.readClasseModel.findOne({ source_id: classeId }).exec();
+  async getClasseEleves(classeId: string, page = 1, limit = 10, search = '', eleveId = '', anneeLabel?: string) {
+    // Chercher la classe en tenant compte de l'année si fournie
+    const classeFilter: any = { source_id: classeId };
+    if (anneeLabel) classeFilter.annee_scolaire = anneeLabel;
+    const classe = await this.readClasseModel.findOne(classeFilter).exec();
     if (!classe) return null;
 
+    // Toujours filtrer les élèves par l'année de la classe
     const filter: any = { classe_id: classeId };
+    const annee = anneeLabel || (classe as any).annee_scolaire;
+    if (annee) filter.annee_scolaire = annee;
     if (eleveId) {
       filter.source_id = eleveId;
     } else if (search) {
@@ -195,19 +201,17 @@ export class ReadService {
 
   // ============ ELEVES LIST ============
   async getElevesList(page = 1, limit = 12, search = '', classeId = '', eleveId = '', anneeLabel?: string) {
+    const resolvedLabel = await this.resolveAnneeLabel(anneeLabel);
     const filter: any = {};
+    // Toujours filtrer par annee_scolaire pour isoler les années
+    if (resolvedLabel) filter.annee_scolaire = resolvedLabel;
     if (eleveId) {
       filter.source_id = eleveId;
     } else {
-      // Si anneeLabel fourni, limiter aux élèves des classes de cette année
-      if (anneeLabel && !classeId) {
-        const resolvedLabel = await this.resolveAnneeLabel(anneeLabel);
-        if (resolvedLabel) {
-          const classeIds = (await this.readClasseModel.find({ annee_scolaire: resolvedLabel }, { source_id: 1 }).exec()).map(c => c.source_id);
-          filter.classe_id = { $in: classeIds };
-        }
-      } else if (classeId) {
+      if (classeId) {
         filter.classe_id = classeId;
+      } else if (resolvedLabel && !classeId) {
+        // Filtre année déjà appliqué via filter.annee_scolaire
       }
       if (search) {
         const tokens = search.trim().split(/\s+/);
@@ -366,6 +370,7 @@ export class ReadService {
     const eleveFilter: any = { classe_id: classeId };
     const noteFilter: any = { matiere_id: matiereId, trimestre };
     if (anneeLabel) {
+      noteFilter.annee_scolaire = anneeLabel;
       const classeDoc = await this.readClasseModel.findOne({ source_id: classeId, annee_scolaire: anneeLabel }).exec();
       if (classeDoc) eleveFilter.classe_id = classeDoc.source_id;
     }
@@ -403,16 +408,19 @@ export class ReadService {
   }
 
   // ============ BULLETIN ============
-  async getBulletin(eleveId: string, trimestre: number) {
-    const eleve = await this.readEleveModel.findOne({ source_id: eleveId }).exec();
+  async getBulletin(eleveId: string, trimestre: number, anneeLabel?: string) {
+    const resolvedLabel = await this.resolveAnneeLabel(anneeLabel);
+    // En mode archive, chercher l'entrée read_eleve pour cette année spécifique
+    const eleveFilter: any = { source_id: eleveId };
+    if (resolvedLabel) eleveFilter.annee_scolaire = resolvedLabel;
+    const eleve = await this.readEleveModel.findOne(eleveFilter).exec();
     if (!eleve) return null;
     const classe = await this.readClasseModel.findOne({ source_id: eleve.classe_id }).exec();
 
-    // Lire les notes tagées par type (ds/evaluation) pour ce trimestre
-    const notes = await this.readNoteModel.find({
-      eleve_id: eleveId,
-      trimestre,
-    }).exec();
+    // Filtrer les notes par annee_scolaire si fourni
+    const noteFilter: any = { eleve_id: eleveId, trimestre };
+    if (resolvedLabel) noteFilter.annee_scolaire = resolvedLabel;
+    const notes = await this.readNoteModel.find(noteFilter).exec();
 
     const matieres = await this.readMatiereModel.find().exec();
     const niveau = (classe?.toJSON() as any)?.niveau;
@@ -620,10 +628,10 @@ export class ReadService {
   }
 
   // ============ CLASSES D'UN NIVEAU + SUGGESTION ============
-  async getClassesParNiveau(niveau: string, dateNaissance?: string) {
-    const anneeLabel = await this.getAnneeActiveLabel();
+  async getClassesParNiveau(niveau: string, dateNaissance?: string, anneeLabel?: string) {
+    const resolvedLabel = await this.resolveAnneeLabel(anneeLabel);
     const filter: any = { niveau };
-    if (anneeLabel) filter.annee_scolaire = anneeLabel;
+    if (resolvedLabel) filter.annee_scolaire = resolvedLabel;
     const classes = await this.readClasseModel.find(filter).exec();
     const sorted = classes.map(c => c.toJSON() as any).sort((a: any, b: any) => a.nom.localeCompare(b.nom));
 
@@ -671,8 +679,12 @@ export class ReadService {
   }
 
   // ============ FICHE ÉLÈVE ============
-  async getEleveFiche(eleveId: string) {
-    const eleve = await this.readEleveModel.findOne({ source_id: eleveId }).exec();
+  async getEleveFiche(eleveId: string, anneeLabel?: string) {
+    const resolvedLabel = await this.resolveAnneeLabel(anneeLabel);
+    // En mode archive, chercher l'entrée read_eleve pour cette année spécifique
+    const eleveFilter: any = { source_id: eleveId };
+    if (resolvedLabel) eleveFilter.annee_scolaire = resolvedLabel;
+    const eleve = await this.readEleveModel.findOne(eleveFilter).exec();
     if (!eleve) return null;
 
     const [classe, creneauxClasse, anneeActive] = await Promise.all([

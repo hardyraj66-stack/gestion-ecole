@@ -176,17 +176,50 @@ export class ViewBuilderService implements OnModuleInit {
       this.classeModel.find().lean().exec(),
     ]);
     const cm = new Map(classes.map(c => [c._id.toString(), c]));
-    const ops = eleves.map(e => {
+
+    const ops: any[] = [];
+
+    for (const e of eleves) {
       const sid = e._id.toString();
-      const cl = cm.get(e.classe_id);
-      return { updateOne: { filter: { source_id: sid }, update: { $set: {
-        source_id: sid, nom: e.nom, prenom: e.prenom, date_naissance: e.date_naissance,
-        genre: e.genre, classe_id: e.classe_id, email: e.email || '', telephone: e.telephone || '', adresse: e.adresse || '',
-        classe_nom: cl?.nom || '', classe_niveau: cl?.niveau || '',
+      const base = {
+        nom: e.nom, prenom: e.prenom, date_naissance: e.date_naissance,
+        genre: e.genre, email: e.email || '', telephone: e.telephone || '', adresse: e.adresse || '',
         pere: (e as any).pere || null, mere: (e as any).mere || null, tuteur: (e as any).tuteur || null,
         statut: (e as any).statut || 'actif',
-      }}, upsert: true }};
-    });
+      };
+
+      // Entrée pour chaque année via historique_classes
+      const historique = (e as any).historique_classes as any[] || [];
+      for (const h of historique) {
+        ops.push({ updateOne: {
+          filter: { source_id: sid, annee_scolaire: h.annee_scolaire },
+          update: { $set: {
+            source_id: sid, annee_scolaire: h.annee_scolaire,
+            classe_id: h.classe_id, classe_nom: h.classe_nom || '', classe_niveau: h.niveau || '',
+            ...base,
+          }},
+          upsert: true,
+        }});
+      }
+
+      // Entrée pour l'année courante (classe_id actuelle)
+      const cl = cm.get(e.classe_id);
+      const anneeActuelle = cl ? (cl as any).annee_scolaire || '' : '';
+      const dejaDansHistorique = historique.some((h: any) => h.annee_scolaire === anneeActuelle);
+      if (!dejaDansHistorique) {
+        ops.push({ updateOne: {
+          filter: { source_id: sid, annee_scolaire: anneeActuelle },
+          update: { $set: {
+            source_id: sid, annee_scolaire: anneeActuelle,
+            classe_id: e.classe_id, classe_nom: cl?.nom || '', classe_niveau: (cl as any)?.niveau || '',
+            ...base,
+          }},
+          upsert: true,
+        }});
+      }
+    }
+
+    // Supprimer les entrées pour des élèves supprimés
     const ids = eleves.map(e => e._id.toString());
     await this.readEleveModel.deleteMany({ source_id: { $nin: ids } }).exec();
     if (ops.length > 0) await this.readEleveModel.bulkWrite(ops);
@@ -221,6 +254,7 @@ export class ViewBuilderService implements OnModuleInit {
         date: n.date, commentaire: n.commentaire || '',
         eleve_nom: el?.nom || '', eleve_prenom: el?.prenom || '',
         matiere_nom: mat?.nom || '', matiere_code: mat?.code || '',
+        annee_scolaire: (n as any).annee_scolaire || '',
       }}, upsert: true }};
     });
     const ids = notes.map(n => n._id.toString());

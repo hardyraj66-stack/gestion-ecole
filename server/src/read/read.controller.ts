@@ -28,8 +28,9 @@ export class ReadController {
     @Param('id') id: string,
     @Query('page') p?: string, @Query('limit') l?: string,
     @Query('search') s?: string, @Query('eleveId') eleveId?: string,
+    @Query('anneeLabel') anneeLabel?: string,
   ) {
-    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '', eleveId || '');
+    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '', eleveId || '', anneeLabel || undefined);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -94,8 +95,12 @@ export class ReadController {
   getNotesPage() { return this.service.getNotesPage(); }
 
   @Get('bulletin/:eleveId')
-  async getBulletin(@Param('eleveId') id: string, @Query('trimestre') t: string) {
-    const data = await this.service.getBulletin(id, parseInt(t) || 1);
+  async getBulletin(
+    @Param('eleveId') id: string,
+    @Query('trimestre') t: string,
+    @Query('anneeLabel') anneeLabel?: string,
+  ) {
+    const data = await this.service.getBulletin(id, parseInt(t) || 1, anneeLabel || undefined);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -149,8 +154,8 @@ export class ReadController {
   getCreateEleveData() { return this.service.getCreateEleveData(); }
 
   @Get('eleves/:id/fiche')
-  async getEleveFiche(@Param('id') id: string) {
-    const data = await this.service.getEleveFiche(id);
+  async getEleveFiche(@Param('id') id: string, @Query('anneeLabel') anneeLabel?: string) {
+    const data = await this.service.getEleveFiche(id, anneeLabel || undefined);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -161,8 +166,12 @@ export class ReadController {
   }
 
   @Get('niveaux/:niveau/classes')
-  getClassesParNiveau(@Param('niveau') niveau: string, @Query('dateNaissance') dn?: string) {
-    return this.service.getClassesParNiveau(decodeURIComponent(niveau), dn);
+  getClassesParNiveau(
+    @Param('niveau') niveau: string,
+    @Query('dateNaissance') dn?: string,
+    @Query('anneeLabel') anneeLabel?: string,
+  ) {
+    return this.service.getClassesParNiveau(decodeURIComponent(niveau), dn, anneeLabel || undefined);
   }
 
   @Get('professeurs/actifs')

@@ -108,7 +108,46 @@ export class AnneesService {
 
     await annee.save();
     await this.periodesService.initForAnnee(annee.label, annee.debut);
+
+    // Snapshot des élèves actifs dans historique_classes pour l'année qui démarre
+    await this.snapshotElevesHistorique(annee.label);
+
     return annee;
+  }
+
+  private async snapshotElevesHistorique(anneeLabel: string) {
+    const classes = await this.classeModel.find({ annee_scolaire: anneeLabel }).lean().exec();
+    const classeIds = classes.map(c => c._id.toString());
+    const classeMap = new Map(classes.map(c => [c._id.toString(), c]));
+
+    const eleves = await this.eleveModel.find({ classe_id: { $in: classeIds } }).lean().exec();
+
+    const ops = [];
+    for (const e of eleves) {
+      const historique = (e as any).historique_classes as any[] || [];
+      const dejaPourAnnee = historique.some((h: any) => h.annee_scolaire === anneeLabel);
+      if (!dejaPourAnnee) {
+        const cl = classeMap.get(e.classe_id);
+        ops.push({
+          updateOne: {
+            filter: { _id: e._id },
+            update: {
+              $push: {
+                historique_classes: {
+                  annee_scolaire: anneeLabel,
+                  classe_id: e.classe_id,
+                  classe_nom: (cl as any)?.nom || '',
+                  niveau: (cl as any)?.niveau || '',
+                  statut: (e as any).statut || 'actif',
+                },
+              },
+            },
+          },
+        });
+      }
+    }
+
+    if (ops.length > 0) await this.eleveModel.bulkWrite(ops as any);
   }
 
   async terminer(id: string): Promise<{ terminee: AnneeScolaire; nouvelle: AnneeScolaire }> {

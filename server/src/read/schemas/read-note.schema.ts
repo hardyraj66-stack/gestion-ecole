@@ -21,6 +21,7 @@ export class ReadNote extends Document {
   @Prop({ default: '' }) eleve_prenom: string;
   @Prop({ default: '' }) matiere_nom: string;
   @Prop({ default: '' }) matiere_code: string;
+  @Prop({ default: '' }) annee_scolaire: string;
 }
 
 export const ReadNoteSchema = SchemaFactory.createForClass(ReadNote);

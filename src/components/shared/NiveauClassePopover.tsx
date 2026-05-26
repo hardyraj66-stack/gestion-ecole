@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { readApi } from '../../services/readApi';
+import { useViewing } from '../../contexts/ViewingContext';
 import { Popover } from './Popover';
 import { Badge } from '../ui/Badge';
 import { Icon } from './Icon';
@@ -22,6 +23,7 @@ export function NiveauClassePopover({
   onChange,
   showCapacite = true,
 }: NiveauClassePopoverProps) {
+  const { viewingLabel } = useViewing();
   const [niveaux, setNiveaux] = useState<NiveauItem[]>([]);
   const [classes, setClasses] = useState<ClasseItem[]>([]);
   const [loadingNiveaux, setLoadingNiveaux] = useState(false);
@@ -29,14 +31,18 @@ export function NiveauClassePopover({
   const [popoverNiveau, setPopoverNiveau] = useState(false);
   const [popoverClasses, setPopoverClasses] = useState(false);
   const fetchedNiveaux = useRef(false);
+  const fetchedForLabel = useRef<string | null>(undefined as any);
   const internalNiveau = useRef(selectedNiveau);
 
   const openNiveauPopover = async () => {
     setPopoverNiveau(true);
-    if (fetchedNiveaux.current) return;
+    // Re-fetch si l'anneeLabel a changé (bascule archive ↔ live)
+    const currentLabel = viewingLabel ?? null;
+    if (fetchedNiveaux.current && fetchedForLabel.current === currentLabel) return;
     fetchedNiveaux.current = true;
+    fetchedForLabel.current = currentLabel;
     setLoadingNiveaux(true);
-    const data = await readApi.niveaux();
+    const data = await readApi.niveaux(viewingLabel ?? undefined);
     if (Array.isArray(data)) setNiveaux(data);
     setLoadingNiveaux(false);
   };
@@ -46,7 +52,7 @@ export function NiveauClassePopover({
     setPopoverNiveau(false);
     setLoadingClasses(true);
     setPopoverClasses(true);
-    const data = await readApi.classesParNiveau(niveau);
+    const data = await readApi.classesParNiveau(niveau, undefined, viewingLabel ?? undefined);
     if (data?.classes) setClasses(data.classes);
     setLoadingClasses(false);
   };

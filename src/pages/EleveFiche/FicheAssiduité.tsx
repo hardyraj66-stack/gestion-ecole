@@ -129,24 +129,26 @@ function AssiduiteSection({ title, type, items, eleveId, readOnly, onRefresh }: 
 
 interface Props {
   eleveId: string;
+  anneeLabel?: string;
   readOnly: boolean;
 }
 
-export function FicheAssiduité({ eleveId, readOnly }: Props) {
+export function FicheAssiduité({ eleveId, anneeLabel, readOnly }: Props) {
   const { t } = useTranslation();
   const [absences, setAbsences] = useState<Absence[]>([]);
   const [retards, setRetards] = useState<Absence[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    const qs = anneeLabel ? `?anneeLabel=${encodeURIComponent(anneeLabel)}` : '';
     const [ra, rr] = await Promise.all([
-      fetch(`${API_BASE_URL}/suivi/${eleveId}/absences`),
-      fetch(`${API_BASE_URL}/suivi/${eleveId}/retards`),
+      fetch(`${API_BASE_URL}/suivi/${eleveId}/absences${qs}`),
+      fetch(`${API_BASE_URL}/suivi/${eleveId}/retards${qs}`),
     ]);
     if (ra.ok) setAbsences(await ra.json());
     if (rr.ok) setRetards(await rr.json());
     setLoading(false);
-  }, [eleveId]);
+  }, [eleveId, anneeLabel]);
 
   useEffect(() => { load(); }, [load]);
 

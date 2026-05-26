@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EleveStatut } from '../../types';
 import { useEleveFicheData } from '../../hooks/usePageData';
+import { useViewing } from '../../contexts/ViewingContext';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { Button } from '../../components/shared/Button';
@@ -18,9 +19,12 @@ import { FicheStatut } from './FicheStatut';
 export function EleveFiche() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
+  const { viewingLabel } = useViewing();
   const { data, loading, error, readOnly } = useEleveFicheData(id || '');
   const [statut, setStatut] = useState<EleveStatut | null>(null);
   const [nbAvertissements, setNbAvertissements] = useState(0);
+  // anneeLabel passé aux sous-composants pour isoler les données de suivi par année
+  const anneeLabel = viewingLabel ?? undefined;
 
   if (loading || !data) return <PageLoader />;
   if (error) return <Alert variant="error">{t('fiche.erreurChargement')}</Alert>;
@@ -69,10 +73,11 @@ export function EleveFiche() {
           <FicheAvertissements
             eleveId={id!}
             anneeActive={anneeActive}
+            anneeLabel={anneeLabel}
             readOnly={readOnly}
             onCountChange={setNbAvertissements}
           />
-          <FicheAssiduité eleveId={id!} readOnly={readOnly} />
+          <FicheAssiduité eleveId={id!} anneeLabel={anneeLabel} readOnly={readOnly} />
         </div>
       </div>
     </div>

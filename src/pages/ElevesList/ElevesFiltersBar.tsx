@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readApi } from '../../services/readApi';
+import { useViewing } from '../../contexts/ViewingContext';
 import { FilterBar } from '../../components/shared/FilterBar';
 import { NiveauClassePopover } from '../../components/shared/NiveauClassePopover';
 import { SearchInputSuggestions, Suggestion } from '../../components/shared/SearchInputSuggestions';
@@ -32,16 +33,17 @@ export function ElevesFiltersBar({
   hasEleveFilter,
 }: ElevesFiltersBarProps) {
   const { t } = useTranslation();
+  const { viewingLabel } = useViewing();
 
   const fetchSuggestions = useCallback(async (query: string): Promise<Suggestion[]> => {
-    const data = await readApi.elevesList(1, 8, query, '');
+    const data = await readApi.elevesList(1, 8, query, '', undefined, viewingLabel ?? undefined);
     if (!data?.eleves) return [];
     return (data.eleves as any[]).map((e: any) => ({
       id: e.id,
       label: `${e.prenom} ${e.nom}`,
       sublabel: e.classe_nom || undefined,
     }));
-  }, []);
+  }, [viewingLabel]);
 
   const handleSuggestionSelect = (s: Suggestion) => {
     onSuggestionSelect(s.id);

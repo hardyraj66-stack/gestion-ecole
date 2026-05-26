@@ -14,7 +14,9 @@ export class Convocation extends Document {
   @Prop({ default: false }) effectuee: boolean;
   // avertissements liés au moment de la convocation (snapshot du count)
   @Prop({ default: 0 }) nb_avertissements: number;
+  @Prop({ default: '' }) annee_scolaire: string;
 }
 
 export const ConvocationSchema = SchemaFactory.createForClass(Convocation);
 ConvocationSchema.index({ eleve_id: 1 });
+ConvocationSchema.index({ eleve_id: 1, annee_scolaire: 1 });

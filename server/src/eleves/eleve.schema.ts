@@ -47,6 +47,21 @@ export class Eleve extends Document {
   // Statut de l'élève dans l'établissement
   @Prop({ required: true, enum: ['actif', 'exclu', 'parti'], default: 'actif' })
   statut: 'actif' | 'exclu' | 'parti';
+
+  // Historique des classes par année scolaire — alimenté lors de chaque demarrer()
+  @Prop({
+    type: [{ annee_scolaire: String, classe_id: String, classe_nom: String, niveau: String, statut: String }],
+    default: [],
+  })
+  historique_classes: Array<{
+    annee_scolaire: string;
+    classe_id: string;
+    classe_nom: string;
+    niveau: string;
+    statut: string;
+  }>;
 }
 
 export const EleveSchema = SchemaFactory.createForClass(Eleve);
+EleveSchema.index({ classe_id: 1 });
+EleveSchema.index({ 'historique_classes.annee_scolaire': 1 });

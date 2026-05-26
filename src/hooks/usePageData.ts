@@ -108,8 +108,9 @@ export function useClassesListData(page = 1, search = '', niveau = '') {
 }
 
 export function useClasseElevesData(classeId: string, page = 1, search = '', eleveId = '') {
+  const { viewingLabel } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.classeEleves(classeId, page, 10, search, eleveId), [classeId, page, search, eleveId]),
+    useCallback(() => readApi.classeEleves(classeId, page, 10, search, eleveId, viewingLabel ?? undefined), [classeId, page, search, eleveId, viewingLabel]),
     undefined, 'eleves',
   );
 }
@@ -164,15 +165,17 @@ export function useNotesFiltersData() {
 }
 
 export function useBulletinData(eleveId: string, trimestre: number) {
+  const { viewingLabel } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.bulletin(eleveId, trimestre), [eleveId, trimestre]),
+    useCallback(() => readApi.bulletin(eleveId, trimestre, viewingLabel ?? undefined), [eleveId, trimestre, viewingLabel]),
     undefined, 'notes',
   );
 }
 
 export function useEleveFicheData(eleveId: string) {
+  const { viewingLabel } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.eleveFiche(eleveId), [eleveId]),
+    useCallback(() => readApi.eleveFiche(eleveId, viewingLabel ?? undefined), [eleveId, viewingLabel]),
     undefined, 'eleves',
   );
 }

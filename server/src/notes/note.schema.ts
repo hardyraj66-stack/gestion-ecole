@@ -33,6 +33,9 @@ export class Note extends Document {
 
   @Prop({ default: false })
   annulee: boolean;
+
+  @Prop({ default: '' })
+  annee_scolaire: string;
 }
 
 export const NoteSchema = SchemaFactory.createForClass(Note);

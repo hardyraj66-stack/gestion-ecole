@@ -20,8 +20,8 @@ export const readApi = {
   classesList: (page?: number, limit?: number, search?: string, niveau?: string, anneeLabel?: string) =>
     get<any>(`/classes${qs({ page, limit, search, niveau, anneeLabel })}`),
 
-  classeEleves: (id: string, page?: number, limit?: number, search?: string, eleveId?: string) =>
-    get<any>(`/classes/${id}/eleves${qs({ page, limit, search, eleveId })}`),
+  classeEleves: (id: string, page?: number, limit?: number, search?: string, eleveId?: string, anneeLabel?: string) =>
+    get<any>(`/classes/${id}/eleves${qs({ page, limit, search, eleveId, anneeLabel })}`),
 
   elevesList: (page?: number, limit?: number, search?: string, classeId?: string, eleveId?: string, anneeLabel?: string) =>
     get<any>(`/eleves${qs({ page, limit, search, classeId, eleveId, anneeLabel })}`),
@@ -44,18 +44,19 @@ export const readApi = {
   notesEleves: (classeId: string, matiereId: string, trimestre: number, anneeLabel?: string) =>
     get<any>(`/notes/eleves${qs({ classeId, matiereId, trimestre, anneeLabel })}`),
 
-  bulletin: (eleveId: string, trimestre: number) =>
-    get<any>(`/bulletin/${eleveId}?trimestre=${trimestre}`),
+  bulletin: (eleveId: string, trimestre: number, anneeLabel?: string) =>
+    get<any>(`/bulletin/${eleveId}${qs({ trimestre, anneeLabel })}`),
 
   anneeSnapshot: (id: string) => get<any>(`/annees/${id}/snapshot`),
-  eleveFiche: (id: string) => get<any>(`/eleves/${id}/fiche`),
+  eleveFiche: (id: string, anneeLabel?: string) =>
+    get<any>(`/eleves/${id}/fiche${qs({ anneeLabel })}`),
   createClasseData: () => get<any>('/create-classe'),
   createEleveData: () => get<any>('/create-eleve'),
 
   niveaux: (anneeLabel?: string) =>
     get<any>(`/niveaux${qs({ anneeLabel })}`),
-  classesParNiveau: (niveau: string, dateNaissance?: string) =>
-    get<any>(`/niveaux/${encodeURIComponent(niveau)}/classes${dateNaissance ? `?dateNaissance=${dateNaissance}` : ''}`),
+  classesParNiveau: (niveau: string, dateNaissance?: string, anneeLabel?: string) =>
+    get<any>(`/niveaux/${encodeURIComponent(niveau)}/classes${qs({ dateNaissance, anneeLabel })}`),
 
   professeurs: (page = 1, limit = 20, search = '') =>
     get<any>(`/professeurs${qs({ page, limit, search: search || undefined })}`),

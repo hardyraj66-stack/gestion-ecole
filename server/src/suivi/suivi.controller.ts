@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, NotFoundException } from '@nestjs/common';
 import { SuiviService } from './suivi.service';
 
 @Controller('suivi')
@@ -7,8 +7,8 @@ export class SuiviController {
 
   // ===== AVERTISSEMENTS =====
   @Get(':eleveId/avertissements')
-  getAvertissements(@Param('eleveId') id: string) {
-    return this.service.findAvertissements(id);
+  getAvertissements(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
+    return this.service.findAvertissements(id, anneeLabel || undefined);
   }
 
   @Post(':eleveId/avertissements')
@@ -25,8 +25,8 @@ export class SuiviController {
 
   // ===== ABSENCES =====
   @Get(':eleveId/absences')
-  getAbsences(@Param('eleveId') id: string) {
-    return this.service.findAbsences(id);
+  getAbsences(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
+    return this.service.findAbsences(id, anneeLabel || undefined);
   }
 
   @Post(':eleveId/absences')
@@ -36,8 +36,8 @@ export class SuiviController {
 
   // ===== RETARDS =====
   @Get(':eleveId/retards')
-  getRetards(@Param('eleveId') id: string) {
-    return this.service.findRetards(id);
+  getRetards(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
+    return this.service.findRetards(id, anneeLabel || undefined);
   }
 
   @Post(':eleveId/retards')
@@ -54,8 +54,8 @@ export class SuiviController {
 
   // ===== CONVOCATIONS PARENTS =====
   @Get(':eleveId/convocations')
-  getConvocations(@Param('eleveId') id: string) {
-    return this.service.findConvocations(id);
+  getConvocations(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
+    return this.service.findConvocations(id, anneeLabel || undefined);
   }
 
   @Post(':eleveId/convocations')
