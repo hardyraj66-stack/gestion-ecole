@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Eleve } from '../../types';
 import { Card } from '../../components/shared/Card';
 import { Avatar } from '../../components/shared/Avatar';
@@ -27,15 +28,17 @@ function getNoteColor(note: number | null): string {
 }
 
 export function NotesTable({ rows, onNoteChange, onCommentChange, readOnly }: NotesTableProps) {
+  const { t } = useTranslation();
+
   return (
     <Card padding="none">
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell header>Élève</TableCell>
-            <TableCell header>Note /20</TableCell>
-            <TableCell header>Commentaire</TableCell>
-            <TableCell header>Statut</TableCell>
+            <TableCell header>{t('notes.table.eleve')}</TableCell>
+            <TableCell header>{t('notes.table.noteSur')}</TableCell>
+            <TableCell header>{t('notes.table.commentaire')}</TableCell>
+            <TableCell header>{t('notes.table.statut')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -63,11 +66,11 @@ export function NotesTable({ rows, onNoteChange, onCommentChange, readOnly }: No
                   <input type="text"
                     className={`comment-field ${readOnly ? 'comment-field-readonly' : ''}`}
                     value={row.commentaire} onChange={e => { if (readOnly) return; onCommentChange(row.eleve.id, e.target.value); }}
-                    placeholder={readOnly ? (row.commentaire || '—') : 'Commentaire…'} disabled={readOnly} />
+                    placeholder={readOnly ? (row.commentaire || '—') : t('notes.table.commentairePlaceholder')} disabled={readOnly} />
                 </TableCell>
                 <TableCell>
-                  {row.existingId ? <Badge label="Existante" variant="default" /> :
-                   row.note !== null ? <Badge label="Nouvelle" variant="success" /> :
+                  {row.existingId ? <Badge label={t('notes.table.existante')} variant="default" /> :
+                   row.note !== null ? <Badge label={t('notes.table.nouvelle')} variant="success" /> :
                    <span style={{ color: 'var(--text-muted)' }}>—</span>}
                 </TableCell>
               </TableRow>

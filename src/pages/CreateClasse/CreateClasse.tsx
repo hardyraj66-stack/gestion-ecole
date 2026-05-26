@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useClasses } from '../../contexts/ClasseContext';
 import { useSalles } from '../../contexts/SalleContext';
 import { useViewing } from '../../contexts/ViewingContext';
@@ -15,17 +16,18 @@ import { SalleType } from '../../types';
 import { readApi } from '../../services/readApi';
 import { getTypeLabel } from '../../utils/helpers';
 
-const SALLE_TYPES: SelectOption[] = [
-  { value: 'fixe', label: 'Salle fixe (toujours la même)' },
-  { value: 'variable', label: 'Salle variable (selon l\'emploi du temps)' },
-];
-
 export function CreateClasse() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isViewingArchive } = useViewing();
   const { create } = useClasses();
   const { salles, loading: sallesLoading, getAll: fetchSalles } = useSalles();
   const confirm = useConfirm();
+
+  const SALLE_TYPES: SelectOption[] = [
+    { value: 'fixe', label: t('classes.form.salleFixe') },
+    { value: 'variable', label: t('classes.form.salleVariableLabel') },
+  ];
 
   const [niveauxOptions, setNiveauxOptions] = useState<SelectOption[]>([]);
   const [nom, setNom] = useState('');
@@ -33,7 +35,6 @@ export function CreateClasse() {
   const [capacite, setCapacite] = useState(30);
   const [salleType, setSalleType] = useState<SalleType>('fixe');
   const [salleId, setSalleId] = useState('');
-
   const [sallesOccupees, setSallesOccupees] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -53,7 +54,6 @@ export function CreateClasse() {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     fetchSalles();
-    // Récupère toutes les salles déjà assignées en fixe
     fetch('http://localhost:3000/read/classes?limit=1000')
       .then(r => r.json())
       .then((res: any) => {
@@ -66,7 +66,6 @@ export function CreateClasse() {
   useEffect(() => {
     readApi.niveaux().then((res: any) => {
       if (res && Array.isArray(res)) {
-        // Niveaux configurés en priorité, sinon tous (orphelins depuis les classes)
         const all = res.map((n: any) => n.nom ?? n.niveau).filter(Boolean);
         const opts: SelectOption[] = all.map((n: string) => ({ value: n, label: n }));
         setNiveauxOptions(opts);
@@ -89,15 +88,15 @@ export function CreateClasse() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nom.trim()) { setError('Le nom est obligatoire.'); return; }
+    if (!nom.trim()) { setError(t('classes.erreurs.nomObligatoire')); return; }
 
     if (isFixe) {
-      if (!salleId || !selectedSalle) { setError('Sélectionnez une salle.'); return; }
+      if (!salleId || !selectedSalle) { setError(t('classes.erreurs.salleObligatoire')); return; }
       if (capacite > selectedSalle.capacite) {
         const ok = await confirm({
-          title: 'Capacité supérieure à la salle',
-          message: `La salle « ${selectedSalle.nom} » a ${selectedSalle.capacite} places mais vous définissez ${capacite} élèves.\n\nContinuer ?`,
-          confirmText: 'Confirmer', variant: 'warning',
+          title: t('classes.erreurs.capaciteDepassee'),
+          message: t('classes.confirmCapacite', { nom: selectedSalle.nom, capacite: selectedSalle.capacite, saisi: capacite }),
+          confirmText: t('common.confirmer'), variant: 'warning',
         });
         if (!ok) return;
       }
@@ -113,49 +112,49 @@ export function CreateClasse() {
 
   return (
     <div>
-      <PageHeader title="Nouvelle classe" subtitle="Créer une nouvelle classe">
-        <Button as="link" to="/classes" variant="secondary">← Retour</Button>
+      <PageHeader title={t('classes.creer.titre')} subtitle={t('classes.creer.sousTitre')}>
+        <Button as="link" to="/classes" variant="secondary">{t('common.retour')}</Button>
       </PageHeader>
 
       <Card style={{ maxWidth: '600px' }}>
-        {success && <Alert variant="success">Classe créée avec succès ! Redirection…</Alert>}
+        {success && <Alert variant="success">{t('classes.creer.succes')}</Alert>}
         {error && <Alert variant="error">{error}</Alert>}
 
         <form onSubmit={handleSubmit}>
-          <Input label="Nom de la classe *" value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex : 6ème A" required />
+          <Input label={t('classes.form.nom')} value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex : 6ème A" required />
 
           <FormGrid>
             {niveauxOptions.length === 0
-              ? <Select label="Niveau *" value="" options={[]} placeholder="Chargement…" disabled />
-              : <Select label="Niveau *" value={niveau} onChange={e => setNiveau(e.target.value)} options={niveauxOptions} />
+              ? <Select label={t('classes.form.niveau')} value="" options={[]} placeholder={t('common.chargement')} disabled />
+              : <Select label={t('classes.form.niveau')} value={niveau} onChange={e => setNiveau(e.target.value)} options={niveauxOptions} />
             }
           </FormGrid>
+
           <div style={{ padding: '0.5rem 0.85rem', marginBottom: '1rem', fontSize: '0.85rem',
             background: 'var(--info-light)', border: '1px solid #a5f3fc', borderRadius: 'var(--radius-sm)', color: 'var(--info)',
           }}>
-            La classe sera automatiquement créée pour l'année scolaire active.
+            {t('classes.creer.infoAnnee')}
           </div>
 
-          <Input label="Capacité maximale *" type="number" value={capacite} onChange={e => setCapacite(Number(e.target.value))} min={1} max={200} />
+          <Input label={t('classes.form.capacite')} type="number" value={capacite} onChange={e => setCapacite(Number(e.target.value))} min={1} max={200} />
 
-          <Select label="Mode de salle *" value={salleType} onChange={e => setSalleType(e.target.value as SalleType)} options={SALLE_TYPES} />
+          <Select label={t('classes.form.modeSalle')} value={salleType} onChange={e => setSalleType(e.target.value as SalleType)} options={SALLE_TYPES} />
 
-          {/* Salle visible UNIQUEMENT en mode fixe */}
           {isFixe && (
             <>
               {sallesLoading ? (
-                <Select label="Salle assignée *" value="" options={[]} placeholder="Chargement…" disabled hint="Récupération en cours…" />
+                <Select label={t('classes.form.salleAssignee')} value="" options={[]} placeholder={t('common.chargement')} disabled />
               ) : salles.length === 0 ? (
                 <div className="form-group">
-                  <label className="form-label">Salle assignée *</label>
-                  <select disabled><option>Aucune salle disponible</option></select>
+                  <label className="form-label">{t('classes.form.salleAssignee')}</label>
+                  <select disabled><option>{t('classes.creer.aucuneSalle')}</option></select>
                   <p className="form-hint">
-                    Aucune salle enregistrée.{' '}
-                    <Link to="/salles" style={{ color: 'var(--primary)' }}>Créer une salle</Link>
+                    {t('classes.creer.aucuneSalleInfo')}{' '}
+                    <Link to="/salles" style={{ color: 'var(--primary)' }}>{t('classes.creer.creerSalle')}</Link>
                   </p>
                 </div>
               ) : (
-                <Select label="Salle assignée *" value={salleId} onChange={e => setSalleId(e.target.value)} options={salleOptions} />
+                <Select label={t('classes.form.salleAssignee')} value={salleId} onChange={e => setSalleId(e.target.value)} options={salleOptions} />
               )}
 
               {selectedSalle && (
@@ -164,8 +163,8 @@ export function CreateClasse() {
                   border: `1px solid ${capacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
                   color: capacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
                 }}>
-                  <strong>{selectedSalle.nom}</strong> — {selectedSalle.capacite} places
-                  {capacite > selectedSalle.capacite && <span> · ⚠ Dépassement de {capacite - selectedSalle.capacite}</span>}
+                  <strong>{selectedSalle.nom}</strong> — {t('classes.form.salleInfo', { nom: selectedSalle.nom, capacite: selectedSalle.capacite }).replace(selectedSalle.nom + ' — ', '')}
+                  {capacite > selectedSalle.capacite && <span> · {t('classes.form.depassementCreation', { val: capacite - selectedSalle.capacite })}</span>}
                 </div>
               )}
             </>
@@ -175,14 +174,14 @@ export function CreateClasse() {
             <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
               background: 'var(--info-light)', border: '1px solid #a5f3fc', color: 'var(--info)',
             }}>
-              En mode variable, la salle sera déterminée dynamiquement selon le planning.
+              {t('classes.form.salleVariableCreation')}
             </div>
           )}
 
           <FormActions>
-            <Button as="link" to="/classes" variant="secondary">Annuler</Button>
+            <Button as="link" to="/classes" variant="secondary">{t('common.annuler')}</Button>
             <Button type="submit" variant="primary" disabled={submitting || success || (isFixe && salles.length === 0)} loading={submitting}>
-              Créer la classe
+              {t('classes.creer.creerBtn')}
             </Button>
           </FormActions>
         </form>

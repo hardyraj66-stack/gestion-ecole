@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useSalles } from '../../contexts/SalleContext';
 import { useViewing } from '../../contexts/ViewingContext';
@@ -29,6 +30,7 @@ const typeColors: Record<TypeSalle, string> = {
 };
 
 export function SallesList() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isViewingArchive: readOnly } = useViewing();
   const { delete: deleteSalle } = useSalles();
@@ -48,8 +50,8 @@ export function SallesList() {
     setSearch(searchInput);
   }, [searchInput]);
 
-  const handleFilterType = (t: string) => {
-    setFilterType(t);
+  const handleFilterType = (typ: string) => {
+    setFilterType(typ);
     setPage(1);
   };
 
@@ -59,18 +61,18 @@ export function SallesList() {
 
     if (usage.utilisee) {
       const ok = await confirm({
-        title: 'Salle utilisée dans le planning',
-        message: `La salle « ${salle.nom} » est utilisée dans ${usage.creneaux_actifs} cours. Voulez-vous quand même la supprimer ? Les créneaux associés garderont leur ancienne référence.`,
-        confirmText: 'Supprimer quand même',
+        title: t('salles.salleUtilisee'),
+        message: t('salles.confirmSupprUsage', { nom: salle.nom, count: usage.creneaux_actifs }),
+        confirmText: t('salles.supprimerQuandMeme'),
         variant: 'danger',
       });
       if (!ok) return;
       await fetch(`${API_BASE_URL}/salles/${salle.id}?force=true`, { method: 'DELETE' });
     } else {
       const ok = await confirm({
-        title: 'Supprimer la salle',
-        message: `Êtes-vous sûr de vouloir supprimer « ${salle.nom} » ?`,
-        confirmText: 'Supprimer',
+        title: t('salles.supprimer'),
+        message: t('salles.confirmSupprimerSalle', { nom: salle.nom }),
+        confirmText: t('salles.supprimerBtn'),
         variant: 'danger',
       });
       if (!ok) return;
@@ -79,41 +81,40 @@ export function SallesList() {
   };
 
   if (loading || !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Problème de chargement des salles.</Alert>;
+  if (error) return <Alert variant="error">{t('salles.erreur')}</Alert>;
 
   const { items, total } = data;
 
   return (
     <div>
-      <PageHeader title="Salles" subtitle={`${total} salle(s)`}>
+      <PageHeader title={t('salles.titre')} subtitle={t('salles.nbSalles', { count: total })}>
         <ExportMenu
           csvUrl={`/export/salles/csv${filterType ? `?type=${filterType}` : ''}`}
           xlsxUrl={`/export/salles/xlsx${filterType ? `?type=${filterType}` : ''}`}
         />
         {!readOnly && (
           <Button variant="primary" onClick={() => navigate('/salles/nouvelle')}>
-            + Nouvelle salle
+            {t('salles.nouvelleSalle')}
           </Button>
         )}
       </PageHeader>
 
-      {readOnly && <Alert variant="warning" icon={false}>Archive — lecture seule</Alert>}
+      {readOnly && <Alert variant="warning" icon={false}>{t('salles.archiveLecture')}</Alert>}
 
-      {/* Filtres */}
       <div className="salles-filters">
         <div className="salles-search">
           <input
             className="input"
-            placeholder="Rechercher une salle..."
+            placeholder={t('salles.rechercher')}
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && applySearch()}
             style={{ maxWidth: 240 }}
           />
-          <Button variant="outline" size="sm" onClick={applySearch}>Rechercher</Button>
+          <Button variant="outline" size="sm" onClick={applySearch}>{t('salles.effectuerRecherche')}</Button>
           {search && (
             <Button variant="outline" size="sm" onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }}>
-              ✕ Effacer
+              {t('salles.effacer')}
             </Button>
           )}
         </div>
@@ -121,15 +122,15 @@ export function SallesList() {
           <button
             className={`salle-filter-btn${filterType === '' ? ' active' : ''}`}
             onClick={() => handleFilterType('')}
-          >Tous</button>
-          {TYPES_SALLE.map(t => (
+          >{t('salles.tous')}</button>
+          {TYPES_SALLE.map(typ => (
             <button
-              key={t.value}
-              className={`salle-filter-btn${filterType === t.value ? ' active' : ''}`}
-              style={filterType === t.value ? { borderColor: typeColors[t.value as TypeSalle], color: typeColors[t.value as TypeSalle], background: `${typeColors[t.value as TypeSalle]}12` } : {}}
-              onClick={() => handleFilterType(t.value)}
+              key={typ.value}
+              className={`salle-filter-btn${filterType === typ.value ? ' active' : ''}`}
+              style={filterType === typ.value ? { borderColor: typeColors[typ.value as TypeSalle], color: typeColors[typ.value as TypeSalle], background: `${typeColors[typ.value as TypeSalle]}12` } : {}}
+              onClick={() => handleFilterType(typ.value)}
             >
-              {t.label}
+              {typ.label}
             </button>
           ))}
         </div>
@@ -138,9 +139,9 @@ export function SallesList() {
       {total === 0 ? (
         <EmptyState
           icon={<Icon path={Icons.building} size={28} />}
-          message={search || filterType ? 'Aucune salle ne correspond aux filtres' : 'Aucune salle'}
+          message={search || filterType ? t('salles.aucuneSalleFiltres') : t('salles.aucuneSalle')}
           action={!readOnly && !search && !filterType ? (
-            <Button variant="primary" onClick={() => navigate('/salles/nouvelle')}>Créer une salle</Button>
+            <Button variant="primary" onClick={() => navigate('/salles/nouvelle')}>{t('salles.creerSalle')}</Button>
           ) : undefined}
         />
       ) : (

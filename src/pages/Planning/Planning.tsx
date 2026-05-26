@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { usePlanningClasses, usePlanningClasse } from '../../hooks/usePageData';
 import { useActivePeriodeData } from '../../hooks/usePeriodesData';
@@ -22,6 +23,7 @@ import { CreateModal, EditModal, MoveModal } from './PlanningModals';
 import { PlanningContextMenu, PlanningTooltip } from './PlanningOverlays';
 
 export function Planning() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [selectedClasseId, setSelectedClasseId] = useState<string>(id || '');
   const [openNiveau, setOpenNiveau] = useState<string | null>(null);
@@ -79,7 +81,6 @@ export function Planning() {
 
   const s = usePlanningState(classeCreneaux, allMatieres, selectedClasse, readOnly);
 
-  // Keyboard shortcuts — refs évitent le stale closure sans re-attacher à chaque rendu
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); s.handleUndoRef.current(); }
@@ -96,7 +97,7 @@ export function Planning() {
   };
 
   if (classesLoading) return <PageLoader />;
-  if (!classesData) return <Alert variant="error">Problème de chargement.</Alert>;
+  if (!classesData) return <Alert variant="error">{t('planning.problemeChargement')}</Alert>;
 
   const selectedNiveau = selectedClasse?.niveau || null;
 
@@ -106,7 +107,7 @@ export function Planning() {
       onMouseUp={() => { if (s.resizing) s.handleResizeEnd(); }}
       onClick={() => s.setContextMenu(null)}
     >
-      <PageHeader title="Planning" subtitle={selectedClasse ? selectedClasse.nom : 'Sélectionnez une classe'} />
+      <PageHeader title={t('planning.titre')} subtitle={selectedClasse ? selectedClasse.nom : t('planning.selectionnerClasse')} />
 
       {s.notification.msg && (
         <div className="planning-notification">
@@ -122,24 +123,23 @@ export function Planning() {
             className={`planning-toolbar-btn${s.undoStack.length === 0 ? ' disabled' : ''}`}
             onClick={s.handleUndo}
             disabled={s.undoStack.length === 0}
-            title="Annuler (Ctrl+Z)"
-          >↩ Annuler</button>
+            title={t('planning.annulerTooltip')}
+          >{t('planning.annuler')}</button>
           <button
             type="button"
             className={`planning-toolbar-btn${s.redoStack.length === 0 ? ' disabled' : ''}`}
             onClick={s.handleRedo}
             disabled={s.redoStack.length === 0}
-            title="Rétablir (Ctrl+Y)"
-          >↪ Rétablir</button>
-          <span className="planning-toolbar-hint">Clic → créer · Glisser → déplacer · Clic droit → options</span>
+            title={t('planning.retablirTooltip')}
+          >{t('planning.retablir')}</button>
+          <span className="planning-toolbar-hint">{t('planning.aide')}</span>
         </div>
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '1.25rem' }}>
-        {/* ── Sidebar ── */}
         <div>
           <Card>
-            <h3 className="planning-sidebar-title">Niveaux</h3>
+            <h3 className="planning-sidebar-title">{t('planning.niveaux')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               {niveaux.map(({ niveau, classes: nc }) => (
                 <Popover
@@ -176,7 +176,7 @@ export function Planning() {
             </div>
             {selectedClasse && (
               <div className="planning-sidebar-selection">
-                <div className="planning-sidebar-selection-label">Sélection</div>
+                <div className="planning-sidebar-selection-label">{t('planning.selection')}</div>
                 <div className="planning-sidebar-selection-name">{selectedClasse.nom}</div>
                 <div className="planning-sidebar-selection-sub">{selectedClasse.niveau} · {selectedClasse.salle}</div>
               </div>
@@ -184,18 +184,16 @@ export function Planning() {
           </Card>
         </div>
 
-        {/* ── Grid area ── */}
         <div>
           {!selectedClasseId ? (
-            <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message="Sélectionnez une classe" /></Card>
+            <Card><EmptyState icon={<Icon path={Icons.calendar} size={28} />} message={t('planning.selectionnerClasse')} /></Card>
           ) : !selectedClasse ? (
-            <Card><EmptyState icon={<Icon path={Icons.warning} size={28} />} message="Classe introuvable" /></Card>
+            <Card><EmptyState icon={<Icon path={Icons.warning} size={28} />} message={t('planning.classeIntrouvable')} /></Card>
           ) : (
             <>
-              {/* Bandeau période active */}
               {activePeriode && (() => {
                 const ap = activePeriode as any;
-                const typeLabel = ap.type === 'ds' ? 'DS' : 'Évaluation';
+                const typeLabel = ap.type === 'ds' ? t('notes.types.ds') : t('notes.types.evaluation');
                 const typeColor = ap.type === 'ds' ? '#2563eb' : '#0891b2';
                 const typeBg   = ap.type === 'ds' ? '#eff6ff' : '#ecfeff';
                 return (
@@ -215,13 +213,13 @@ export function Planning() {
                       {typeLabel}
                     </span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: typeColor }}>
-                      Période {typeLabel} — Trimestre {ap.trimestre} en cours
+                      {t('planning.periodeInfo', { type: typeLabel, trimestre: ap.trimestre })}
                     </span>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      {ap.date_debut} → {ap.date_fin}
+                      {t('planning.periodeDate', { debut: ap.date_debut, fin: ap.date_fin })}
                     </span>
                     <span style={{ marginLeft: 'auto', fontSize: '0.73rem', color: '#16a34a', fontWeight: 600 }}>
-                      Saisie des notes active
+                      {t('planning.saisieActive')}
                     </span>
                   </div>
                 );
@@ -229,11 +227,11 @@ export function Planning() {
 
               <Card style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                  <StatItem label="Classe" value={selectedClasse.nom} />
-                  <StatItem label="Créneaux" value={classeLoading && !classeData ? '…' : classeCreneaux.length} />
-                  <StatItem label="Heures/sem" value={classeLoading && !classeData ? '…' : `${totalHeures}h`} />
-                  <StatItem label="Mode" value={<Badge label={selectedClasse.salle_type === 'fixe' ? 'Fixe' : 'Variable'} variant={selectedClasse.salle_type === 'fixe' ? 'info' : 'warning'} />} />
-                  {!readOnly && <StatItem label="Historique" value={`${s.undoStack.length} action${s.undoStack.length !== 1 ? 's' : ''}`} />}
+                  <StatItem label={t('planning.stats.classe')} value={selectedClasse.nom} />
+                  <StatItem label={t('planning.stats.creneaux')} value={classeLoading && !classeData ? '…' : classeCreneaux.length} />
+                  <StatItem label={t('planning.stats.heuresSem')} value={classeLoading && !classeData ? '…' : `${totalHeures}h`} />
+                  <StatItem label={t('planning.stats.mode')} value={<Badge label={selectedClasse.salle_type === 'fixe' ? t('planning.stats.fixe') : t('planning.stats.variable')} variant={selectedClasse.salle_type === 'fixe' ? 'info' : 'warning'} />} />
+                  {!readOnly && <StatItem label={t('planning.stats.historique')} value={t('planning.historique', { count: s.undoStack.length })} />}
                 </div>
               </Card>
 
@@ -320,7 +318,7 @@ export function Planning() {
       />
 
       <PlanningContextMenu
-        contextMenu={s.contextMenu} 
+        contextMenu={s.contextMenu}
         onEdit={s.handleOpenEdit}
         onDuplicate={s.handleDuplicate}
         onDelete={s.handleDeleteCreneau}

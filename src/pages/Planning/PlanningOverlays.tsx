@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ContextMenuState, HoverState } from './planning.types';
 
 // ─── Context menu ─────────────────────────────────────────────────────────────
@@ -9,6 +10,7 @@ interface ContextMenuProps {
 }
 
 export function PlanningContextMenu({ contextMenu, onEdit, onDuplicate, onDelete }: ContextMenuProps) {
+  const { t } = useTranslation();
   if (!contextMenu) return null;
   return (
     <div
@@ -17,14 +19,14 @@ export function PlanningContextMenu({ contextMenu, onEdit, onDuplicate, onDelete
       onClick={e => e.stopPropagation()}
     >
       <button type="button" className="planning-ctx-item" onClick={() => onEdit(contextMenu.cr)}>
-        ✏️ Modifier
+        {t('planning.ctx.modifier')}
       </button>
       <button type="button" className="planning-ctx-item" onClick={() => onDuplicate(contextMenu.cr)}>
-        📋 Dupliquer
+        {t('planning.ctx.dupliquer')}
       </button>
       <div className="planning-ctx-separator" />
       <button type="button" className="planning-ctx-item planning-ctx-item-danger" onClick={() => onDelete(contextMenu.cr)}>
-        🗑 Supprimer
+        {t('planning.ctx.supprimer')}
       </button>
     </div>
   );
@@ -37,6 +39,7 @@ interface TooltipProps {
 }
 
 export function PlanningTooltip({ hoverCr, visible }: TooltipProps) {
+  const { t } = useTranslation();
   if (!visible || !hoverCr) return null;
   return (
     <div
@@ -50,7 +53,7 @@ export function PlanningTooltip({ hoverCr, visible }: TooltipProps) {
       <div className="planning-tooltip-row">📍 {hoverCr.cr.salle}</div>
       {hoverCr.cr.professeur_nom && <div className="planning-tooltip-row">👤 {hoverCr.cr.professeur_nom}</div>}
       <div className="planning-tooltip-row" style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.25rem' }}>
-        Clic droit pour plus d'options
+        {t('planning.tooltip.cliquer')}
       </div>
     </div>
   );

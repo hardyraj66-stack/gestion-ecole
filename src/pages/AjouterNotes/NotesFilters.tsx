@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Matiere } from '../../types';
 import { Card } from '../../components/shared/Card';
 import { Button } from '../../components/shared/Button';
@@ -30,6 +31,7 @@ export function NotesFilters({
   onLoad,
   loading,
 }: NotesFiltersProps) {
+  const { t } = useTranslation();
   const [matiereQuery, setMatiereQuery] = useState(selectedMatiereName);
 
   const fetchMatieresSuggestions = useCallback(async (query: string): Promise<Suggestion[]> => {
@@ -54,11 +56,11 @@ export function NotesFilters({
 
   return (
     <Card style={{ marginBottom: '1.5rem' }}>
-      <h3 className="card-title" style={{ marginBottom: '1rem' }}>Sélection</h3>
+      <h3 className="card-title" style={{ marginBottom: '1rem' }}>{t('notes.filtres.selection')}</h3>
 
       <div className="notes-filters-row">
         <div className="notes-filter-group">
-          <label className="notes-filter-label">Classe *</label>
+          <label className="notes-filter-label">{t('notes.filtres.classe')}</label>
           <NiveauClassePopover
             selectedNiveau={selectedNiveau}
             selectedClasseId={selectedClasseId}
@@ -69,9 +71,9 @@ export function NotesFilters({
         </div>
 
         <div className="notes-filter-group">
-          <label className="notes-filter-label">Matière *</label>
+          <label className="notes-filter-label">{t('notes.filtres.matiere')}</label>
           <SearchInputSuggestions
-            placeholder="Rechercher une matière…"
+            placeholder={t('notes.filtres.rechercher')}
             value={matiereQuery}
             onChange={handleMatiereQueryChange}
             onSelect={handleMatiereSelect}
@@ -87,7 +89,7 @@ export function NotesFilters({
             disabled={isDisabled}
             loading={loading}
           >
-            Charger les élèves →
+            {t('notes.filtres.charger')}
           </Button>
         </div>
       </div>

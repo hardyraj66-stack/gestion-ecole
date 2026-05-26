@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNotes } from '../../contexts/NoteContext';
 import { useNotesFiltersData } from '../../hooks/usePageData';
 import { useActivePeriodeData } from '../../hooks/usePeriodesData';
@@ -13,9 +14,8 @@ import { NotesStatsBar } from './NotesStatsBar';
 import { NotesTable, NoteRow } from './NotesTable';
 import { useViewing } from '../../contexts/ViewingContext';
 
-const TYPE_LABELS: Record<string, string> = { ds: 'DS', evaluation: 'Évaluation' };
-
 export function AjouterNotes() {
+  const { t } = useTranslation();
   const { data, loading } = useNotesFiltersData();
   const { data: activePeriode, loading: loadingPeriode } = useActivePeriodeData();
   const { isViewingArchive: readOnly } = useViewing();
@@ -31,6 +31,11 @@ export function AjouterNotes() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  const TYPE_LABELS: Record<string, string> = {
+    ds: t('notes.types.ds'),
+    evaluation: t('notes.types.evaluation'),
+  };
 
   const allMatieres = data?.matieres || [];
   const niveaux: any[] = data?.niveaux || [];
@@ -48,7 +53,6 @@ export function AjouterNotes() {
     return { filled: wv.length, total: rows.length, average: wv.length > 0 ? wv.reduce((s, r) => s + (r.note || 0), 0) / wv.length : null };
   }, [rows]);
 
-  // La période active détermine le trimestre et le type automatiquement
   const periode = activePeriode as any;
   const trimestre = periode?.trimestre ?? null;
 
@@ -80,7 +84,7 @@ export function AjouterNotes() {
     setError('');
     const res = await readApi.notesEleves(selectedClasseId, selectedMatiereId, trimestre);
     if (!res) {
-      setError('Erreur lors du chargement des élèves.');
+      setError(t('notes.erreurChargement'));
       setLoadingEleves(false);
       return;
     }
@@ -114,7 +118,7 @@ export function AjouterNotes() {
     const today = new Date().toISOString().split('T')[0];
     const invalid = rows.find(r => r.note !== null && (r.note < 0 || r.note > 20));
     if (invalid) {
-      setError(`La note de ${invalid.eleve.prenom} ${invalid.eleve.nom} est invalide (0 à 20).`);
+      setError(t('notes.erreurNote', { prenom: invalid.eleve.prenom, nom: invalid.eleve.nom }));
       setSaving(false);
       return;
     }
@@ -124,7 +128,6 @@ export function AjouterNotes() {
       for (let i = 0; i < updatedRows.length; i++) {
         const r = updatedRows[i];
         if (r.note !== null) {
-          // trimestre et type seront auto-taggés par le backend depuis la période active
           const d = { eleve_id: r.eleve.id, matiere_id: selectedMatiereId, valeur: r.note, trimestre, date: today, commentaire: r.commentaire || undefined };
           if (r.existingId && r.existingId !== 'saved') {
             await updateNote(r.existingId, d);
@@ -136,20 +139,19 @@ export function AjouterNotes() {
       }
       setRows(updatedRows);
       setSuccess(true);
-    } catch { setError('Erreur lors de la sauvegarde.'); }
+    } catch { setError(t('notes.erreurSauvegarde')); }
     setSaving(false);
   };
 
   const subtitle = selectedMatiereName && selectedClasseNom
-    ? `${selectedClasseNom} · ${selectedMatiereName}`
-    : 'Sélectionnez niveau, classe et matière';
+    ? t('notes.subtitleFull', { classeNom: selectedClasseNom, matiereName: selectedMatiereName })
+    : t('notes.subtitleDefault');
 
-  // Mode archive : lecture seule
   if (readOnly) {
     return (
       <div>
-        <PageHeader title="Notes" subtitle="Consultation (archive — lecture seule)" />
-        <Alert variant="warning" icon={false}>Année archivée — saisie désactivée.</Alert>
+        <PageHeader title={t('notes.titre')} subtitle={t('notes.titreArchive')} />
+        <Alert variant="warning" icon={false}>{t('notes.anneeArchivee')}</Alert>
         <NotesFilters
           matieres={matieres}
           selectedClasseId={selectedClasseId}
@@ -172,14 +174,12 @@ export function AjouterNotes() {
     );
   }
 
-  // Aucune période active : blocage
   if (!periode) {
     return (
       <div>
-        <PageHeader title="Saisie des notes" subtitle="Aucune période active" />
+        <PageHeader title={t('notes.titreSaisie')} subtitle={t('notes.aucunePeriodeActive')} />
         <Alert variant="warning">
-          La saisie des notes est bloquée. Aucune période d'évaluation n'est en cours.
-          Rendez-vous dans <strong>Périodes</strong> pour définir les dates des périodes DS et Évaluation.
+          {t('notes.blocagePeriode')}
         </Alert>
       </div>
     );
@@ -187,20 +187,19 @@ export function AjouterNotes() {
 
   return (
     <div>
-      <PageHeader title="Saisie des notes" subtitle={subtitle} />
+      <PageHeader title={t('notes.titreSaisie')} subtitle={subtitle} />
 
-      {/* Bandeau période active */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '0.75rem',
         background: 'var(--color-surface)', border: '1px solid var(--color-success)',
         borderRadius: 8, padding: '0.6rem 1rem', marginBottom: '1.25rem',
       }}>
-        <Badge variant="success" label="Période active" />
+        <Badge variant="success" label={t('notes.periodeActive')} />
         <strong style={{ fontSize: '0.9rem' }}>
-          {TYPE_LABELS[periode.type]} — Trimestre {periode.trimestre}
+          {TYPE_LABELS[periode.type]} — {t('notes.trimestre', { t: periode.trimestre })}
         </strong>
         <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
-          {periode.date_debut} → {periode.date_fin}
+          {t('notes.periodeDate', { debut: periode.date_debut, fin: periode.date_fin })}
         </span>
       </div>
 
@@ -217,14 +216,14 @@ export function AjouterNotes() {
         loading={loadingEleves}
       />
 
-      {success && <Alert variant="success">Notes enregistrées !</Alert>}
+      {success && <Alert variant="success">{t('notes.succes')}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
 
       {rows.length > 0 && (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <NotesStatsBar filled={classeStats.filled} total={classeStats.total} average={classeStats.average} />
-            <Button variant="primary" onClick={handleSave} loading={saving}>✓ Enregistrer</Button>
+            <Button variant="primary" onClick={handleSave} loading={saving}>{t('notes.enregistrer')}</Button>
           </div>
           <NotesTable rows={rows} onNoteChange={handleNoteChange} onCommentChange={handleCommentChange} />
         </>

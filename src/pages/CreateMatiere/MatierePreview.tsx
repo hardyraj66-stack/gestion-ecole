@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/ui/Badge';
 import { CoefficientNiveau } from '../../types';
 
@@ -10,9 +11,11 @@ interface MatierePreviewProps {
 }
 
 export function MatierePreview({ nom, code, coefficients, description, couleur }: MatierePreviewProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="preview-card" style={{ borderTopColor: couleur }}>
-      <div className="preview-title">Aperçu</div>
+      <div className="preview-title">{t('matierePreview.apercu')}</div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
         <div
@@ -23,10 +26,10 @@ export function MatierePreview({ nom, code, coefficients, description, couleur }
             fontWeight: 600, fontSize: '0.85rem', flexShrink: 0,
           }}
         >
-          {code || 'CODE'}
+          {code || t('matierePreview.codePlaceholder')}
         </div>
         <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>
-          {nom || 'Nom de la matière'}
+          {nom || t('matierePreview.nomPlaceholder')}
         </h3>
       </div>
 
@@ -46,7 +49,7 @@ export function MatierePreview({ nom, code, coefficients, description, couleur }
           ))}
         </div>
       ) : (
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Aucun coefficient défini</p>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('matierePreview.aucunCoef')}</p>
       )}
     </div>
   );

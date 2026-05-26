@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useElevesListData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -13,6 +14,7 @@ import { ElevesListTable } from './ElevesListTable';
 import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function ElevesList() {
+  const { t } = useTranslation();
   const { isViewingArchive: readOnly } = useViewing();
 
   const [page, setPage] = useState(1);
@@ -29,7 +31,7 @@ export function ElevesList() {
   const totalAll = data?.totalAll || 0;
 
   if (loading && !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Problème de chargement des élèves.</Alert>;
+  if (error) return <Alert variant="error">{t('eleves.erreurChargement')}</Alert>;
 
   const handleSearch = (s: string) => { setSearch(s); setEleveId(''); setPage(1); };
   const handleSuggestionSelect = (id: string) => { setEleveId(id); setSearch(''); setPage(1); };
@@ -52,12 +54,12 @@ export function ElevesList() {
 
   return (
     <div>
-      <PageHeader title="Élèves" subtitle={`${totalAll} élève(s) inscrit(s)`}>
+      <PageHeader title={t('eleves.titre')} subtitle={t('eleves.nbEleves', { count: totalAll })}>
         <ExportMenu
           csvUrl={`/export/eleves/csv${classeId ? `?classeId=${classeId}` : ''}${search ? `${classeId ? '&' : '?'}search=${encodeURIComponent(search)}` : ''}`}
           xlsxUrl={`/export/eleves/xlsx${classeId ? `?classeId=${classeId}` : ''}${search ? `${classeId ? '&' : '?'}search=${encodeURIComponent(search)}` : ''}`}
         />
-        {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">+ Nouvel élève</Button>}
+        {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">{t('eleves.nouvelEleve')}</Button>}
       </PageHeader>
 
       <ElevesFiltersBar
@@ -76,11 +78,11 @@ export function ElevesList() {
       {totalAll === 0 ? (
         <EmptyState
           icon={<Icon path={Icons.users} size={28} />}
-          message="Aucun élève inscrit"
-          action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">Inscrire</Button> : undefined}
+          message={t('eleves.aucunEleve')}
+          action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">{t('eleves.inscrire')}</Button> : undefined}
         />
       ) : total === 0 ? (
-        <EmptyState icon={<Icon path={Icons.search} size={28} />} message="Aucun élève ne correspond" />
+        <EmptyState icon={<Icon path={Icons.search} size={28} />} message={t('eleves.aucunResultat')} />
       ) : (
         <>
           <ElevesListTable eleves={eleves} />

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Avertissement, Convocation } from '../../types';
 import { API_BASE_URL } from '../../config/api';
 import { Card, CardHeader } from '../../components/shared/Card';
@@ -11,13 +12,6 @@ import { Textarea } from '../../components/shared/Textarea';
 import { formatDate } from '../../utils/helpers';
 
 const SEUIL_ESCALADE = 3;
-
-const TYPE_OPTIONS: SelectOption[] = [
-  { value: 'comportement', label: 'Comportement' },
-  { value: 'degats', label: 'Dégâts matériels' },
-  { value: 'absence', label: 'Absence injustifiée' },
-  { value: 'autre', label: 'Autre' },
-];
 
 const TYPE_VARIANT: Record<string, any> = {
   comportement: 'warning',
@@ -34,6 +28,15 @@ interface Props {
 }
 
 export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountChange }: Props) {
+  const { t } = useTranslation();
+
+  const TYPE_OPTIONS: SelectOption[] = [
+    { value: 'comportement', label: t('fiche.avertissements.types.comportement') },
+    { value: 'degats', label: t('fiche.avertissements.types.degats') },
+    { value: 'absence', label: t('fiche.avertissements.types.absence') },
+    { value: 'autre', label: t('fiche.avertissements.types.autre') },
+  ];
+
   const [items, setItems] = useState<Avertissement[]>([]);
   const [convocations, setConvocations] = useState<Convocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,34 +123,32 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
 
   const escalade = items.length >= SEUIL_ESCALADE;
 
-  if (loading) return <Card><CardHeader title="Avertissements" /><p className="suivi-empty">Chargement…</p></Card>;
+  if (loading) return <Card><CardHeader title={t('fiche.avertissements.titre')} /><p className="suivi-empty">{t('common.chargement')}</p></Card>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Carte avertissements */}
       <Card>
         <CardHeader
-          title={`Avertissements (${items.length})`}
+          title={t('fiche.avertissements.titre') + ` (${items.length})`}
           action={!readOnly && (
             <Button size="sm" variant="outline" onClick={() => setShowForm(s => !s)}>
-              {showForm ? 'Annuler' : '+ Ajouter'}
+              {showForm ? t('common.annuler') : t('fiche.avertissements.ajouter')}
             </Button>
           )}
         />
 
-        {/* Bannière d'escalade */}
         {escalade && (
           <div className="escalade-banner">
             <div className="escalade-banner-left">
               <Icon path="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" size={20} />
               <div>
-                <div className="escalade-banner-title">{items.length} avertissements — Action requise</div>
-                <div className="escalade-banner-sub">Le seuil d'escalade est atteint. Envisagez une convocation des parents ou une mesure disciplinaire.</div>
+                <div className="escalade-banner-title">{t('fiche.avertissements.seuilAtteint', { count: items.length })}</div>
+                <div className="escalade-banner-sub">{t('fiche.avertissements.seuilMsg')}</div>
               </div>
             </div>
             {!readOnly && (
               <Button size="sm" variant="danger" onClick={() => { setShowConvForm(true); }}>
-                Convoquer les parents
+                {t('fiche.avertissements.convoquerParents')}
               </Button>
             )}
           </div>
@@ -156,20 +157,20 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
         {showForm && (
           <div className="suivi-form">
             <div className="suivi-form-grid">
-              <Select label="Type" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} options={TYPE_OPTIONS} />
-              <Input label="Date" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
-              <Input label="Année scolaire" value={form.annee_scolaire} onChange={e => setForm(f => ({ ...f, annee_scolaire: e.target.value }))} placeholder={anneeActive || '2025-2026'} />
+              <Select label={t('fiche.avertissements.type')} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} options={TYPE_OPTIONS} />
+              <Input label={t('fiche.avertissements.date')} type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+              <Input label={t('fiche.avertissements.anneeScolaire')} value={form.annee_scolaire} onChange={e => setForm(f => ({ ...f, annee_scolaire: e.target.value }))} placeholder={anneeActive || t('fiche.avertissements.anneePlaceholder')} />
             </div>
-            <Input label="Motif *" value={form.motif} onChange={e => setForm(f => ({ ...f, motif: e.target.value }))} placeholder="Décrire le motif" fullWidth />
-            <Textarea label="Commentaire" value={form.commentaire} onChange={e => setForm(f => ({ ...f, commentaire: e.target.value }))} placeholder="Détails supplémentaires…" />
+            <Input label={t('fiche.avertissements.motif')} value={form.motif} onChange={e => setForm(f => ({ ...f, motif: e.target.value }))} placeholder={t('fiche.avertissements.motifPlaceholder')} fullWidth />
+            <Textarea label={t('fiche.avertissements.commentaire')} value={form.commentaire} onChange={e => setForm(f => ({ ...f, commentaire: e.target.value }))} placeholder={t('fiche.avertissements.detailsPlaceholder')} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <Button size="sm" variant="primary" onClick={handleAdd} disabled={submitting || !form.motif.trim()} loading={submitting}>Enregistrer</Button>
+              <Button size="sm" variant="primary" onClick={handleAdd} disabled={submitting || !form.motif.trim()} loading={submitting}>{t('common.enregistrer')}</Button>
             </div>
           </div>
         )}
 
         {items.length === 0 ? (
-          <p className="suivi-empty">Aucun avertissement enregistré</p>
+          <p className="suivi-empty">{t('fiche.avertissements.aucunAvertissement')}</p>
         ) : (
           <ul className="suivi-list">
             {items.map(a => (
@@ -181,7 +182,7 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
                   <div>
                     <div className="suivi-item-title">
                       {a.motif}
-                      <Badge label={TYPE_OPTIONS.find(t => t.value === a.type)?.label || a.type} variant={TYPE_VARIANT[a.type]} />
+                      <Badge label={TYPE_OPTIONS.find(opt => opt.value === a.type)?.label || a.type} variant={TYPE_VARIANT[a.type]} />
                     </div>
                     <div className="suivi-item-meta">
                       {formatDate(a.date)} · {a.annee_scolaire}
@@ -190,7 +191,7 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
                   </div>
                 </div>
                 {!readOnly && (
-                  <button className="suivi-delete-btn" onClick={() => handleDelete(a.id)} title="Supprimer">
+                  <button className="suivi-delete-btn" onClick={() => handleDelete(a.id)} title={t('common.supprimer')}>
                     <Icon path="M6 18L18 6M6 6l12 12" size={14} />
                   </button>
                 )}
@@ -200,13 +201,12 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
         )}
       </Card>
 
-      {/* Carte convocations parents */}
       <Card>
         <CardHeader
-          title={`Convocations parents (${convocations.length})`}
+          title={t('fiche.avertissements.titreConvocations') + ` (${convocations.length})`}
           action={!readOnly && (
             <Button size="sm" variant="outline" onClick={() => setShowConvForm(s => !s)}>
-              {showConvForm ? 'Annuler' : '+ Ajouter'}
+              {showConvForm ? t('common.annuler') : t('fiche.avertissements.ajouter')}
             </Button>
           )}
         />
@@ -214,18 +214,18 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
         {showConvForm && (
           <div className="suivi-form">
             <div className="suivi-form-grid">
-              <Input label="Date *" type="date" value={convForm.date} onChange={e => setConvForm(f => ({ ...f, date: e.target.value }))} />
+              <Input label={t('fiche.avertissements.dateLabel')} type="date" value={convForm.date} onChange={e => setConvForm(f => ({ ...f, date: e.target.value }))} />
             </div>
-            <Input label="Raison *" value={convForm.raison} onChange={e => setConvForm(f => ({ ...f, raison: e.target.value }))} placeholder="Raison de la convocation" fullWidth />
-            <Textarea label="Commentaire" value={convForm.commentaire} onChange={e => setConvForm(f => ({ ...f, commentaire: e.target.value }))} placeholder="Détails…" />
+            <Input label={t('fiche.avertissements.raison')} value={convForm.raison} onChange={e => setConvForm(f => ({ ...f, raison: e.target.value }))} placeholder={t('fiche.avertissements.raisonPlaceholder')} fullWidth />
+            <Textarea label={t('fiche.avertissements.commentaire')} value={convForm.commentaire} onChange={e => setConvForm(f => ({ ...f, commentaire: e.target.value }))} placeholder={t('fiche.avertissements.convocDetails')} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <Button size="sm" variant="primary" onClick={handleAddConvocation} disabled={submitting || !convForm.raison.trim()} loading={submitting}>Enregistrer</Button>
+              <Button size="sm" variant="primary" onClick={handleAddConvocation} disabled={submitting || !convForm.raison.trim()} loading={submitting}>{t('common.enregistrer')}</Button>
             </div>
           </div>
         )}
 
         {convocations.length === 0 ? (
-          <p className="suivi-empty">Aucune convocation enregistrée</p>
+          <p className="suivi-empty">{t('fiche.avertissements.aucuneConvocation')}</p>
         ) : (
           <ul className="suivi-list">
             {convocations.map(c => (
@@ -237,8 +237,8 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
                   <div>
                     <div className="suivi-item-title">
                       {c.raison}
-                      <Badge label={c.effectuee ? 'Effectuée' : 'En attente'} variant={c.effectuee ? 'success' : 'warning'} />
-                      {c.nb_avertissements > 0 && <Badge label={`${c.nb_avertissements} avert.`} variant="danger" />}
+                      <Badge label={c.effectuee ? t('fiche.avertissements.effectuee') : t('fiche.avertissements.enAttente')} variant={c.effectuee ? 'success' : 'warning'} />
+                      {c.nb_avertissements > 0 && <Badge label={t('fiche.avertissements.nbAvert', { count: c.nb_avertissements })} variant="danger" />}
                     </div>
                     <div className="suivi-item-meta">
                       {formatDate(c.date)}{c.commentaire && ` · ${c.commentaire}`}
@@ -247,10 +247,10 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
                 </div>
                 {!readOnly && (
                   <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
-                    <button className="suivi-toggle-btn" onClick={() => handleToggleConvocation(c)} title={c.effectuee ? 'Marquer non effectuée' : 'Marquer effectuée'}>
+                    <button className="suivi-toggle-btn" onClick={() => handleToggleConvocation(c)} title={c.effectuee ? t('ficheAvert.marquerNonEffectuee') : t('ficheAvert.marquerEffectuee')}>
                       <Icon path={c.effectuee ? 'M6 18L18 6M6 6l12 12' : 'M5 13l4 4L19 7'} size={14} />
                     </button>
-                    <button className="suivi-delete-btn" onClick={() => handleDeleteConvocation(c.id)} title="Supprimer">
+                    <button className="suivi-delete-btn" onClick={() => handleDeleteConvocation(c.id)} title={t('common.supprimer')}>
                       <Icon path="M6 18L18 6M6 6l12 12" size={14} />
                     </button>
                   </div>

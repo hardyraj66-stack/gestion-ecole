@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/shared/Avatar';
 import { getInitials } from '../../utils/helpers';
 
@@ -16,11 +17,13 @@ interface RecentElevesProps {
 }
 
 export function RecentEleves({ eleves }: RecentElevesProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="card">
       <div className="card-header">
-        <h3 className="card-title">Derniers élèves inscrits</h3>
-        <Link to="/eleves" className="link-primary">Voir tout →</Link>
+        <h3 className="card-title">{t('dashboard.derniersEleves')}</h3>
+        <Link to="/eleves" className="link-primary">{t('dashboard.voirTout')}</Link>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         {eleves.map((eleve) => (
@@ -35,11 +38,11 @@ export function RecentEleves({ eleves }: RecentElevesProps) {
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{eleve.classe_nom}</div>
               </div>
             </div>
-            <Link to={`/eleves/${eleve.id}/bulletin`} className="btn btn-sm btn-outline">Bulletin</Link>
+            <Link to={`/eleves/${eleve.id}/bulletin`} className="btn btn-sm btn-outline">{t('dashboard.bulletin')}</Link>
           </div>
         ))}
         {eleves.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Aucun élève inscrit</div>
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('eleves.aucun')}</div>
         )}
       </div>
     </div>

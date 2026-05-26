@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { JourSemaine } from '../../types';
 import { JOURS, HEURES, isBreakSlot, hexToRgb } from './planning.helpers';
@@ -43,6 +44,7 @@ export function PlanningGrid({
   onResizeStart, onResizeEnter, onResizeEnd,
   onOpenEdit, onDelete, onContextMenu, onCreneauMouseEnter, onCreneauMouseLeave,
 }: Props) {
+  const { t } = useTranslation();
 
   const isGhost = (j: JourSemaine, h: string) => ghostCells.has(`${j}-${h}`);
 
@@ -55,7 +57,7 @@ export function PlanningGrid({
       {classeRefreshing && (
         <div className="planning-table-overlay">
           <div className="spinner" />
-          <span className="planning-table-overlay-text">Mise à jour…</span>
+          <span className="planning-table-overlay-text">{t('planning.grid.miseAJour')}</span>
         </div>
       )}
 
@@ -65,7 +67,7 @@ export function PlanningGrid({
         <table className="planning-table planning-interactive">
           <thead>
             <tr>
-              <th className="planning-th-time">Horaire</th>
+              <th className="planning-th-time">{t('planning.grid.horaire')}</th>
               {JOURS.map(j => <th key={j} className="planning-th-day">{j}</th>)}
             </tr>
           </thead>
@@ -76,7 +78,7 @@ export function PlanningGrid({
                 <tr key={h} className={isBreak ? 'planning-break-row' : 'planning-row'}>
                   <td className={`planning-time-cell${isBreak ? ' planning-break-cell' : ''}`}>
                     <span className="planning-time-label">{h}</span>
-                    {isBreak && <span className="planning-break-label">pause</span>}
+                    {isBreak && <span className="planning-break-label">{t('planning.grid.pause')}</span>}
                   </td>
                   {JOURS.map(j => (
                     <PlanningCell

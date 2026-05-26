@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useClasseElevesData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -14,6 +15,7 @@ import { ElevesTable } from './ElevesTable';
 import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function ClasseEleves() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { isViewingArchive: readOnly } = useViewing();
   const [page, setPage] = useState(1);
@@ -27,7 +29,7 @@ export function ClasseEleves() {
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   if (loading || !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Problème de chargement.</Alert>;
+  if (error) return <Alert variant="error">{t('common.erreurChargement')}</Alert>;
 
   const { classe, eleves, total } = data;
 
@@ -62,14 +64,14 @@ export function ClasseEleves() {
 
   return (
     <div>
-      <PageHeader title={`${classe.nom} — Liste des élèves`} subtitle={`${classe.niveau} · Année scolaire ${classe.annee_scolaire}`}>
-        <Button as="link" to="/classes" variant="secondary">← Classes</Button>
-        <Button as="link" to={`/classes/${id}/planning`} variant="outline">Planning</Button>
+      <PageHeader title={t('classeEleves.titre', { nom: classe.nom })} subtitle={`${classe.niveau} · ${t('classeEleves.annee', { annee: classe.annee_scolaire })}`}>
+        <Button as="link" to="/classes" variant="secondary">{t('classeEleves.retourClasses')}</Button>
+        <Button as="link" to={`/classes/${id}/planning`} variant="outline">{t('classes.actions.planning')}</Button>
         <ExportMenu
           csvUrl={`/export/classes/${id}/eleves/csv`}
           xlsxUrl={`/export/classes/${id}/eleves/xlsx`}
         />
-        {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">+ Nouvel élève</Button>}
+        {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">{t('eleves.nouvelEleve')}</Button>}
       </PageHeader>
 
       <ClasseInfoBar
@@ -88,11 +90,11 @@ export function ClasseEleves() {
         {classe.nb_eleves === 0 && !search && !eleveId ? (
           <EmptyState
             icon={<Icon path={Icons.users} size={28} />}
-            message="Aucun élève dans cette classe"
-            action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">Inscrire</Button> : undefined}
+            message={t('eleves.aucunEleveClasse')}
+            action={!readOnly ? <Button as="link" to="/eleves/nouveau" variant="primary">{t('eleves.inscrire')}</Button> : undefined}
           />
         ) : total === 0 ? (
-          <EmptyState icon={<Icon path={Icons.search} size={28} />} message="Aucun élève ne correspond" />
+          <EmptyState icon={<Icon path={Icons.search} size={28} />} message={t('eleves.aucunResultat')} />
         ) : (
           <>
             <ElevesTable eleves={eleves} />

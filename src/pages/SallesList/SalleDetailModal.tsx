@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Salle, SalleStats, TypeSalle, EQUIPEMENTS_SALLE, JourSemaine } from '../../types';
 import { JOURS } from '../Planning/planning.helpers';
 import { API_BASE_URL } from '../../config/api';
@@ -17,7 +18,6 @@ const typeColors: Record<TypeSalle, string> = {
   autre: '#64748b',
 };
 
-// Plages de 30 min — de 07h à 18h
 const HEURE_DEBUT = 7;
 const HEURE_FIN = 18;
 const SLOTS: string[] = [];
@@ -25,8 +25,7 @@ for (let h = HEURE_DEBUT; h <= HEURE_FIN; h++) {
   SLOTS.push(`${String(h).padStart(2, '0')}:00`);
   if (h < HEURE_FIN) SLOTS.push(`${String(h).padStart(2, '0')}:30`);
 }
-// SLOTS = 07:00, 07:30, … 17:30, 18:00 → 23 slots
-const CELL_H = 52; // px par slot (30 min)
+const CELL_H = 52;
 const TOTAL_H = SLOTS.length * CELL_H;
 
 interface SalleDetailModalProps {
@@ -51,46 +50,33 @@ function creneauPx(hd: string, hf: string) {
   const endMin = HEURE_FIN * 60;
   const startMin = Math.max(toMinutes(hd), originMin);
   const finMin = Math.min(toMinutes(hf), endMin);
-  // CELL_H px = 30 min
   const top = ((startMin - originMin) / 30) * CELL_H;
   const height = Math.max(((finMin - startMin) / 30) * CELL_H, 20);
   return { top, height };
 }
 
-// Calcule les colonnes pour éviter le chevauchement visuel
-// Renvoie pour chaque créneau : { col, totalCols }
 function layoutCreneaux(creneaux: any[]): Map<string, { col: number; totalCols: number }> {
-  // Trier par heure de début
   const sorted = [...creneaux].sort((a, b) => toMinutes(a.heure_debut) - toMinutes(b.heure_debut));
-
-  // Groupes de créneaux qui se chevauchent
   const result = new Map<string, { col: number; totalCols: number }>();
-  const cols: number[] = []; // fin (en minutes) de chaque colonne occupée
-
-  // Première passe : assigner une colonne à chaque créneau
+  const cols: number[] = [];
   const assigned = sorted.map(c => {
     const start = toMinutes(c.heure_debut);
     const end = toMinutes(c.heure_fin);
-    // Trouver la première colonne libre
     let col = cols.findIndex(fin => fin <= start);
     if (col === -1) { col = cols.length; }
     cols[col] = end;
     return { id: c.id, col, start, end };
   });
-
-  // Deuxième passe : pour chaque créneau, calculer combien de colonnes se chevauchent avec lui
   assigned.forEach(a => {
-    const overlapping = assigned.filter(b =>
-      b.start < a.end && b.end > a.start
-    );
+    const overlapping = assigned.filter(b => b.start < a.end && b.end > a.start);
     const totalCols = Math.max(...overlapping.map(o => o.col)) + 1;
     result.set(a.id, { col: a.col, totalCols });
   });
-
   return result;
 }
 
 export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalProps) {
+  const { t } = useTranslation();
   const [statsData, setStatsData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const color = typeColors[salle.type] || '#64748b';
@@ -110,7 +96,6 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
     }
   }
 
-  // Filtre les jours qui ont au moins un créneau (+ toujours afficher Lundi–Vendredi)
   const joursActifs = JOURS.filter(j => j !== 'Samedi' || (creneauxParJour['Samedi']?.length ?? 0) > 0);
 
   return (
@@ -123,38 +108,37 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
               <span className="salle-type-badge" style={{ backgroundColor: `${color}18`, color }}>
                 {getTypeLabel(salle.type)}
               </span>
-              <span className="salle-capacite">{salle.capacite} places</span>
+              <span className="salle-capacite">{t('salles.card.places', { count: salle.capacite })}</span>
               {salle.accessible_pmr && <Badge label="PMR" variant="success" />}
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-            {onEdit && <Button variant="outline" size="sm" onClick={onEdit}>Modifier</Button>}
+            {onEdit && <Button variant="outline" size="sm" onClick={onEdit}>{t('salles.detail.modifier')}</Button>}
             <button className="modal-close" onClick={onClose}>✕</button>
           </div>
         </div>
 
         <div className="modal-body salle-detail-body">
-          {/* Colonne gauche — infos + stats */}
           <div className="salle-detail-left">
             {(salle.batiment || salle.etage) && (
               <div className="salle-info-block">
-                <h4 className="section-label">Localisation</h4>
+                <h4 className="section-label">{t('salles.detail.localisation')}</h4>
                 <div className="salle-info-row">
-                  {salle.batiment && <span>Bâtiment : <strong>{salle.batiment}</strong></span>}
-                  {salle.etage && <span>Étage : <strong>{salle.etage}</strong></span>}
+                  {salle.batiment && <span>{t('salles.detail.batiment')} <strong>{salle.batiment}</strong></span>}
+                  {salle.etage && <span>{t('salles.detail.etage')} <strong>{salle.etage}</strong></span>}
                 </div>
               </div>
             )}
 
             {salle.description && (
               <div className="salle-info-block">
-                <h4 className="section-label">Description</h4>
+                <h4 className="section-label">{t('salles.detail.description')}</h4>
                 <p className="salle-desc-text">{salle.description}</p>
               </div>
             )}
 
             <div className="salle-info-block">
-              <h4 className="section-label">Équipements</h4>
+              <h4 className="section-label">{t('salles.detail.equipements')}</h4>
               {salle.equipements && salle.equipements.length > 0 ? (
                 <div className="equipements-list">
                   {salle.equipements.map(eq => {
@@ -163,26 +147,26 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
                   })}
                 </div>
               ) : (
-                <p className="text-muted">Aucun équipement renseigné</p>
+                <p className="text-muted">{t('salles.detail.aucunEquip')}</p>
               )}
             </div>
 
             {loading && <PageLoader />}
             {!loading && statsData && (
               <div className="salle-info-block">
-                <h4 className="section-label">Statistiques hebdomadaires</h4>
+                <h4 className="section-label">{t('salles.detail.statsHebdo')}</h4>
                 <div className="salle-stats-grid">
                   <div className="salle-stat-item">
                     <div className="salle-stat-value">{statsData.stats.creneaux_par_semaine}</div>
-                    <div className="salle-stat-label">cours / semaine</div>
+                    <div className="salle-stat-label">{t('salles.detail.cours')}</div>
                   </div>
                   <div className="salle-stat-item">
                     <div className="salle-stat-value">{statsData.stats.heures_par_semaine}h</div>
-                    <div className="salle-stat-label">d'utilisation</div>
+                    <div className="salle-stat-label">{t('salles.detail.utilisation')}</div>
                   </div>
                   <div className="salle-stat-item">
                     <div className="salle-stat-value">{statsData.stats.jours_utilises}</div>
-                    <div className="salle-stat-label">jours utilisés</div>
+                    <div className="salle-stat-label">{t('salles.detail.jours')}</div>
                   </div>
                   <div className="salle-stat-item">
                     <div className="salle-stat-value" style={{
@@ -191,7 +175,7 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
                     }}>
                       {statsData.stats.taux_occupation}%
                     </div>
-                    <div className="salle-stat-label">taux d'occupation</div>
+                    <div className="salle-stat-label">{t('salles.detail.taux')}</div>
                   </div>
                 </div>
                 <div className="occupation-bar-wrapper">
@@ -208,19 +192,17 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
             )}
           </div>
 
-          {/* Colonne droite — calendrier */}
           <div className="salle-detail-right">
-            <h4 className="section-label" style={{ marginTop: 0 }}>Planning hebdomadaire</h4>
+            <h4 className="section-label" style={{ marginTop: 0 }}>{t('salles.detail.planning')}</h4>
 
             {loading ? (
               <PageLoader />
             ) : !statsData || statsData.creneaux.length === 0 ? (
               <div className="salle-planning-empty">
-                <p className="text-muted">Aucun cours planifié dans cette salle</p>
+                <p className="text-muted">{t('salles.detail.aucunCours')}</p>
               </div>
             ) : (
               <div className="salle-calendrier">
-                {/* En-tête jours */}
                 <div className="salle-cal-header">
                   <div className="salle-cal-time-col" />
                   {joursActifs.map(j => (
@@ -233,9 +215,7 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
                   ))}
                 </div>
 
-                {/* Corps — grille horaire */}
                 <div className="salle-cal-body">
-                  {/* Colonne heures */}
                   <div className="salle-cal-time-col">
                     {SLOTS.map(s => (
                       <div key={s} className={`salle-cal-hour${s.endsWith(':30') ? ' salle-cal-hour-half' : ''}`} style={{ height: CELL_H }}>
@@ -244,18 +224,15 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
                     ))}
                   </div>
 
-                  {/* Colonnes jours */}
                   {joursActifs.map(jour => {
                     const crs = creneauxParJour[jour] || [];
                     const layout = layoutCreneaux(crs);
                     return (
                       <div key={jour} className="salle-cal-col" style={{ height: TOTAL_H }}>
-                        {/* Lignes de fond */}
                         {SLOTS.map((s, i) => (
                           <div key={s} className={`salle-cal-cell${s.endsWith(':00') ? ' salle-cal-cell-hour' : ' salle-cal-cell-half'}`} style={{ height: CELL_H, top: i * CELL_H }} />
                         ))}
 
-                        {/* Créneaux — décalés si chevauchement */}
                         {crs.map((c: any) => {
                           const { top, height } = creneauPx(c.heure_debut, c.heure_fin);
                           const { col, totalCols } = layout.get(c.id) ?? { col: 0, totalCols: 1 };

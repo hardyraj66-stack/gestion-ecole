@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Eleve, Classe, BulletinMatiere } from '../../types';
 import { Card } from '../../components/shared/Card';
 import { Avatar } from '../../components/shared/Avatar';
@@ -12,14 +13,15 @@ interface StudentCardProps {
 }
 
 export function StudentCard({ eleve, classe, bulletinMatieres, moyenneGenerale }: StudentCardProps) {
+  const { t } = useTranslation();
   const hasNotes = bulletinMatieres.some(m => m.ds !== null || m.evaluation !== null);
   const mention = moyenneGenerale !== null ? getMention(moyenneGenerale) : null;
 
   return (
     <Card className="student-card">
-      <Avatar 
-        initiales={getInitials(eleve)} 
-        genre={eleve.genre} 
+      <Avatar
+        initiales={getInitials(eleve)}
+        genre={eleve.genre}
         size="lg"
       />
       <h2 className="student-card-name">{eleve.prenom} {eleve.nom}</h2>
@@ -32,12 +34,12 @@ export function StudentCard({ eleve, classe, bulletinMatieres, moyenneGenerale }
 
       {hasNotes && moyenneGenerale !== null && (
         <div className="student-moyenne">
-          <div className="student-moyenne-label">Moyenne générale</div>
-          <div 
+          <div className="student-moyenne-label">{t('bulletin.moyenneGenerale')}</div>
+          <div
             className="student-moyenne-value"
             style={{ color: getNoteColor(moyenneGenerale) }}
           >
-            {moyenneGenerale.toFixed(1)}/20
+            {moyenneGenerale.toFixed(1)}{t('bulletin.sur20')}
           </div>
           {mention && (
             <Badge label={mention.label} variant={mention.variant} />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useMatieresListData } from '../../hooks/usePageData';
 import { readApi } from '../../services/readApi';
@@ -16,6 +17,7 @@ import { MatiereCard } from './MatiereCard';
 import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function MatieresList() {
+  const { t } = useTranslation();
   const { isViewingArchive: readOnly } = useViewing();
   const [page, setPage] = useState(1);
   const [niveau, setNiveau] = useState('');
@@ -48,19 +50,19 @@ export function MatieresList() {
   };
 
   if (loading || !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Problème de chargement des matières.</Alert>;
+  if (error) return <Alert variant="error">{t('matieres.erreurChargement')}</Alert>;
 
   const { total, totalPages } = data;
   const items = localItems ?? data.items;
 
   const niveauxOptions: SelectOption[] = [
-    { value: '', label: 'Tous les niveaux' },
+    { value: '', label: t('matieres.tousNiveaux') },
     ...niveaux.map(n => ({ value: n, label: n })),
   ];
 
   return (
     <div>
-      <PageHeader title="Matières" subtitle={`${total} matière(s)`}>
+      <PageHeader title={t('matieres.titre')} subtitle={t('matieres.nbMatieres', { count: total })}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ minWidth: 180 }}>
             <Select
@@ -75,15 +77,15 @@ export function MatieresList() {
             csvUrl={`/export/matieres/csv${niveau ? `?niveau=${encodeURIComponent(niveau)}` : ''}`}
             xlsxUrl={`/export/matieres/xlsx${niveau ? `?niveau=${encodeURIComponent(niveau)}` : ''}`}
           />
-          {!readOnly && <Button as="link" to="/matieres/nouvelle" variant="primary">+ Nouvelle matière</Button>}
+          {!readOnly && <Button as="link" to="/matieres/nouvelle" variant="primary">{t('matieres.nouvelleMatieres')}</Button>}
         </div>
       </PageHeader>
 
       {total === 0 ? (
         <EmptyState
           icon={<Icon path={Icons.book} size={28} />}
-          message={niveau ? `Aucune matière pour le niveau ${niveau}` : 'Aucune matière'}
-          action={!readOnly ? <Button as="link" to="/matieres/nouvelle" variant="primary">Créer</Button> : undefined}
+          message={niveau ? t('matieres.aucuneMatiereNiveau', { niveau }) : t('matieres.aucuneMatiere')}
+          action={!readOnly ? <Button as="link" to="/matieres/nouvelle" variant="primary">{t('matieres.creer')}</Button> : undefined}
         />
       ) : (
         <>
@@ -98,7 +100,7 @@ export function MatieresList() {
                 readOnly={readOnly}
               />
             ))}
-            {!readOnly && page === totalPages && <AddCard to="/matieres/nouvelle" label="Nouvelle matière" />}
+            {!readOnly && page === totalPages && <AddCard to="/matieres/nouvelle" label={t('matieres.nouvelleMatieres')} />}
           </div>
           <Pagination currentPage={page} totalItems={total} pageSize={8} onPageChange={setPage} />
         </>

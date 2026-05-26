@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Salle, TypeSalle } from '../../types';
 import { Card } from '../../components/shared/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -35,14 +36,15 @@ interface SalleCardProps {
 }
 
 export function SalleCard({ salle, onEdit, onDelete, onView, readOnly }: SalleCardProps) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const color = typeColors[salle.type] || '#64748b';
 
   const handleDelete = async () => {
     const ok = await confirm({
-      title: 'Supprimer la salle',
-      message: `Êtes-vous sûr de vouloir supprimer la salle « ${salle.nom} » ?`,
-      confirmText: 'Supprimer',
+      title: t('salles.supprimer'),
+      message: t('salles.card.confirmeSuppr', { nom: salle.nom }),
+      confirmText: t('salles.supprimerBtn'),
       variant: 'danger',
     });
     if (ok) onDelete(salle.id);
@@ -56,7 +58,7 @@ export function SalleCard({ salle, onEdit, onDelete, onView, readOnly }: SalleCa
             <Icon path={typeIcons[salle.type] || typeIcons.standard} size={14} />
             {getTypeLabel(salle.type)}
           </span>
-          <Badge label={`${salle.capacite} places`} variant="default" />
+          <Badge label={t('salles.card.places', { count: salle.capacite })} variant="default" />
           {salle.accessible_pmr && <Badge label="PMR" variant="success" />}
         </div>
       </div>
@@ -69,8 +71,8 @@ export function SalleCard({ salle, onEdit, onDelete, onView, readOnly }: SalleCa
 
       {(salle.batiment || salle.etage) && (
         <p className="salle-card-desc" style={{ display: 'flex', gap: '0.5rem' }}>
-          {salle.batiment && <span>Bât. {salle.batiment}</span>}
-          {salle.etage && <span>· Étage {salle.etage}</span>}
+          {salle.batiment && <span>{t('salles.detail.batiment')} {salle.batiment}</span>}
+          {salle.etage && <span>· {t('salles.detail.etage')} {salle.etage}</span>}
         </p>
       )}
 
@@ -87,15 +89,15 @@ export function SalleCard({ salle, onEdit, onDelete, onView, readOnly }: SalleCa
 
       <div className="salle-card-actions">
         <Button variant="outline" size="sm" onClick={() => onView(salle)}>
-          Voir
+          {t('salles.card.voir')}
         </Button>
         {!readOnly && (
           <>
             <Button variant="outline" size="sm" onClick={() => onEdit(salle)}>
-              Modifier
+              {t('salles.card.modifier')}
             </Button>
             <Button variant="danger" size="sm" onClick={handleDelete}>
-              Supprimer
+              {t('salles.card.supprimer')}
             </Button>
           </>
         )}

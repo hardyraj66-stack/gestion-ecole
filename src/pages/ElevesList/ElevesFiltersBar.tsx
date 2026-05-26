@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { readApi } from '../../services/readApi';
 import { FilterBar } from '../../components/shared/FilterBar';
 import { NiveauClassePopover } from '../../components/shared/NiveauClassePopover';
@@ -30,7 +31,8 @@ export function ElevesFiltersBar({
   count,
   hasEleveFilter,
 }: ElevesFiltersBarProps) {
-  // Suggestions de recherche : filtre côté client sur les noms
+  const { t } = useTranslation();
+
   const fetchSuggestions = useCallback(async (query: string): Promise<Suggestion[]> => {
     const data = await readApi.elevesList(1, 8, query, '');
     if (!data?.eleves) return [];
@@ -48,17 +50,15 @@ export function ElevesFiltersBar({
   const hasFilter = !!selectedClasseId || !!searchTerm || hasEleveFilter;
 
   return (
-    <FilterBar count={count} countLabel="élève(s)">
-      {/* Recherche avec auto-complétion */}
+    <FilterBar count={count} countLabel={t('elevesFiltersBar.eleveS')}>
       <SearchInputSuggestions
-        placeholder="Rechercher par nom ou prénom…"
+        placeholder={t('elevesFiltersBar.rechercherPlaceholder')}
         value={searchTerm}
         onChange={onSearchChange}
         onSelect={handleSuggestionSelect}
         fetchSuggestions={fetchSuggestions}
       />
 
-      {/* Filtre Niveau → Classe */}
       <NiveauClassePopover
         selectedNiveau={selectedNiveau}
         selectedClasseId={selectedClasseId}
@@ -67,10 +67,9 @@ export function ElevesFiltersBar({
         showCapacite={true}
       />
 
-      {/* Réinitialiser */}
       {hasFilter && (
         <button type="button" className="filter-reset-btn" onClick={onReset}>
-          <Icon path="M6 18L18 6M6 6l12 12" size={14} /> Réinitialiser
+          <Icon path="M6 18L18 6M6 6l12 12" size={14} /> {t('common.effacer')}
         </button>
       )}
     </FilterBar>

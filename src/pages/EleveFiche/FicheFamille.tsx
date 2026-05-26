@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eleve, ParentInfo } from '../../types';
 import { Card, CardHeader } from '../../components/shared/Card';
 import { Icon } from '../../components/shared/Icon';
@@ -8,11 +9,6 @@ import { Input } from '../../components/shared/Input';
 import { Select, SelectOption } from '../../components/shared/Select';
 import { useEleves } from '../../contexts/EleveContext';
 
-const STATUT_OPTIONS: SelectOption[] = [
-  { value: 'vivant', label: 'Vivant(e)' },
-  { value: 'decede', label: 'Décédé(e)' },
-];
-
 interface ParentFormProps {
   label: string;
   data: ParentInfo | null;
@@ -21,6 +17,12 @@ interface ParentFormProps {
 }
 
 function ParentForm({ label, data, onSave, readOnly }: ParentFormProps) {
+  const { t } = useTranslation();
+  const STATUT_OPTIONS: SelectOption[] = [
+    { value: 'vivant', label: t('fiche.famille.statuts.vivant') },
+    { value: 'decede', label: t('fiche.famille.statuts.decede') },
+  ];
+
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<ParentInfo>(
     data ?? { nom: '', prenom: '', telephone: '', email: '', statut: 'vivant' }
@@ -42,14 +44,14 @@ function ParentForm({ label, data, onSave, readOnly }: ParentFormProps) {
           <div className="famille-info">
             <span className="famille-nom">{data.prenom} {data.nom}</span>
             <Badge
-              label={data.statut === 'decede' ? 'Décédé(e)' : 'Vivant(e)'}
+              label={data.statut === 'decede' ? t('fiche.famille.statuts.decede') : t('fiche.famille.statuts.vivant')}
               variant={data.statut === 'decede' ? 'danger' : 'success'}
             />
             {data.telephone && <span className="famille-contact">{data.telephone}</span>}
             {data.email && <span className="famille-contact">{data.email}</span>}
           </div>
         ) : (
-          <span className="famille-empty">Non renseigné</span>
+          <span className="famille-empty">{t('fiche.famille.nonRenseigne')}</span>
         )}
       </div>
     );
@@ -61,16 +63,16 @@ function ParentForm({ label, data, onSave, readOnly }: ParentFormProps) {
         <span className="famille-block-title">{label}</span>
       </div>
       <div className="famille-form-grid">
-        <Input label="Prénom" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} />
-        <Input label="Nom" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
-        <Input label="Téléphone" value={form.telephone || ''} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} />
-        <Input label="Email" value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-        <Select label="Statut" value={form.statut} onChange={e => setForm(f => ({ ...f, statut: e.target.value as any }))} options={STATUT_OPTIONS} />
+        <Input label={t('eleves.creer.form.prenom')} value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} />
+        <Input label={t('eleves.creer.form.nom')} value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
+        <Input label={t('eleves.creer.form.telephone')} value={form.telephone || ''} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} />
+        <Input label={t('eleves.creer.form.email')} value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        <Select label={t('fiche.famille.statuts.vivant').replace('(e)', '')} value={form.statut} onChange={e => setForm(f => ({ ...f, statut: e.target.value as any }))} options={STATUT_OPTIONS} />
       </div>
       <div className="famille-form-actions">
-        <Button size="sm" variant="secondary" onClick={() => setEditing(false)}>Annuler</Button>
-        {data && <Button size="sm" variant="danger" onClick={handleRemove}>Supprimer</Button>}
-        <Button size="sm" variant="primary" onClick={handleSave}>Enregistrer</Button>
+        <Button size="sm" variant="secondary" onClick={() => setEditing(false)}>{t('common.annuler')}</Button>
+        {data && <Button size="sm" variant="danger" onClick={handleRemove}>{t('common.supprimer')}</Button>}
+        <Button size="sm" variant="primary" onClick={handleSave}>{t('common.enregistrer')}</Button>
       </div>
     </div>
   );
@@ -83,6 +85,7 @@ interface Props {
 }
 
 export function FicheFamille({ eleve, eleveId, readOnly }: Props) {
+  const { t } = useTranslation();
   const { update } = useEleves();
   const [localEleve, setLocalEleve] = useState(eleve);
 
@@ -100,15 +103,14 @@ export function FicheFamille({ eleve, eleveId, readOnly }: Props) {
 
   return (
     <Card>
-      <CardHeader title="Famille" />
+      <CardHeader title={t('fiche.famille.titre')} />
       <div className="famille-container">
-        <ParentForm label="Père" data={(localEleve as any).pere ?? null} onSave={handleSavePere} readOnly={readOnly} />
-        <ParentForm label="Mère" data={(localEleve as any).mere ?? null} onSave={handleSaveMere} readOnly={readOnly} />
+        <ParentForm label={t('fiche.famille.pere')} data={(localEleve as any).pere ?? null} onSave={handleSavePere} readOnly={readOnly} />
+        <ParentForm label={t('fiche.famille.mere')} data={(localEleve as any).mere ?? null} onSave={handleSaveMere} readOnly={readOnly} />
 
-        {/* Tuteur */}
         <div className="famille-block">
           <div className="famille-block-header">
-            <span className="famille-block-title">Tuteur légal</span>
+            <span className="famille-block-title">{t('fiche.famille.tuteur')}</span>
           </div>
           {(localEleve as any).tuteur ? (
             <div className="famille-info">
@@ -117,7 +119,7 @@ export function FicheFamille({ eleve, eleveId, readOnly }: Props) {
               {(localEleve as any).tuteur.telephone && <span className="famille-contact">{(localEleve as any).tuteur.telephone}</span>}
             </div>
           ) : (
-            <span className="famille-empty">Aucun tuteur</span>
+            <span className="famille-empty">{t('fiche.famille.aucunTuteur')}</span>
           )}
         </div>
       </div>

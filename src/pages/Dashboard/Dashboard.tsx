@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useDashboardData } from '../../hooks/usePageData';
@@ -15,32 +16,33 @@ import { QuickActions } from './QuickActions';
 import { ConvocationsWidget } from './ConvocationsWidget';
 
 export function Dashboard() {
+  const { t } = useTranslation();
   const { active, preparation } = useAnnees();
   const { viewing, isViewingArchive: readOnly } = useViewing();
   const [classesPage, setClassesPage] = useState(1);
 
   const { data, loading, error } = useDashboardData(classesPage);
 
-  const subtitle = viewing ? `Archive de l'année ${viewing.label}` : "Vue d'ensemble";
+  const subtitle = viewing ? t('dashboard.archiveAnnee', { label: viewing.label }) : t('dashboard.sousTitre');
 
   if (loading || !data) return <PageLoader />;
-  if (error) return <Alert variant="error">Problème de chargement du dashboard.</Alert>;
+  if (error) return <Alert variant="error">{t('dashboard.erreurChargement')}</Alert>;
 
   const { stats, classesWithCount, classesPagination, recentEleves, convocationsRecentes } = data;
 
   return (
     <div>
-      <PageHeader title="Dashboard" subtitle={subtitle}>
+      <PageHeader title={t('nav.dashboard')} subtitle={subtitle}>
         {!readOnly && active && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Badge label={active.label} variant="primary" />
-            <Badge label="Active" variant="success" />
+            <Badge label={t('sidebar.statut.active')} variant="success" />
           </div>
         )}
         {!readOnly && !active && preparation && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Badge label={preparation.label} variant="warning" />
-            <Button as="link" to="/annee-scolaire" variant="outline" size="sm">Configurer</Button>
+            <Button as="link" to="/annee-scolaire" variant="outline" size="sm">{t('dashboard.configurer')}</Button>
           </div>
         )}
       </PageHeader>
@@ -48,18 +50,18 @@ export function Dashboard() {
       {!readOnly && !active && preparation && (
         <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>⚠️ Aucune année active</p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Démarrez « {preparation.label} ».</p>
+            <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>⚠️ {t('dashboard.aucuneAnneeActive')}</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('dashboard.demarrerAnnee', { label: preparation.label })}</p>
           </div>
-          <Button as="link" to="/annee-scolaire" variant="primary">Gérer le cycle</Button>
+          <Button as="link" to="/annee-scolaire" variant="primary">{t('dashboard.gererCycle')}</Button>
         </Card>
       )}
 
       <div className="stats-grid">
-        <StatCard title="Classes" value={stats.classes} subtitle="Toutes niveaux" color="blue" icon="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-        <StatCard title="Élèves" value={stats.eleves} subtitle={readOnly ? 'Archive' : 'Actifs'} color="purple" icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <StatCard title="Matières" value={stats.matieres} subtitle="Au programme" color="green" icon="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <StatCard title="Notes" value={stats.notes} subtitle={readOnly ? 'Archive' : 'Total'} color="orange" icon="M12 20h9" />
+        <StatCard title={t('nav.classes')} value={stats.classes} subtitle={t('dashboard.stats.toutesNiveaux')} color="blue" icon="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+        <StatCard title={t('nav.eleves')} value={stats.eleves} subtitle={readOnly ? t('sidebar.statut.archive') : t('dashboard.stats.actifs')} color="purple" icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <StatCard title={t('nav.matieres')} value={stats.matieres} subtitle={t('dashboard.stats.auProgramme')} color="green" icon="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <StatCard title={t('nav.notes')} value={stats.notes} subtitle={readOnly ? t('sidebar.statut.archive') : t('dashboard.stats.total')} color="orange" icon="M12 20h9" />
       </div>
 
       <div className="dashboard-grid">

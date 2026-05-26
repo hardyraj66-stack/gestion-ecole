@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Absence } from '../../types';
 import { API_BASE_URL } from '../../config/api';
 import { Card, CardHeader } from '../../components/shared/Card';
@@ -16,6 +17,7 @@ interface AddFormProps {
 }
 
 function AddForm({ type, eleveId, onAdded, onCancel }: AddFormProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), motif: '', duree: '', justifiee: false });
   const [submitting, setSubmitting] = useState(false);
 
@@ -33,21 +35,21 @@ function AddForm({ type, eleveId, onAdded, onCancel }: AddFormProps) {
   return (
     <div className="suivi-form">
       <div className="suivi-form-grid">
-        <Input label="Date" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+        <Input label={t('fiche.assiduite.date')} type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
         {type === 'retard' && (
-          <Input label="Durée (ex: 15 min)" value={form.duree} onChange={e => setForm(f => ({ ...f, duree: e.target.value }))} placeholder="15 min" />
+          <Input label={t('fiche.assiduite.duree')} value={form.duree} onChange={e => setForm(f => ({ ...f, duree: e.target.value }))} placeholder={t('fiche.assiduite.dureePlaceholder')} />
         )}
-        <Input label="Motif" value={form.motif} onChange={e => setForm(f => ({ ...f, motif: e.target.value }))} placeholder="Motif éventuel" />
+        <Input label={t('fiche.assiduite.motif')} value={form.motif} onChange={e => setForm(f => ({ ...f, motif: e.target.value }))} placeholder={t('fiche.assiduite.motifPlaceholder')} />
         <div className="suivi-form-check">
           <label className="suivi-check-label">
             <input type="checkbox" checked={form.justifiee} onChange={e => setForm(f => ({ ...f, justifiee: e.target.checked }))} />
-            Justifiée
+            {t('fiche.assiduite.justifiee')}
           </label>
         </div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-        <Button size="sm" variant="secondary" onClick={onCancel}>Annuler</Button>
-        <Button size="sm" variant="primary" onClick={handleSubmit} loading={submitting}>Enregistrer</Button>
+        <Button size="sm" variant="secondary" onClick={onCancel}>{t('common.annuler')}</Button>
+        <Button size="sm" variant="primary" onClick={handleSubmit} loading={submitting}>{t('common.enregistrer')}</Button>
       </div>
     </div>
   );
@@ -63,6 +65,7 @@ interface SectionProps {
 }
 
 function AssiduiteSection({ title, type, items, eleveId, readOnly, onRefresh }: SectionProps) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
 
   const handleDelete = async (id: string) => {
@@ -83,7 +86,7 @@ function AssiduiteSection({ title, type, items, eleveId, readOnly, onRefresh }: 
         </div>
         {!readOnly && (
           <button className="suivi-add-btn" onClick={() => setShowForm(s => !s)}>
-            {showForm ? 'Annuler' : '+ Ajouter'}
+            {showForm ? t('common.annuler') : t('fiche.assiduite.ajouter')}
           </button>
         )}
       </div>
@@ -93,7 +96,7 @@ function AssiduiteSection({ title, type, items, eleveId, readOnly, onRefresh }: 
       )}
 
       {items.length === 0 ? (
-        <p className="suivi-empty">Aucun(e) {type === 'absence' ? 'absence' : 'retard'} enregistré(e)</p>
+        <p className="suivi-empty">{type === 'absence' ? t('fiche.assiduite.aucuneAbsence') : t('fiche.assiduite.aucunRetard')}</p>
       ) : (
         <ul className="suivi-list">
           {items.map(a => (
@@ -106,13 +109,13 @@ function AssiduiteSection({ title, type, items, eleveId, readOnly, onRefresh }: 
                   <div className="suivi-item-title">
                     {formatDate(a.date)}
                     {a.duree && <span className="suivi-item-duree"> · {a.duree}</span>}
-                    <Badge label={a.justifiee ? 'Justifiée' : 'Non justifiée'} variant={a.justifiee ? 'success' : 'danger'} />
+                    <Badge label={a.justifiee ? t('fiche.assiduite.justifiee') : t('fiche.assiduite.nonJustifiee')} variant={a.justifiee ? 'success' : 'danger'} />
                   </div>
                   {a.motif && <div className="suivi-item-meta">{a.motif}</div>}
                 </div>
               </div>
               {!readOnly && (
-                <button className="suivi-delete-btn" onClick={() => handleDelete(a.id)} title="Supprimer">
+                <button className="suivi-delete-btn" onClick={() => handleDelete(a.id)} title={t('common.supprimer')}>
                   <Icon path="M6 18L18 6M6 6l12 12" size={14} />
                 </button>
               )}
@@ -130,6 +133,7 @@ interface Props {
 }
 
 export function FicheAssiduité({ eleveId, readOnly }: Props) {
+  const { t } = useTranslation();
   const [absences, setAbsences] = useState<Absence[]>([]);
   const [retards, setRetards] = useState<Absence[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,13 +152,13 @@ export function FicheAssiduité({ eleveId, readOnly }: Props) {
 
   return (
     <Card>
-      <CardHeader title="Assiduité" />
+      <CardHeader title={t('fiche.assiduite.titre')} />
       {loading ? (
-        <p className="suivi-empty">Chargement…</p>
+        <p className="suivi-empty">{t('common.chargement')}</p>
       ) : (
         <div className="assiduite-container">
-          <AssiduiteSection title="Absences" type="absence" items={absences} eleveId={eleveId} readOnly={readOnly} onRefresh={load} />
-          <AssiduiteSection title="Retards" type="retard" items={retards} eleveId={eleveId} readOnly={readOnly} onRefresh={load} />
+          <AssiduiteSection title={t('fiche.assiduite.absences')} type="absence" items={absences} eleveId={eleveId} readOnly={readOnly} onRefresh={load} />
+          <AssiduiteSection title={t('fiche.assiduite.retards')} type="retard" items={retards} eleveId={eleveId} readOnly={readOnly} onRefresh={load} />
         </div>
       )}
     </Card>

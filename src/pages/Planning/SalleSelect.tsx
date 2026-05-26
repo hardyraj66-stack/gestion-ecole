@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '../../config/api';
 import { SalleDisponible } from '../../types';
 import { SalleOccupant } from './planning.types';
@@ -31,6 +32,7 @@ export function SalleSelect({
   jour, heureDebut, heureFin, value, onChange,
   excludeCreneauId, salleFixe, disabled, initialConflict, onConflictChange,
 }: SalleSelectProps) {
+  const { t } = useTranslation();
   const [salles, setSalles] = useState<SalleDisponible[]>([]);
   const [checking, setChecking] = useState(true);
   const [open, setOpen] = useState(false);
@@ -92,13 +94,13 @@ export function SalleSelect({
   if (salleFixe && !exceptionnel) {
     return (
       <div className="form-group">
-        <label className="form-label">Salle</label>
+        <label className="form-label">{t('planning.salle.titre')}</label>
         <div className={`salle-select-fixed${initialConflict ? ' conflict' : ''}`}>
           <span className="salle-select-fixed-icon">🏫</span>
           <span className="salle-select-fixed-nom">{salleFixe}</span>
           {initialConflict
-            ? <span className="salle-select-fixed-badge conflict">⚠ Occupée</span>
-            : <span className="salle-select-fixed-badge">Salle fixe</span>
+            ? <span className="salle-select-fixed-badge conflict">{t('planning.salle.fixeBadge')}</span>
+            : <span className="salle-select-fixed-badge">{t('planning.salle.fixe')}</span>
           }
         </div>
         {initialConflict && (
@@ -109,7 +111,7 @@ export function SalleSelect({
           className="salle-select-exceptionnel-btn"
           onClick={() => { setExceptionnel(true); openDropdown(); }}
         >
-          Choisir une salle exceptionnelle
+          {t('planning.salle.exceptionnel')}
         </button>
       </div>
     );
@@ -118,9 +120,9 @@ export function SalleSelect({
   return (
     <div className="form-group" ref={containerRef} style={{ position: 'relative' }}>
       <label className="form-label">
-        Salle *
+        {t('planning.salle.titreObligatoire')}
         {salleFixe && exceptionnel && (
-          <span className="salle-select-exceptionnel-badge">Salle exceptionnelle</span>
+          <span className="salle-select-exceptionnel-badge">{t('planning.salle.exceptionnelBadge')}</span>
         )}
       </label>
 
@@ -134,10 +136,10 @@ export function SalleSelect({
           <span className="salle-select-value">
             <span className={`salle-select-dot ${isConflict ? 'red' : checking ? 'checking' : 'green'}`} />
             {value}
-            {isConflict && <span className="salle-select-conflict-hint">⚠ Conflit</span>}
+            {isConflict && <span className="salle-select-conflict-hint">{t('planning.salle.conflit')}</span>}
           </span>
         ) : (
-          <span className="salle-select-placeholder">Choisir une salle…</span>
+          <span className="salle-select-placeholder">{t('planning.salle.choisir')}</span>
         )}
         <span className="salle-select-arrow">▾</span>
       </button>
@@ -152,7 +154,7 @@ export function SalleSelect({
           className="salle-select-retour-fixe-btn"
           onClick={() => { setExceptionnel(false); onChange(salleFixe); setOpen(false); }}
         >
-          ↩ Revenir à la salle fixe ({salleFixe})
+          {t('planning.salle.retourFixe', { salle: salleFixe })}
         </button>
       )}
 
@@ -167,15 +169,15 @@ export function SalleSelect({
             zIndex: 2000,
           }}
         >
-          {checking && <div className="salle-select-empty">Chargement…</div>}
+          {checking && <div className="salle-select-empty">{t('planning.salle.chargement')}</div>}
 
           {!checking && libres.length === 0 && occupees.length === 0 && (
-            <div className="salle-select-empty">Aucune salle enregistrée</div>
+            <div className="salle-select-empty">{t('planning.salle.aucune')}</div>
           )}
 
           {!checking && libres.length > 0 && (
             <div className="salle-select-group">
-              <div className="salle-select-group-label">🟢 Disponibles</div>
+              <div className="salle-select-group-label">{t('planning.salle.disponibles')}</div>
               {libres.map(s => (
                 <button
                   key={s.id}
@@ -186,7 +188,7 @@ export function SalleSelect({
                   <span className="salle-select-dot green" />
                   <span className="salle-select-option-nom">{s.nom}</span>
                   <span className="salle-select-option-meta">{s.type} · {s.capacite} pl.</span>
-                  <span className="salle-select-option-status free">Libre</span>
+                  <span className="salle-select-option-status free">{t('planning.salle.libre')}</span>
                 </button>
               ))}
             </div>
@@ -194,7 +196,7 @@ export function SalleSelect({
 
           {!checking && occupees.length > 0 && (
             <div className="salle-select-group">
-              <div className="salle-select-group-label">🔴 Indisponibles</div>
+              <div className="salle-select-group-label">{t('planning.salle.indisponibles')}</div>
               {occupees.map(s => (
                 <div key={s.id} className="salle-select-option unavailable">
                   <span className="salle-select-dot red" />
@@ -202,7 +204,7 @@ export function SalleSelect({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span className="salle-select-option-nom">{s.nom}</span>
                       <span className="salle-select-option-meta">{s.capacite} pl.</span>
-                      <span className="salle-select-option-status busy">Occupée</span>
+                      <span className="salle-select-option-status busy">{t('planning.salle.occupee')}</span>
                     </div>
                     {s.occupant && (
                       <div className="salle-select-occupant">

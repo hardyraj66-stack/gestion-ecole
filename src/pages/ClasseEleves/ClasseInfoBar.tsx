@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { readApi } from '../../services/readApi';
 import { SearchInputSuggestions, Suggestion } from '../../components/shared/SearchInputSuggestions';
 import { ProgressBar } from '../../components/shared/ProgressBar';
@@ -18,6 +19,7 @@ interface ClasseInfoBarProps {
 }
 
 export function ClasseInfoBar({ classe, filteredCount, totalCount, inputValue, hasFilter, onInputChange, onCommit, onSuggestionSelect, onReset }: ClasseInfoBarProps) {
+  const { t } = useTranslation();
   const isVariable = classe.salle_type === 'variable';
   const pct = Math.round((totalCount / classe.capacite) * 100);
   const pleine = pct >= 100;
@@ -35,7 +37,7 @@ export function ClasseInfoBar({ classe, filteredCount, totalCount, inputValue, h
     <div className="classe-eleves-infobar">
       <div className="classe-eleves-infobar-stats">
         <div className="classe-stat-item">
-          <span className="classe-stat-label">Élèves</span>
+          <span className="classe-stat-label">{t('classes.colonne.eleves')}</span>
           <span className="classe-stat-value">{totalCount} / {classe.capacite}</span>
           <div style={{ marginTop: '0.25rem' }}>
             <ProgressBar value={totalCount} max={classe.capacite} size="sm" />
@@ -45,16 +47,16 @@ export function ClasseInfoBar({ classe, filteredCount, totalCount, inputValue, h
         <div className="classe-stat-divider" />
 
         <div className="classe-stat-item">
-          <span className="classe-stat-label">Salle</span>
-          <span className="classe-stat-value">{isVariable ? 'Selon planning' : (classe.salle || '—')}</span>
+          <span className="classe-stat-label">{t('classes.colonne.salle')}</span>
+          <span className="classe-stat-value">{isVariable ? t('classeCard.selonPlanning') : (classe.salle || '—')}</span>
         </div>
 
         <div className="classe-stat-divider" />
 
         <div className="classe-stat-item">
-          <span className="classe-stat-label">Statut</span>
+          <span className="classe-stat-label">{t('classeInfoBar.statut')}</span>
           <Badge
-            label={pleine ? 'Complète' : `${classe.capacite - totalCount} place(s)`}
+            label={pleine ? t('classeInfoBar.complete') : t('classeInfoBar.places', { count: classe.capacite - totalCount })}
             variant={pleine ? 'danger' : 'success'}
           />
         </div>
@@ -63,7 +65,7 @@ export function ClasseInfoBar({ classe, filteredCount, totalCount, inputValue, h
           <>
             <div className="classe-stat-divider" />
             <div className="classe-stat-item">
-              <span className="classe-stat-label">Résultats</span>
+              <span className="classe-stat-label">{t('classeInfoBar.resultats')}</span>
               <span className="classe-stat-value">{filteredCount}</span>
             </div>
           </>
@@ -72,7 +74,7 @@ export function ClasseInfoBar({ classe, filteredCount, totalCount, inputValue, h
 
       <div className="classe-eleves-infobar-search" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <SearchInputSuggestions
-          placeholder="Rechercher un élève…"
+          placeholder={t('classeInfoBar.rechercherEleve')}
           value={inputValue}
           onChange={onInputChange}
           onSelect={handleSelect}
@@ -81,7 +83,7 @@ export function ClasseInfoBar({ classe, filteredCount, totalCount, inputValue, h
         />
         {hasFilter && (
           <button type="button" className="filter-reset-btn" onClick={onReset} style={{ flexShrink: 0 }}>
-            <Icon path="M6 18L18 6M6 6l12 12" size={14} /> Réinitialiser
+            <Icon path="M6 18L18 6M6 6l12 12" size={14} /> {t('common.effacer')}
           </button>
         )}
       </div>

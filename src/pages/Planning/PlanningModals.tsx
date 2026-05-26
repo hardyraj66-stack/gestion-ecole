@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert } from '../../components/shared/Alert';
 import { Select, SelectOption } from '../../components/shared/Select';
 import { Button } from '../../components/shared/Button';
@@ -8,15 +9,14 @@ import { HEURES, nextSlot } from './planning.helpers';
 import { SalleSelect } from './SalleSelect';
 import { SalleOccupant } from './planning.types';
 
-const JOUR_OPTIONS: SelectOption[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map(j => ({ value: j, label: j }));
-const HEURE_OPTIONS: SelectOption[] = HEURES.map(h => ({ value: h, label: h }));
-
 function ProfDisplay({ matiereId, classeData, selectedClasse, onResolved }: {
   matiereId: string;
   classeData: any;
   selectedClasse: any;
   onResolved: (prof: { id: string; nom: string } | null) => void;
 }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (!matiereId || !selectedClasse) { onResolved(null); return; }
     const assignment = classeData?.assignments?.find((a: any) => a.matiere_id === matiereId);
@@ -34,10 +34,10 @@ function ProfDisplay({ matiereId, classeData, selectedClasse, onResolved }: {
 
   return (
     <div>
-      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Enseignant</label>
+      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>{t('planning.modal.enseignant')}</label>
       {profNom
         ? <div style={{ fontSize: '0.9rem', fontWeight: 500, padding: '0.4rem 0' }}>{profNom}</div>
-        : <div style={{ fontSize: '0.85rem', color: 'var(--warning)', padding: '0.4rem 0' }}>Aucun prof assigné à cette matière</div>
+        : <div style={{ fontSize: '0.85rem', color: 'var(--warning)', padding: '0.4rem 0' }}>{t('planning.modal.aucunProf')}</div>
       }
     </div>
   );
@@ -72,6 +72,9 @@ export function CreateModal({
   onClose, onSubmit, setFormJour, setFormDebut, setFormFin,
   setFormMatiereId, setFormSalle, setProfResolu,
 }: CreateModalProps) {
+  const { t } = useTranslation();
+  const JOUR_OPTIONS: SelectOption[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map(j => ({ value: j, label: j }));
+  const HEURE_OPTIONS: SelectOption[] = HEURES.map(h => ({ value: h, label: h }));
   const [salleConflict, setSalleConflict] = useState(!!initialConflict);
 
   if (!show) return null;
@@ -79,7 +82,7 @@ export function CreateModal({
     <div className="planning-modal-overlay" onClick={onClose}>
       <div className="planning-modal" onClick={e => e.stopPropagation()}>
         <div className="planning-modal-header">
-          <h3>Nouveau créneau</h3>
+          <h3>{t('planning.modal.nouveauCreneau')}</h3>
           <div className="planning-modal-header-sub">{formJour} · {formDebut} – {formFin}</div>
           <button type="button" className="planning-modal-close" onClick={onClose}>✕</button>
         </div>
@@ -87,7 +90,7 @@ export function CreateModal({
           {formError && <Alert variant="error">{formError}</Alert>}
           <form onSubmit={onSubmit}>
             <FormGrid columns={2}>
-              <Select label="Matière *" value={formMatiereId} onChange={e => setFormMatiereId(e.target.value)} options={matiereOptions} placeholder="Choisir" />
+              <Select label={t('planning.modal.matiere')} value={formMatiereId} onChange={e => setFormMatiereId(e.target.value)} options={matiereOptions} placeholder={t('planning.modal.choisir')} />
               <ProfDisplay
                 matiereId={formMatiereId}
                 classeData={classeData}
@@ -107,19 +110,19 @@ export function CreateModal({
               onConflictChange={setSalleConflict}
             />
             <FormGrid columns={3}>
-              <Select label="Jour" value={formJour} onChange={e => setFormJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
-              <Select label="Début" value={formDebut} onChange={e => setFormDebut(e.target.value)} options={HEURE_OPTIONS} />
-              <Select label="Fin" value={formFin} onChange={e => setFormFin(e.target.value)} options={HEURE_OPTIONS} />
+              <Select label={t('planning.modal.jour')} value={formJour} onChange={e => setFormJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
+              <Select label={t('planning.modal.debut')} value={formDebut} onChange={e => setFormDebut(e.target.value)} options={HEURE_OPTIONS} />
+              <Select label={t('planning.modal.fin')} value={formFin} onChange={e => setFormFin(e.target.value)} options={HEURE_OPTIONS} />
             </FormGrid>
             <FormActions>
-              <Button type="button" variant="secondary" onClick={onClose}>Annuler</Button>
+              <Button type="button" variant="secondary" onClick={onClose}>{t('planning.modal.annuler')}</Button>
               <Button
                 type="submit"
                 variant="primary"
                 disabled={formSubmitting || !formMatiereId || !formSalle || salleConflict}
                 loading={formSubmitting}
               >
-                Créer le créneau
+                {t('planning.modal.creer')}
               </Button>
             </FormActions>
           </form>
@@ -157,6 +160,9 @@ export function EditModal({
   onClose, onSubmit, setEditMatiereId, setEditJour, setEditDebut, setEditFin,
   setEditSalle, setEditProfResolu,
 }: EditModalProps) {
+  const { t } = useTranslation();
+  const JOUR_OPTIONS: SelectOption[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map(j => ({ value: j, label: j }));
+  const HEURE_OPTIONS: SelectOption[] = HEURES.map(h => ({ value: h, label: h }));
   const [salleConflict, setSalleConflict] = useState(!!initialConflict);
 
   if (!show || !editCreneau) return null;
@@ -164,7 +170,7 @@ export function EditModal({
     <div className="planning-modal-overlay" onClick={onClose}>
       <div className="planning-modal" onClick={e => e.stopPropagation()}>
         <div className="planning-modal-header">
-          <h3>Modifier le créneau</h3>
+          <h3>{t('planning.modal.modifierCreneau')}</h3>
           <div className="planning-modal-header-sub" style={{ color: editCreneau.matiere_couleur }}>● {editCreneau.matiere_nom}</div>
           <button type="button" className="planning-modal-close" onClick={onClose}>✕</button>
         </div>
@@ -172,7 +178,7 @@ export function EditModal({
           {editError && <Alert variant="error">{editError}</Alert>}
           <form onSubmit={onSubmit}>
             <FormGrid columns={2}>
-              <Select label="Matière *" value={editMatiereId} onChange={e => setEditMatiereId(e.target.value)} options={matiereOptions} placeholder="Choisir" />
+              <Select label={t('planning.modal.matiere')} value={editMatiereId} onChange={e => setEditMatiereId(e.target.value)} options={matiereOptions} placeholder={t('planning.modal.choisir')} />
               <ProfDisplay
                 matiereId={editMatiereId}
                 classeData={classeData}
@@ -193,19 +199,19 @@ export function EditModal({
               onConflictChange={setSalleConflict}
             />
             <FormGrid columns={3}>
-              <Select label="Jour" value={editJour} onChange={e => setEditJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
-              <Select label="Début" value={editDebut} onChange={e => setEditDebut(e.target.value)} options={HEURE_OPTIONS} />
-              <Select label="Fin" value={editFin} onChange={e => setEditFin(e.target.value)} options={HEURE_OPTIONS} />
+              <Select label={t('planning.modal.jour')} value={editJour} onChange={e => setEditJour(e.target.value as JourSemaine)} options={JOUR_OPTIONS} />
+              <Select label={t('planning.modal.debut')} value={editDebut} onChange={e => setEditDebut(e.target.value)} options={HEURE_OPTIONS} />
+              <Select label={t('planning.modal.fin')} value={editFin} onChange={e => setEditFin(e.target.value)} options={HEURE_OPTIONS} />
             </FormGrid>
             <FormActions>
-              <Button type="button" variant="secondary" onClick={onClose}>Annuler</Button>
+              <Button type="button" variant="secondary" onClick={onClose}>{t('planning.modal.annuler')}</Button>
               <Button
                 type="submit"
                 variant="primary"
                 disabled={editSubmitting || !editMatiereId || !editSalle || salleConflict}
                 loading={editSubmitting}
               >
-                Enregistrer
+                {t('planning.modal.enregistrer')}
               </Button>
             </FormActions>
           </form>
@@ -223,12 +229,13 @@ interface MoveModalProps {
 }
 
 export function MoveModal({ show, moveCreneau, moveTarget, moveDragSlot, onConfirm, onCancel }: MoveModalProps) {
+  const { t } = useTranslation();
   if (!show || !moveCreneau || !moveTarget) return null;
   return (
     <div className="planning-modal-overlay" onClick={onCancel}>
       <div className="planning-modal planning-modal-sm" onClick={e => e.stopPropagation()}>
         <div className="planning-modal-header">
-          <h3>Déplacer</h3>
+          <h3>{t('planning.modal.deplacer')}</h3>
           <button type="button" className="planning-modal-close" onClick={onCancel}>✕</button>
         </div>
         <div className="planning-modal-body">
@@ -239,27 +246,27 @@ export function MoveModal({ show, moveCreneau, moveTarget, moveDragSlot, onConfi
           </div>
           {moveDragSlot && moveDragSlot !== moveCreneau.heure_debut && (
             <div className="planning-move-hint">
-              Plage saisie : <strong>{moveDragSlot}</strong> (dans un bloc {moveCreneau.heure_debut}–{moveCreneau.heure_fin})
+              {t('planning.modal.plageInfo', { slot: moveDragSlot, debut: moveCreneau.heure_debut, fin: moveCreneau.heure_fin })}
             </div>
           )}
           <div className="planning-move-actions">
             <button type="button" className="planning-move-btn planning-move-btn-primary" onClick={() => onConfirm(true)}>
               <span className="planning-move-btn-icon">⬛</span>
               <div>
-                <div className="planning-move-btn-label">Tout le bloc</div>
-                <div className="planning-move-btn-sub">Déplacer depuis {moveDragSlot || moveCreneau.heure_debut} jusqu'à la fin</div>
+                <div className="planning-move-btn-label">{t('planning.modal.toutBloc')}</div>
+                <div className="planning-move-btn-sub">{t('planning.modal.toutBlocSub', { slot: moveDragSlot || moveCreneau.heure_debut })}</div>
               </div>
             </button>
             <button type="button" className="planning-move-btn planning-move-btn-secondary" onClick={() => onConfirm(false)}>
               <span className="planning-move-btn-icon">⬜</span>
               <div>
-                <div className="planning-move-btn-label">Ce créneau seulement</div>
+                <div className="planning-move-btn-label">{t('planning.modal.ceCreneauSeulement')}</div>
                 <div className="planning-move-btn-sub">
-                  {moveDragSlot || moveCreneau.heure_debut}–{moveDragSlot ? nextSlot(moveDragSlot) : moveCreneau.heure_fin} uniquement
+                  {t('planning.modal.ceCreneauSub', { debut: moveDragSlot || moveCreneau.heure_debut, fin: moveDragSlot ? nextSlot(moveDragSlot) : moveCreneau.heure_fin })}
                 </div>
               </div>
             </button>
-            <button type="button" className="planning-move-btn-cancel" onClick={onCancel}>Annuler</button>
+            <button type="button" className="planning-move-btn-cancel" onClick={onCancel}>{t('planning.modal.annuler')}</button>
           </div>
         </div>
       </div>

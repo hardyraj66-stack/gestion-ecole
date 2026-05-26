@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Matiere, CoefficientNiveau } from '../../types';
 import { Card } from '../../components/shared/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -18,6 +19,7 @@ interface MatiereCardProps {
 }
 
 export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }: MatiereCardProps) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const couleur = matiere.couleur || '#2563eb';
 
@@ -48,9 +50,9 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
   const cancelEdit = () => { setEditing(false); setError(''); };
 
   const handleSave = async () => {
-    if (!nom.trim()) { setError('Le nom est obligatoire.'); return; }
+    if (!nom.trim()) { setError(t('matiereCard.nomObligatoire')); return; }
     for (const c of coefficients) {
-      if (c.coefficient <= 0) { setError(`Coefficient invalide pour ${c.niveau}.`); return; }
+      if (c.coefficient <= 0) { setError(t('matiereCard.coefficientInvalide', { niveau: c.niveau })); return; }
     }
     setSaving(true);
     setError('');
@@ -62,23 +64,23 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.message || 'Erreur lors de la sauvegarde.');
+        setError(body.message || t('matiereCard.erreurSauvegarde'));
       } else {
         const updated = await res.json();
         onUpdated(updated);
         setEditing(false);
       }
     } catch {
-      setError('Erreur réseau.');
+      setError(t('matiereCard.erreurReseau'));
     }
     setSaving(false);
   };
 
   const handleDelete = async () => {
     const ok = await confirm({
-      title: 'Désactiver la matière',
-      message: `Désactiver « ${matiere.nom} » ? Elle ne sera plus proposée dans les nouveaux créneaux, mais les bulletins existants sont conservés.`,
-      confirmText: 'Désactiver',
+      title: t('matiereCard.desactiverTitre'),
+      message: t('matiereCard.desactiverMsg', { nom: matiere.nom }),
+      confirmText: t('matiereCard.desactiverBtn'),
       variant: 'danger',
     });
     if (!ok) return;
@@ -86,9 +88,9 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       await confirm({
-        title: 'Désactivation impossible',
-        message: body.message || 'Cette matière ne peut pas être désactivée.',
-        confirmText: 'Fermer',
+        title: t('matiereCard.desactivationImpossible'),
+        message: body.message || t('matiereCard.desactivationImpossibleMsg'),
+        confirmText: t('matiereCard.fermer'),
         variant: 'danger',
       });
     } else {
@@ -116,16 +118,16 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
       <Card borderTop={couleur}>
         <div className="matiere-edit-header">
           <div className="matiere-code" style={{ backgroundColor: `${couleur}20`, color: couleur }}>{matiere.code}</div>
-          <span className="matiere-edit-label">Édition</span>
+          <span className="matiere-edit-label">{t('matiereCard.edition')}</span>
         </div>
 
-        <Input label="Nom *" value={nom} onChange={e => setNom(e.target.value)} fullWidth />
-        <Textarea label="Description" value={description} onChange={e => setDescription(e.target.value)} rows={2} />
+        <Input label={t('matieres.form.nom')} value={nom} onChange={e => setNom(e.target.value)} fullWidth />
+        <Textarea label={t('matieres.form.description')} value={description} onChange={e => setDescription(e.target.value)} rows={2} />
 
         <div className="matiere-coef-section">
-          <div className="matiere-coef-title">Coefficients par niveau</div>
+          <div className="matiere-coef-title">{t('matiereCard.coefSection')}</div>
           {coefficients.length === 0 && (
-            <p className="matiere-coef-empty">Aucun niveau configuré. Ajoutez un niveau ci-dessous.</p>
+            <p className="matiere-coef-empty">{t('matiereCard.coefficientsVide')}</p>
           )}
           {coefficients.map(c => (
             <div key={c.niveau} className="matiere-coef-row">
@@ -139,7 +141,7 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
                 step={0.5}
                 onChange={e => setCoeffForNiveau(c.niveau, parseFloat(e.target.value) || 0)}
               />
-              <button className="matiere-coef-remove" onClick={() => removeNiveau(c.niveau)} title="Retirer ce niveau">
+              <button className="matiere-coef-remove" onClick={() => removeNiveau(c.niveau)} title={t('matiereCard.retirerNiveau')}>
                 <Icon path="M6 18L18 6M6 6l12 12" size={12} />
               </button>
             </div>
@@ -151,7 +153,7 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
                 defaultValue=""
                 onChange={e => { if (e.target.value) { addNiveau(e.target.value); e.target.value = ''; } }}
               >
-                <option value="" disabled>+ Ajouter un niveau</option>
+                <option value="" disabled>{t('matiereCard.ajouterNiveau')}</option>
                 {availableToAdd.map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
@@ -161,8 +163,8 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
         {error && <p className="matiere-edit-error">{error}</p>}
 
         <div className="matiere-edit-actions">
-          <Button size="sm" variant="secondary" onClick={cancelEdit} disabled={saving}>Annuler</Button>
-          <Button size="sm" variant="primary" onClick={handleSave} loading={saving} disabled={saving}>Enregistrer</Button>
+          <Button size="sm" variant="secondary" onClick={cancelEdit} disabled={saving}>{t('common.annuler')}</Button>
+          <Button size="sm" variant="primary" onClick={handleSave} loading={saving} disabled={saving}>{t('common.enregistrer')}</Button>
         </div>
       </Card>
     );
@@ -173,7 +175,7 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
       <div className="matiere-card-header">
         <div className="matiere-code" style={{ backgroundColor: `${couleur}20`, color: couleur }}>{matiere.code}</div>
         {!readOnly && (
-          <button className="matiere-edit-btn" onClick={startEdit} title="Modifier">
+          <button className="matiere-edit-btn" onClick={startEdit} title={t('matiereCard.modifier')}>
             <Icon path="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" size={14} />
           </button>
         )}
@@ -203,7 +205,7 @@ export function MatiereCard({ matiere, niveaux, onDelete, onUpdated, readOnly }:
       {!readOnly && (
         <div className="matiere-card-actions">
           <Button variant="danger" size="sm" onClick={handleDelete}>
-            Supprimer
+            {t('matiereCard.supprimer')}
           </Button>
         </div>
       )}

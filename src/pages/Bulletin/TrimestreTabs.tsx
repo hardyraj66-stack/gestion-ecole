@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Trimestre } from '../../types';
 
 interface TrimestreTabsProps {
@@ -6,18 +7,19 @@ interface TrimestreTabsProps {
 }
 
 export function TrimestreTabs({ selected, onChange }: TrimestreTabsProps) {
+  const { t } = useTranslation();
   const trimestres: Trimestre[] = [1, 2, 3];
 
   return (
     <div className="trimestre-tabs">
-      {trimestres.map(t => (
+      {trimestres.map(tr => (
         <button
-          key={t}
+          key={tr}
           type="button"
-          className={`trimestre-tab ${selected === t ? 'active' : ''}`}
-          onClick={() => onChange(t)}
+          className={`trimestre-tab ${selected === tr ? 'active' : ''}`}
+          onClick={() => onChange(tr)}
         >
-          Trimestre {t}
+          {t('bulletin.trimestre', { t: tr })}
         </button>
       ))}
     </div>

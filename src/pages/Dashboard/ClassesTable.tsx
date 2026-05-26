@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader } from '../../components/shared/Card';
 import { ProgressBar } from '../../components/shared/ProgressBar';
 import { Table, TableHead, TableBody, TableRow, TableCell } from '../../components/shared/Table';
@@ -11,19 +12,21 @@ interface ClassesTableProps {
 }
 
 export function ClassesTable({ classes, pagination, onPageChange }: ClassesTableProps) {
+  const { t } = useTranslation();
+
   return (
     <Card padding="none">
       <div style={{ padding: '1.25rem 1.25rem 0' }}>
-        <CardHeader title="Classes" linkTo="/classes" linkText="Voir tout →" />
+        <CardHeader title={t('nav.classes')} linkTo="/classes" linkText={t('dashboard.voirTout')} />
       </div>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell header>Classe</TableCell>
-            <TableCell header>Niveau</TableCell>
-            <TableCell header>Salle</TableCell>
-            <TableCell header>Élèves</TableCell>
-            <TableCell header>Remplissage</TableCell>
+            <TableCell header>{t('classes.colonne.classe')}</TableCell>
+            <TableCell header>{t('classes.colonne.niveau')}</TableCell>
+            <TableCell header>{t('classes.colonne.salle')}</TableCell>
+            <TableCell header>{t('classes.colonne.eleves')}</TableCell>
+            <TableCell header>{t('classes.colonne.remplissage')}</TableCell>
             <TableCell header></TableCell>
           </TableRow>
         </TableHead>
@@ -41,7 +44,7 @@ export function ClassesTable({ classes, pagination, onPageChange }: ClassesTable
                 </div>
               </TableCell>
               <TableCell>
-                <Button as="link" to={`/classes/${c.id}/eleves`} variant="outline" size="sm">Voir</Button>
+                <Button as="link" to={`/classes/${c.id}/eleves`} variant="outline" size="sm">{t('classes.voir')}</Button>
               </TableCell>
             </TableRow>
           ))}

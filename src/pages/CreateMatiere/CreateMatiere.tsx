@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useMatieres } from '../../contexts/MatiereContext';
 import { useViewing } from '../../contexts/ViewingContext';
@@ -15,21 +16,22 @@ import { FormGrid, FormActions } from '../../components/shared/FormGrid';
 import { Icon } from '../../components/shared/Icon';
 import { MatierePreview } from './MatierePreview';
 
-const COULEURS = [
-  { value: '#2563eb', label: 'Bleu' },
-  { value: '#7c3aed', label: 'Violet' },
-  { value: '#db2777', label: 'Rose' },
-  { value: '#dc2626', label: 'Rouge' },
-  { value: '#d97706', label: 'Orange' },
-  { value: '#16a34a', label: 'Vert' },
-  { value: '#0891b2', label: 'Cyan' },
-  { value: '#475569', label: 'Ardoise' },
-];
-
 export function CreateMatiere() {
+  const { t } = useTranslation();
   const { isViewingArchive } = useViewing();
   const navigate = useNavigate();
   const { create } = useMatieres();
+
+  const COULEURS = [
+    { value: '#2563eb', label: t('matieres.couleurs.bleu') },
+    { value: '#7c3aed', label: t('matieres.couleurs.violet') },
+    { value: '#db2777', label: t('matieres.couleurs.rose') },
+    { value: '#dc2626', label: t('matieres.couleurs.rouge') },
+    { value: '#d97706', label: t('matieres.couleurs.orange') },
+    { value: '#16a34a', label: t('matieres.couleurs.vert') },
+    { value: '#0891b2', label: t('matieres.couleurs.cyan') },
+    { value: '#475569', label: t('matieres.couleurs.ardoise') },
+  ];
 
   const [nom, setNom] = useState('');
   const [code, setCode] = useState('');
@@ -73,16 +75,16 @@ export function CreateMatiere() {
     e.preventDefault();
 
     if (!nom.trim() || !code.trim()) {
-      setError('Veuillez remplir tous les champs obligatoires.');
+      setError(t('matieres.champsObligatoires'));
       return;
     }
     if (coefficients.length === 0) {
-      setError('Définissez au moins un coefficient de niveau.');
+      setError(t('matieres.coefficientVide'));
       return;
     }
     for (const c of coefficients) {
       if (c.coefficient <= 0) {
-        setError(`Le coefficient pour ${c.niveau} doit être positif.`);
+        setError(t('matieres.coefficientPositif', { niveau: c.niveau }));
         return;
       }
     }
@@ -102,55 +104,55 @@ export function CreateMatiere() {
       setSuccess(true);
       setTimeout(() => navigate('/matieres'), 1500);
     } else {
-      setError('Erreur lors de la création de la matière.');
+      setError(t('matieres.erreurCreation'));
       setSubmitting(false);
     }
   };
 
   return (
     <div>
-      <PageHeader title="Nouvelle matière" subtitle="Créer une nouvelle matière">
-        <Button as="link" to="/matieres" variant="secondary">← Retour</Button>
+      <PageHeader title={t('matieres.creerTitre')} subtitle={t('matieres.creerSousTitre')}>
+        <Button as="link" to="/matieres" variant="secondary">{t('matieres.retour')}</Button>
       </PageHeader>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', maxWidth: '900px' }}>
         <Card>
-          {success && <Alert variant="success">Matière créée avec succès ! Redirection en cours…</Alert>}
+          {success && <Alert variant="success">{t('matieres.succes')}</Alert>}
           {error && <Alert variant="error">{error}</Alert>}
 
           <form onSubmit={handleSubmit}>
             <FormGrid>
               <Input
-                label="Nom de la matière *"
+                label={t('matieres.form.nom')}
                 value={nom}
                 onChange={e => setNom(e.target.value)}
-                placeholder="Ex : Mathématiques"
+                placeholder={t('matieres.form.nomPlaceholder')}
                 required
               />
               <Input
-                label="Code *"
+                label={t('matieres.form.code')}
                 value={code}
                 onChange={e => setCode(e.target.value.toUpperCase())}
-                placeholder="Ex : MATH"
+                placeholder={t('matieres.form.codePlaceholder')}
                 maxLength={6}
                 required
               />
             </FormGrid>
 
             <Textarea
-              label="Description"
+              label={t('matieres.form.description')}
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Description de la matière…"
+              placeholder={t('matieres.form.descriptionPlaceholder')}
               rows={3}
             />
 
-            <ColorPicker label="Couleur" colors={COULEURS} value={couleur} onChange={setCouleur} />
+            <ColorPicker label={t('matieres.form.couleur')} colors={COULEURS} value={couleur} onChange={setCouleur} />
 
             <div className="matiere-coef-section" style={{ marginTop: '1.25rem' }}>
-              <div className="matiere-coef-title">Coefficients par niveau *</div>
+              <div className="matiere-coef-title">{t('matieres.form.coefficients')}</div>
               {coefficients.length === 0 && (
-                <p className="matiere-coef-empty">Ajoutez un niveau pour définir son coefficient.</p>
+                <p className="matiere-coef-empty">{t('matieres.form.coefficientsVide')}</p>
               )}
               {coefficients.map(c => (
                 <div key={c.niveau} className="matiere-coef-row">
@@ -164,7 +166,7 @@ export function CreateMatiere() {
                     step={0.5}
                     onChange={e => setCoeffForNiveau(c.niveau, parseFloat(e.target.value) || 0)}
                   />
-                  <button type="button" className="matiere-coef-remove" onClick={() => removeNiveau(c.niveau)} title="Retirer ce niveau">
+                  <button type="button" className="matiere-coef-remove" onClick={() => removeNiveau(c.niveau)} title={t('matieres.form.retirerNiveau')}>
                     <Icon path="M6 18L18 6M6 6l12 12" size={12} />
                   </button>
                 </div>
@@ -176,7 +178,7 @@ export function CreateMatiere() {
                     defaultValue=""
                     onChange={e => { if (e.target.value) { addNiveau(e.target.value); e.target.value = ''; } }}
                   >
-                    <option value="" disabled>+ Ajouter un niveau</option>
+                    <option value="" disabled>{t('matieres.form.ajouterNiveau')}</option>
                     {availableToAdd.map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
@@ -184,9 +186,9 @@ export function CreateMatiere() {
             </div>
 
             <FormActions>
-              <Button as="link" to="/matieres" variant="secondary">Annuler</Button>
+              <Button as="link" to="/matieres" variant="secondary">{t('common.annuler')}</Button>
               <Button type="submit" variant="primary" disabled={submitting || success} loading={submitting}>
-                Créer la matière
+                {t('matieres.form.creerBtn')}
               </Button>
             </FormActions>
           </form>

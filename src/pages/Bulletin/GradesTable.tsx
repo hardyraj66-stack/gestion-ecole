@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { BulletinMatiere } from '../../types';
 import { Card } from '../../components/shared/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -19,18 +20,20 @@ function NoteCell({ valeur }: { valeur: number | null }) {
 }
 
 export function GradesTable({ bulletinMatieres, moyenneGenerale }: GradesTableProps) {
+  const { t } = useTranslation();
+
   return (
     <Card padding="none">
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell header>Matière</TableCell>
-            <TableCell header>Code</TableCell>
-            <TableCell header>Coef.</TableCell>
-            <TableCell header>DS</TableCell>
-            <TableCell header>Évaluation</TableCell>
-            <TableCell header>Moyenne</TableCell>
-            <TableCell header>Mention</TableCell>
+            <TableCell header>{t('bulletin.table.matiere')}</TableCell>
+            <TableCell header>{t('bulletin.table.code')}</TableCell>
+            <TableCell header>{t('bulletin.table.coef')}</TableCell>
+            <TableCell header>{t('bulletin.table.ds')}</TableCell>
+            <TableCell header>{t('bulletin.table.evaluation')}</TableCell>
+            <TableCell header>{t('bulletin.table.moyenne')}</TableCell>
+            <TableCell header>{t('bulletin.table.mention')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -50,7 +53,7 @@ export function GradesTable({ bulletinMatieres, moyenneGenerale }: GradesTablePr
                 <TableCell>
                   {hasNote ? (
                     <span className="note-moyenne" style={{ color: getNoteColor(matiere.moyenne) }}>
-                      {matiere.moyenne.toFixed(1)}/20
+                      {matiere.moyenne.toFixed(1)}{t('bulletin.sur20')}
                     </span>
                   ) : (
                     <span style={{ color: 'var(--text-muted)' }}>—</span>
@@ -70,14 +73,14 @@ export function GradesTable({ bulletinMatieres, moyenneGenerale }: GradesTablePr
         {moyenneGenerale !== null && bulletinMatieres.some(m => m.ds !== null || m.evaluation !== null) && (
           <TableFooter>
             <TableRow>
-              <TableCell><strong>Moyenne générale (pondérée)</strong></TableCell>
+              <TableCell><strong>{t('bulletin.table.moyenneGenerale')}</strong></TableCell>
               <TableCell></TableCell>
               <TableCell></TableCell>
               <TableCell></TableCell>
               <TableCell></TableCell>
               <TableCell>
                 <span className="note-moyenne" style={{ color: getNoteColor(moyenneGenerale), fontSize: '1.1rem' }}>
-                  {moyenneGenerale.toFixed(1)}/20
+                  {moyenneGenerale.toFixed(1)}{t('bulletin.sur20')}
                 </span>
               </TableCell>
               <TableCell>

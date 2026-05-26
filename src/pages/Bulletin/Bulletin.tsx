@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useBulletinData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -13,6 +14,7 @@ import { BulletinMatiere, Trimestre } from '../../types';
 import { API_BASE_URL } from '../../config/api';
 
 export function Bulletin() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [trimestre, setTrimestre] = useState<Trimestre>(1);
   const { data, loading, readOnly } = useBulletinData(id || '', trimestre);
@@ -34,15 +36,18 @@ export function Bulletin() {
 
   return (
     <div>
-      <PageHeader title={`Bulletin de ${eleve.prenom} ${eleve.nom}`} subtitle={`Trimestre ${trimestre} — ${classe?.annee_scolaire || ''}`}>
-        {classe && <Button as="link" to={`/classes/${classe.id}/eleves`} variant="secondary">← Classe</Button>}
-        <Button as="link" to="/eleves" variant="outline">Tous les élèves</Button>
+      <PageHeader
+        title={t('bulletin.titre', { prenom: eleve.prenom, nom: eleve.nom })}
+        subtitle={t('bulletin.soustitre', { trimestre, annee: classe?.annee_scolaire || '' })}
+      >
+        {classe && <Button as="link" to={`/classes/${classe.id}/eleves`} variant="secondary">{t('bulletin.retourClasse')}</Button>}
+        <Button as="link" to="/eleves" variant="outline">{t('bulletin.tousEleves')}</Button>
         <Button
           variant="outline"
           onClick={() => window.open(`${API_BASE_URL}/export/bulletin/${id}?trimestre=${trimestre}`, '_blank')}
         >
           <Icon path="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" size={16} />
-          Imprimer / PDF
+          {t('bulletin.imprimer')}
         </Button>
       </PageHeader>
 
@@ -51,8 +56,11 @@ export function Bulletin() {
         <div>
           <TrimestreTabs selected={trimestre} onChange={setTrimestre} />
           {bulletin.length === 0 || !bulletin.some((m: any) => m.ds !== null || m.evaluation !== null) ? (
-            <EmptyState icon={<Icon path={Icons.document} size={28} />} message={`Aucune évaluation pour le trimestre ${trimestre}`}
-              action={!readOnly ? <Button as="link" to="/evaluations/nouvelle" variant="primary">Créer une évaluation</Button> : undefined} />
+            <EmptyState
+              icon={<Icon path={Icons.document} size={28} />}
+              message={t('bulletin.aucuneEval', { trimestre })}
+              action={!readOnly ? <Button as="link" to="/evaluations/nouvelle" variant="primary">{t('bulletin.creerEval')}</Button> : undefined}
+            />
           ) : (
             <GradesTable bulletinMatieres={bulletin} moyenneGenerale={moyenneGenerale} />
           )}
