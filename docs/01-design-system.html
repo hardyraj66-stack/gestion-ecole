@@ -4,7 +4,7 @@
 <div class="doc">
 
 <h1>🎨 Design System</h1>
-<p class="subtitle">Variables CSS, couleurs, typographie, layout</p>
+<p class="subtitle">Variables CSS, couleurs, typographie, layout, dark mode, thèmes de couleur</p>
 
 <h2>Palette de couleurs</h2>
 <table>
@@ -82,6 +82,32 @@
 <tr><td><code>primary</code></td><td>#eff6ff</td><td>#2563eb</td><td>Niveau de classe</td></tr>
 <tr><td><code>default</code></td><td>#f1f5f9</td><td>#64748b</td><td>Coefficients, lecture seule</td></tr>
 </table>
+
+<h2>Dark mode</h2>
+<p>Activé via l'attribut <code>data-theme="dark"</code> sur <code>&lt;html&gt;</code>, positionné par <code>SettingsContext</code> au démarrage. Toutes les variables ci-dessous sont surchargées automatiquement — aucune classe CSS à ajouter dans les composants.</p>
+<table>
+<tr><th>Variable</th><th>Light</th><th>Dark</th></tr>
+<tr><td><code>--bg</code></td><td>#f1f5f9</td><td>#0f172a</td></tr>
+<tr><td><code>--card-bg</code></td><td>#ffffff</td><td>#1e293b</td></tr>
+<tr><td><code>--text</code></td><td>#0f172a</td><td>#f1f5f9</td></tr>
+<tr><td><code>--text-muted</code></td><td>#64748b</td><td>#94a3b8</td></tr>
+<tr><td><code>--border</code></td><td>#e2e8f0</td><td>#334155</td></tr>
+<tr><td><code>--primary-light</code></td><td>#eff6ff</td><td>#1e3a5f (et variantes par couleur)</td></tr>
+</table>
+<div class="callout callout-info"><p>Le toggle dark/light est dans la page <strong>Paramètres</strong> (<code>/parametres</code>). Le choix est persisté dans IndexedDB et appliqué <strong>avant</strong> le premier rendu pour éviter le flash de mauvais thème.</p></div>
+
+<h2>Couleurs d'accentuation</h2>
+<p>6 couleurs sélectionnables dans Paramètres. Appliquées via <code>data-color="..."</code> sur <code>&lt;html&gt;</code> — surchargent uniquement <code>--primary</code>, <code>--primary-dark</code>, <code>--primary-light</code>.</p>
+<table>
+<tr><th>Valeur</th><th>--primary</th><th>--primary-dark</th><th>--primary-light</th></tr>
+<tr><td><code>blue</code> <em>(défaut)</em></td><td><span style="color:#2563eb">■</span> #2563eb</td><td>#1d4ed8</td><td>#eff6ff</td></tr>
+<tr><td><code>violet</code></td><td><span style="color:#7c3aed">■</span> #7c3aed</td><td>#6d28d9</td><td>#ede9fe</td></tr>
+<tr><td><code>green</code></td><td><span style="color:#16a34a">■</span> #16a34a</td><td>#15803d</td><td>#f0fdf4</td></tr>
+<tr><td><code>red</code></td><td><span style="color:#dc2626">■</span> #dc2626</td><td>#b91c1c</td><td>#fef2f2</td></tr>
+<tr><td><code>orange</code></td><td><span style="color:#ea580c">■</span> #ea580c</td><td>#c2410c</td><td>#fff7ed</td></tr>
+<tr><td><code>indigo</code></td><td><span style="color:#4f46e5">■</span> #4f46e5</td><td>#4338ca</td><td>#eef2ff</td></tr>
+</table>
+<p>En mode dark, <code>--primary-light</code> est aussi surchargée pour chaque couleur (fond plus sombre) afin de maintenir le contraste.</p>
 
 <div class="doc-footer">
 <a href="00-vue-ensemble.html">← Vue d'ensemble</a>

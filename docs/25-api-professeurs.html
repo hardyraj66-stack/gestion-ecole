@@ -55,7 +55,7 @@
 <p>Mise à jour partielle. Mêmes événements qu'à la création.</p>
 
 <h3><span class="badge b-patch">PATCH</span> <code>/professeurs/:id/desactiver</code></h3>
-<p>Passe le statut à <code>'inactif'</code>. Le professeur reste dans la base mais n'est plus sélectionnable dans les affectations.</p>
+<p>Passe le statut à <code>'inactif'</code> <strong>et supprime toutes ses affectations</strong> (TeacherAssignment). Le professeur reste dans la base mais n'est plus sélectionnable dans les formulaires.</p>
 
 <h3><span class="badge b-patch">PATCH</span> <code>/professeurs/:id/activer</code></h3>
 <p>Repasse le statut à <code>'actif'</code>.</p>

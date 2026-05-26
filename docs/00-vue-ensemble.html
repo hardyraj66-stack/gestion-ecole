@@ -48,20 +48,28 @@ Backend (NestJS)
 ├── data/mockData.ts
 ├── services/
 │   ├── socketService.ts       Singleton Socket.IO + notifyDataChange
-│   └── readApi.ts             Appels GET /read/* centralisés
+│   ├── readApi.ts             Appels GET /read/* centralisés
+│   └── settingsDB.ts          IndexedDB — persistance thème/couleur/langue
+├── i18n/
+│   ├── index.ts               Init i18next (importé avant App dans main.tsx)
+│   └── locales/fr.json|en.json|mg.json
 ├── hooks/
 │   └── usePageData.ts         1 hook dédié par page / endpoint
 ├── contexts/
-│   ├── AnneeContext.tsx       Années scolaires
-│   ├── ClasseContext.tsx      Write only + socket listen
-│   ├── EleveContext.tsx       Write only + socket listen
-│   ├── MatiereContext.tsx     Write only + socket listen
-│   ├── NoteContext.tsx        Write only + bulletin helper
-│   ├── NiveauContext.tsx      Write only — CRUD niveaux
-│   ├── PlanningContext.tsx    Write only + socket listen
-│   ├── SalleContext.tsx       Write + lecture salles utilitaires
-│   ├── ViewingContext.tsx     Mode archive / snapshot
-│   └── AppProviders.tsx
+│   ├── AnneeContext.tsx             Années scolaires
+│   ├── ClasseContext.tsx            Write only + socket listen
+│   ├── EleveContext.tsx             Write only + socket listen
+│   ├── MatiereContext.tsx           Write only + socket listen
+│   ├── NoteContext.tsx              Write only + bulletin helper
+│   ├── NiveauContext.tsx            Write only — CRUD niveaux
+│   ├── PlanningContext.tsx          Write only + socket listen
+│   ├── SalleContext.tsx             Write + lecture salles utilitaires
+│   ├── ViewingContext.tsx           Mode archive / snapshot
+│   ├── ProfesseurContext.tsx        Write only — CRUD professeurs
+│   ├── TeacherAssignmentContext.tsx Write only — affectations prof/matière/classe
+│   ├── PeriodeContext.tsx           Write only — gestion périodes d'évaluation
+│   ├── SettingsContext.tsx          Thème, couleur, langue — persistance IndexedDB
+│   └── AppProviders.tsx             Ordre : SettingsProvider (1er) → ConfirmProvider → AnneeProvider → …
 ├── components/
 │   ├── layout/
 │   ├── ui/
@@ -87,7 +95,8 @@ Backend (NestJS)
 │       ├── read-matiere.schema.ts
 │       ├── read-note.schema.ts
 │       ├── read-creneau.schema.ts
-│       └── read-salle.schema.ts
+│       ├── read-salle.schema.ts
+│       └── read-evaluation.schema.ts
 ├── annees/
 ├── classes/
 ├── eleves/
@@ -96,6 +105,10 @@ Backend (NestJS)
 ├── notes/
 ├── planning/
 ├── salles/
+├── professeurs/    CRUD professeurs + activation/désactivation
+├── evaluations/    DS et évaluations libres par classe/matière/trimestre
+├── periodes/       Fenêtres de saisie par trimestre (PériodeEvaluation)
+├── export/         CSV, Excel (SpreadsheetML), bulletin HTML, carte scolaire
 ├── suivi/          avertissements, absences, retards, convocations
 ├── exclusions/     gestion des exclusions d'élèves
 └── departs/        gestion des départs d'élèves</code></pre>
@@ -132,6 +145,7 @@ Backend (NestJS)
 <tr><td><code>read_notes</code></td><td>note</td><td><code>eleve_nom</code>, <code>matiere_nom</code>, <code>matiere_code</code></td></tr>
 <tr><td><code>read_creneaux</code></td><td>créneau</td><td><code>classe_nom</code></td></tr>
 <tr><td><code>read_salles</code></td><td>salle</td><td>miroir dénormalisé</td></tr>
+<tr><td><code>read_evaluations</code></td><td>évaluation</td><td><code>classe_nom</code>, <code>matiere_nom</code>, <code>nb_eleves</code>, <code>moyenne_classe</code>, notes dénormalisées</td></tr>
 </table>
 
 <h3>Collections write supplémentaires</h3>
@@ -142,6 +156,10 @@ Backend (NestJS)
 <tr><td><code>convocations</code></td><td>suivi</td><td>Convocations générées après seuil d'avertissements</td></tr>
 <tr><td><code>exclusions</code></td><td>exclusions</td><td>Exclusions d'élèves</td></tr>
 <tr><td><code>departs</code></td><td>departs</td><td>Départs d'élèves</td></tr>
+<tr><td><code>professeurs</code></td><td>professeurs</td><td>Enseignants — statut actif/inactif</td></tr>
+<tr><td><code>teacherassignments</code></td><td>teacher_assignments</td><td>Affectations professeur → matière → classe</td></tr>
+<tr><td><code>evaluations</code></td><td>evaluations</td><td>DS et évaluations libres avec notes individuelles</td></tr>
+<tr><td><code>periodeevaluations</code></td><td>periode_evaluations</td><td>Fenêtres de saisie par trimestre (6 max / année)</td></tr>
 </table>
 
 <div class="doc-footer">
