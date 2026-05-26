@@ -20,7 +20,7 @@ export class ClassesController {
     const payload = { ...body, annee_scolaire: anneeActive.label };
     const item = await this.service.create(payload);
     this.events.emit('classe:created', item);
-    this.viewBuilder.onClasseWrite(); // sync read model
+    this.viewBuilder.onClasseWrite(item.id);
     return item;
   }
 
@@ -29,7 +29,7 @@ export class ClassesController {
     const item = await this.service.update(id, body);
     if (!item) throw new NotFoundException();
     this.events.emit('classe:updated', item);
-    this.viewBuilder.onClasseWrite();
+    this.viewBuilder.onClasseWrite(id);
     return item;
   }
 
@@ -39,7 +39,7 @@ export class ClassesController {
     const ok = await this.service.desactiver(id);
     if (!ok) throw new NotFoundException();
     this.events.emit('classe:updated', { id });
-    this.viewBuilder.onClasseWrite();
+    this.viewBuilder.onClasseWrite(id);
     return { id };
   }
 }
