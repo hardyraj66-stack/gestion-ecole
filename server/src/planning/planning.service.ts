@@ -79,36 +79,33 @@ export class PlanningService {
   // Retourne le nombre de fusions effectuées.
   async mergeAdjacent(classeId: string): Promise<number> {
     const creneaux = await this.model.find({ classe_id: classeId }).lean().exec();
-
     const sorted = [...creneaux].sort((a, b) => {
       const jd = JOURS.indexOf(a.jour) - JOURS.indexOf(b.jour);
-      if (jd !== 0) return jd;
-      return toMin(a.heure_debut) - toMin(b.heure_debut);
+      return jd !== 0 ? jd : toMin(a.heure_debut) - toMin(b.heure_debut);
     });
 
     let mergeCount = 0;
     const deleted = new Set<string>();
+    const updateOps: any[] = [];
+    const deleteIds: string[] = [];
 
     for (let i = 0; i < sorted.length - 1; i++) {
       const a = sorted[i] as any;
       if (deleted.has(String(a._id))) continue;
       const b = sorted[i + 1] as any;
       if (deleted.has(String(b._id))) continue;
-
-      if (
-        a.jour === b.jour &&
-        a.matiere_id === b.matiere_id &&
-        a.salle === b.salle &&
-        (a.professeur_id || '') === (b.professeur_id || '') &&
-        a.heure_fin === b.heure_debut
-      ) {
-        await this.model.findByIdAndUpdate(a._id, { heure_fin: b.heure_fin }).exec();
-        await this.model.findByIdAndDelete(b._id).exec();
+      if (a.jour === b.jour && a.matiere_id === b.matiere_id && a.salle === b.salle
+          && (a.professeur_id || '') === (b.professeur_id || '') && a.heure_fin === b.heure_debut) {
+        updateOps.push({ updateOne: { filter: { _id: a._id }, update: { $set: { heure_fin: b.heure_fin } } } });
+        deleteIds.push(String(b._id));
         deleted.add(String(b._id));
         sorted[i] = { ...a, heure_fin: b.heure_fin };
         mergeCount++;
       }
     }
+
+    if (updateOps.length > 0) await this.model.bulkWrite(updateOps);
+    if (deleteIds.length > 0) await this.model.deleteMany({ _id: { $in: deleteIds } }).exec();
 
     return mergeCount;
   }

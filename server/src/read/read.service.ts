@@ -76,12 +76,20 @@ export class ReadService {
     let elevesCount: number;
     let notesCount: number;
     if (anneeLabel) {
-      const classeIds = (await this.readClasseModel.find(classeFilter, { source_id: 1 }).exec()).map(c => c.source_id);
-      const eleveIds = (await this.readEleveModel.find({ classe_id: { $in: classeIds } }, { source_id: 1 }).exec()).map(e => e.source_id);
-      [elevesCount, notesCount] = await Promise.all([
-        this.readEleveModel.countDocuments({ classe_id: { $in: classeIds } }).exec(),
+      const classeIds = (await this.readClasseModel.find(classeFilter, { source_id: 1 }).lean().exec())
+        .map((c: any) => c.source_id);
+
+      const eleveFilter = { classe_id: { $in: classeIds } };
+      const [eleveSourceIds, elevesCnt] = await Promise.all([
+        this.readEleveModel.find(eleveFilter, { source_id: 1 }).lean().exec(),
+        this.readEleveModel.countDocuments(eleveFilter).exec(),
+      ]);
+      const eleveIds = eleveSourceIds.map((e: any) => e.source_id);
+      const [notesCnt] = await Promise.all([
         this.readNoteModel.countDocuments({ eleve_id: { $in: eleveIds } }).exec(),
       ]);
+      elevesCount = elevesCnt;
+      notesCount = notesCnt;
     } else {
       [elevesCount, notesCount] = await Promise.all([
         this.readEleveModel.countDocuments().exec(),
@@ -288,12 +296,18 @@ export class ReadService {
     const classeFilter = resolvedLabel ? { annee_scolaire: resolvedLabel } : {};
     const [classes, creneaux] = await Promise.all([
       this.readClasseModel.find(classeFilter).exec(),
-      this.readCreneauModel.find().lean().exec(),
+      this.readCreneauModel.find({}, { classe_id: 1 }).lean().exec(),
     ]);
+
+    const countMap = new Map<string, number>();
+    for (const cr of creneaux) {
+      const id = (cr as any).classe_id;
+      countMap.set(id, (countMap.get(id) || 0) + 1);
+    }
 
     const classesJson = classes.map(c => {
       const cj = c.toJSON() as any;
-      cj._creneauxCount = creneaux.filter((cr: any) => cr.classe_id === c.source_id).length;
+      cj._creneauxCount = countMap.get(c.source_id) || 0;
       return cj;
     });
 
@@ -410,37 +424,39 @@ export class ReadService {
   // ============ BULLETIN ============
   async getBulletin(eleveId: string, trimestre: number, anneeLabel?: string) {
     const resolvedLabel = await this.resolveAnneeLabel(anneeLabel);
-    // En mode archive, chercher l'entrée read_eleve pour cette année spécifique
     const eleveFilter: any = { source_id: eleveId };
     if (resolvedLabel) eleveFilter.annee_scolaire = resolvedLabel;
+
     const eleve = await this.readEleveModel.findOne(eleveFilter).exec();
     if (!eleve) return null;
-    const classe = await this.readClasseModel.findOne({ source_id: eleve.classe_id }).exec();
 
-    // Filtrer les notes par annee_scolaire si fourni
     const noteFilter: any = { eleve_id: eleveId, trimestre };
     if (resolvedLabel) noteFilter.annee_scolaire = resolvedLabel;
-    const notes = await this.readNoteModel.find(noteFilter).exec();
 
-    const matieres = await this.readMatiereModel.find().exec();
+    const [classe, notes, matieres] = await Promise.all([
+      this.readClasseModel.findOne({ source_id: eleve.classe_id }).exec(),
+      this.readNoteModel.find(noteFilter).exec(),
+      this.readMatiereModel.find().exec(),
+    ]);
+
+    const matiereMap = new Map(matieres.map(m => [m.source_id, m.toJSON() as any]));
     const niveau = (classe?.toJSON() as any)?.niveau;
 
-    const matiereMap = new Map<string, { ds: number | null; evaluation: number | null; matiere_nom: string; matiere_code: string }>();
+    const notesByMatiere = new Map<string, { ds: number | null; evaluation: number | null; matiere_nom: string; matiere_code: string }>();
     for (const n of notes) {
       const nj = n.toJSON() as any;
-      if (!matiereMap.has(nj.matiere_id)) {
-        matiereMap.set(nj.matiere_id, { ds: null, evaluation: null, matiere_nom: nj.matiere_nom, matiere_code: nj.matiere_code });
+      if (!notesByMatiere.has(nj.matiere_id)) {
+        notesByMatiere.set(nj.matiere_id, { ds: null, evaluation: null, matiere_nom: nj.matiere_nom, matiere_code: nj.matiere_code });
       }
-      const entry = matiereMap.get(nj.matiere_id)!;
+      const entry = notesByMatiere.get(nj.matiere_id)!;
       if (nj.type === 'ds') entry.ds = nj.valeur;
       else if (nj.type === 'evaluation') entry.evaluation = nj.valeur;
     }
 
-    const bulletin = Array.from(matiereMap).map(([mid, data]) => {
-      const mat = matieres.find(m => m.source_id === mid);
-      const matJson = mat?.toJSON() as any;
-      const coefficients: Array<{ niveau: string; coefficient: number }> = matJson?.coefficients || [];
-      let coeff = matJson?.coefficient ?? 1;
+    const bulletin = Array.from(notesByMatiere).map(([mid, data]) => {
+      const mat = matiereMap.get(mid);
+      const coefficients: Array<{ niveau: string; coefficient: number }> = mat?.coefficients || [];
+      let coeff = mat?.coefficient ?? 1;
       if (niveau && coefficients.length > 0) {
         const found = coefficients.find((c: any) => c.niveau === niveau);
         if (found) coeff = found.coefficient;
@@ -687,10 +703,9 @@ export class ReadService {
     const eleve = await this.readEleveModel.findOne(eleveFilter).exec();
     if (!eleve) return null;
 
-    const [classe, creneauxClasse, anneeActive] = await Promise.all([
+    const [classe, creneauxClasse] = await Promise.all([
       this.readClasseModel.findOne({ source_id: eleve.classe_id }).exec(),
       this.readCreneauModel.find({ classe_id: eleve.classe_id }).exec(),
-      this.anneeModel.findOne({ statut: 'active' }).exec(),
     ]);
 
     // Salle actuelle : fixe → salle de la classe, variable → laisser vide (résolu côté front via planning)
@@ -701,7 +716,7 @@ export class ReadService {
       classe: classe?.toJSON() || null,
       salleActuelle,
       creneaux: creneauxClasse.map(c => c.toJSON()),
-      anneeActive: anneeActive?.label || null,
+      anneeActive: (eleve as any).annee_scolaire || null,
     };
   }
 }
