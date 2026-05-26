@@ -30,3 +30,5 @@ export class Professeur extends Document {
 }
 
 export const ProfesseurSchema = SchemaFactory.createForClass(Professeur);
+ProfesseurSchema.index({ statut: 1 });
+ProfesseurSchema.index({ nom: 1 });

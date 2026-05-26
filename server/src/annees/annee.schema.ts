@@ -29,3 +29,4 @@ export class AnneeScolaire extends Document {
 }
 
 export const AnneeScolaireSchema = SchemaFactory.createForClass(AnneeScolaire);
+AnneeScolaireSchema.index({ statut: 1 });

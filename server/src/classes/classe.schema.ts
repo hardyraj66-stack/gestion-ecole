@@ -33,3 +33,7 @@ export class Classe extends Document {
 }
 
 export const ClasseSchema = SchemaFactory.createForClass(Classe);
+ClasseSchema.index({ annee_scolaire: 1 });
+ClasseSchema.index({ annee_scolaire: 1, actif: 1 });
+ClasseSchema.index({ salle: 1, salle_type: 1, actif: 1 });
+ClasseSchema.index({ niveau: 1, actif: 1 });

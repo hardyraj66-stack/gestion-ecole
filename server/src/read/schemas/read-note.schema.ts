@@ -27,3 +27,5 @@ export class ReadNote extends Document {
 export const ReadNoteSchema = SchemaFactory.createForClass(ReadNote);
 ReadNoteSchema.index({ source_id: 1 }, { unique: true });
 ReadNoteSchema.index({ eleve_id: 1, trimestre: 1 });
+ReadNoteSchema.index({ matiere_id: 1, trimestre: 1 });
+ReadNoteSchema.index({ annee_scolaire: 1 });

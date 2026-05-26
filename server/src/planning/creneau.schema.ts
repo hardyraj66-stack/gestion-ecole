@@ -36,3 +36,6 @@ export class Creneau extends Document {
 }
 
 export const CreneauSchema = SchemaFactory.createForClass(Creneau);
+CreneauSchema.index({ classe_id: 1 });
+CreneauSchema.index({ salle: 1, jour: 1 });
+CreneauSchema.index({ matiere_id: 1 });
