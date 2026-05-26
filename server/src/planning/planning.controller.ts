@@ -15,7 +15,7 @@ export class PlanningController {
   async create(@Body() body: any) {
     const item = await this.service.create(body);
     this.events.emit('creneau:created', item);
-    this.viewBuilder.onCreneauWrite();
+    this.viewBuilder.onCreneauWrite(item.id);
     return item;
   }
 
@@ -24,7 +24,7 @@ export class PlanningController {
     const item = await this.service.update(id, body);
     if (!item) throw new NotFoundException();
     this.events.emit('creneau:updated', item);
-    this.viewBuilder.onCreneauWrite();
+    this.viewBuilder.onCreneauWrite(id);
     return item;
   }
 
@@ -33,7 +33,7 @@ export class PlanningController {
     const ok = await this.service.delete(id);
     if (!ok) throw new NotFoundException();
     this.events.emit('creneau:deleted', { id });
-    this.viewBuilder.onCreneauWrite();
+    this.viewBuilder.onCreneauWrite(id);
     return { id };
   }
 
@@ -43,7 +43,7 @@ export class PlanningController {
     const count = await this.service.mergeAdjacent(classeId);
     if (count > 0) {
       this.events.emit('creneau:updated', { classe_id: classeId });
-      this.viewBuilder.onCreneauWrite();
+      this.viewBuilder.onCreneauWrite(); // pas d'id unique — rebuild complet des creneaux de la classe
     }
     return { merged: count };
   }

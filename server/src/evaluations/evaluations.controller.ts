@@ -15,7 +15,7 @@ export class EvaluationsController {
   async create(@Body() body: any) {
     const item = await this.service.create(body);
     this.events.emit('evaluation:created', item);
-    this.viewBuilder.onEvaluationWrite();
+    this.viewBuilder.onEvaluationWrite(item.id);
     return item;
   }
 
@@ -23,7 +23,7 @@ export class EvaluationsController {
   async saisirNotes(@Param('id') id: string, @Body() body: { notes: any[] }) {
     const item = await this.service.saisirNotes(id, body.notes);
     this.events.emit('evaluation:updated', item);
-    this.viewBuilder.onEvaluationWrite();
+    this.viewBuilder.onEvaluationWrite(id);
     return item;
   }
 
@@ -32,7 +32,7 @@ export class EvaluationsController {
   async publier(@Param('id') id: string) {
     const item = await this.service.publier(id);
     this.events.emit('evaluation:publie', item);
-    this.viewBuilder.onEvaluationWrite();
+    this.viewBuilder.onEvaluationWrite(id);
     return item;
   }
 
@@ -41,7 +41,7 @@ export class EvaluationsController {
   async delete(@Param('id') id: string) {
     const result = await this.service.delete(id);
     this.events.emit('evaluation:deleted', result);
-    this.viewBuilder.onEvaluationWrite();
+    this.viewBuilder.onEvaluationWrite(id);
     return result;
   }
 }

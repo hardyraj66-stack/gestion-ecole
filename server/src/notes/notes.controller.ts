@@ -15,7 +15,7 @@ export class NotesController {
   async create(@Body() body: any) {
     const item = await this.service.create(body);
     this.events.emit('note:created', item);
-    this.viewBuilder.onNoteWrite();
+    this.viewBuilder.onNoteWrite(item.id);
     return item;
   }
 
@@ -24,7 +24,7 @@ export class NotesController {
     const item = await this.service.update(id, body);
     if (!item) throw new NotFoundException();
     this.events.emit('note:updated', item);
-    this.viewBuilder.onNoteWrite();
+    this.viewBuilder.onNoteWrite(id);
     return item;
   }
 
@@ -34,7 +34,7 @@ export class NotesController {
     const ok = await this.service.annuler(id);
     if (!ok) throw new NotFoundException();
     this.events.emit('note:updated', { id });
-    this.viewBuilder.onNoteWrite();
+    this.viewBuilder.onNoteWrite(id);
     return { id };
   }
 }
