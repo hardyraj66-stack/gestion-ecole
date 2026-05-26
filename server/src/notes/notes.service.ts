@@ -64,43 +64,39 @@ export class NotesService {
   }
 
   async getBulletin(eleveId: string, trimestre: number): Promise<BulletinMatiere[]> {
-    const eleveNotes = await this.noteModel.find({ eleve_id: eleveId, trimestre, annulee: { $ne: true } }).exec();
-    const matieres = await this.matiereModel.find().exec();
+    const [eleveNotes, eleve] = await Promise.all([
+      this.noteModel.find({ eleve_id: eleveId, trimestre, annulee: { $ne: true } }).lean().exec(),
+      this.eleveModel.findById(eleveId).lean().exec() as any,
+    ]);
 
-    let niveauClasse: string | undefined;
-    const eleve = await this.eleveModel.findById(eleveId).lean().exec() as any;
-    if (eleve?.classe_id) {
-      const classe = await this.classeModel.findById(eleve.classe_id).lean().exec() as any;
-      niveauClasse = classe?.niveau;
-    }
+    const matiereIds = [...new Set(eleveNotes.map((n: any) => n.matiere_id))];
+    const [classe, matieres] = await Promise.all([
+      eleve?.classe_id ? this.classeModel.findById(eleve.classe_id).lean().exec() : Promise.resolve(null),
+      matiereIds.length > 0
+        ? this.matiereModel.find({ _id: { $in: matiereIds } }).lean().exec()
+        : Promise.resolve([]),
+    ]);
 
-    // Regrouper par matière → { ds: note, evaluation: note }
+    const niveauClasse: string | undefined = (classe as any)?.niveau;
+    const matiereMap = new Map((matieres as any[]).map((m: any) => [m._id.toString(), m]));
+
     const map = new Map<string, { ds: number | null; evaluation: number | null }>();
-    for (const n of eleveNotes) {
+    for (const n of eleveNotes as any[]) {
       const mid = n.matiere_id;
       if (!map.has(mid)) map.set(mid, { ds: null, evaluation: null });
       const entry = map.get(mid)!;
-      const type = (n as any).type as string | null;
-      if (type === 'ds') entry.ds = n.valeur;
-      else if (type === 'evaluation') entry.evaluation = n.valeur;
+      if (n.type === 'ds') entry.ds = n.valeur;
+      else if (n.type === 'evaluation') entry.evaluation = n.valeur;
     }
 
     const result: BulletinMatiere[] = [];
     for (const [matiereId, vals] of map) {
-      const mat = matieres.find(m => m._id.toString() === matiereId || (m as any).id === matiereId);
+      const mat = matiereMap.get(matiereId);
       if (!mat) continue;
       const coefficient = MatieresService.resolveCoefficient(mat, niveauClasse);
       const rawVals = [vals.ds, vals.evaluation].filter(v => v !== null) as number[];
       const moyenne = rawVals.length > 0 ? Math.round((rawVals.reduce((a, b) => a + b, 0) / rawVals.length) * 10) / 10 : 0;
-      result.push({
-        matiere_id: matiereId,
-        matiere_nom: mat.nom,
-        code: mat.code,
-        coefficient,
-        ds: vals.ds,
-        evaluation: vals.evaluation,
-        moyenne,
-      });
+      result.push({ matiere_id: matiereId, matiere_nom: mat.nom, code: mat.code, coefficient, ds: vals.ds, evaluation: vals.evaluation, moyenne });
     }
 
     return result;
