@@ -349,9 +349,9 @@ export function ProfesseurDetail() {
                     return (
                       <span key={c.id} title={alreadyAssigned ? 'Déjà assigné' : 'Matière non enseignée dans ce niveau'} style={{
                         padding: '0.3rem 0.7rem', borderRadius: '20px',
-                        border: `1.5px solid ${alreadyAssigned ? '#d1fae5' : 'var(--border-color)'}`,
-                        background: alreadyAssigned ? '#f0fdf4' : 'transparent',
-                        color: alreadyAssigned ? '#6ee7b7' : 'var(--text-muted)',
+                        border: `1.5px solid ${alreadyAssigned ? 'color-mix(in srgb, var(--success) 35%, transparent)' : 'var(--border)'}`,
+                        background: alreadyAssigned ? 'var(--success-light)' : 'transparent',
+                        color: alreadyAssigned ? 'var(--success)' : 'var(--text-muted)',
                         fontSize: '0.8rem', fontWeight: 400,
                         cursor: 'not-allowed', userSelect: 'none',
                         textDecoration: alreadyAssigned ? 'none' : 'line-through',
@@ -369,8 +369,8 @@ export function ProfesseurDetail() {
                       style={{
                         padding: '0.3rem 0.75rem', borderRadius: '20px',
                         border: `1.5px solid ${selected ? 'var(--primary)' : 'var(--border-color)'}`,
-                        background: selected ? 'var(--primary)' : 'var(--bg-card, #fff)',
-                        color: selected ? '#fff' : 'var(--text)',
+                        background: selected ? 'var(--primary)' : 'var(--card-bg)',
+                        color: selected ? 'var(--text-on-color)' : 'var(--text)',
                         fontSize: '0.825rem', fontWeight: selected ? 600 : 400,
                         cursor: 'pointer',
                         transition: 'all 0.12s',

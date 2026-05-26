@@ -20,13 +20,13 @@ import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { ExportMenu } from '../../components/shared/ExportMenu';
 
 const typeColors: Record<TypeSalle, string> = {
-  standard: '#2563eb',
-  laboratoire: '#7c3aed',
-  informatique: '#0891b2',
-  sport: '#16a34a',
-  arts: '#db2777',
-  amphi: '#d97706',
-  autre: '#64748b',
+  standard:    'var(--primary)',
+  laboratoire: 'var(--secondary)',
+  informatique:'var(--info)',
+  sport:       'var(--success)',
+  arts:        'var(--secondary)',
+  amphi:       'var(--warning)',
+  autre:       'var(--text-muted)',
 };
 
 export function SallesList() {

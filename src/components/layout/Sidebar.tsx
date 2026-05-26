@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { Badge } from '../ui/Badge';
+import { BrandIcon } from '../brand/BrandIcon';
+import { BrandWordmark } from '../brand/BrandWordmark';
 
 type IconElement =
   | { type: 'path'; d: string }
@@ -44,6 +46,8 @@ export function Sidebar() {
   const { t } = useTranslation();
   const { active, preparation, getAll: fetchAnnees } = useAnnees();
   const { viewing, isViewingArchive, exitView } = useViewing();
+  const [expanded, setExpanded] = useState(false);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchedRef = useRef(false);
   useEffect(() => {
@@ -71,73 +75,82 @@ export function Sidebar() {
     '/niveaux': t('nav.niveaux'),
   };
 
+  const handleMouseEnter = () => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => setExpanded(true), 80);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => setExpanded(false), 120);
+  };
+
   return (
-    <aside className={`sidebar ${isViewingArchive ? 'sidebar-archive' : ''}`}>
+    <aside
+      className={`sidebar ${expanded ? 'sidebar-expanded' : ''} ${isViewingArchive ? 'sidebar-archive' : ''}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Brand */}
       <div className="sidebar-brand">
-        <div className="sidebar-brand-icon">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          </svg>
+        <div className="sidebar-brand-icon-wrap">
+          <BrandIcon size={36} />
         </div>
-        <span className="sidebar-brand-text">GestionÉcole</span>
+        <div className="sidebar-brand-label">
+          <BrandWordmark height={28} />
+        </div>
       </div>
 
       <nav className="sidebar-nav">
         {navItems.map((item) => (
-          <NavLink key={item.path} to={item.path} end={item.end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.end}
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            title={!expanded ? (navLabels[item.path] ?? item.label) : undefined}
+          >
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="nav-item-icon">
               {item.icon
                 ? <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                 : item.iconMultiple?.map((el, idx) => renderIconElement(el, idx))
               }
             </svg>
-            <span>{navLabels[item.path] ?? item.label}</span>
+            <span className="nav-item-label">{navLabels[item.path] ?? item.label}</span>
           </NavLink>
         ))}
 
-        <div style={{ margin: '0.75rem 0', borderTop: '1px solid var(--sidebar-border)' }} />
+        <div className="sidebar-divider" />
 
-        <NavLink to="/annee-scolaire" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <NavLink to="/annee-scolaire" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={!expanded ? t('nav.cycle') : undefined}>
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="nav-item-icon">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>{t('nav.cycle')}</span>
+          <span className="nav-item-label">{t('nav.cycle')}</span>
         </NavLink>
-
       </nav>
 
       <div className="sidebar-footer">
-        <NavLink to="/parametres" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ marginBottom: '0.5rem' }}>
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <NavLink to="/parametres" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ marginBottom: '0.5rem' }} title={!expanded ? t('nav.parametres') : undefined}>
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="nav-item-icon">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <span>{t('nav.parametres')}</span>
+          <span className="nav-item-label">{t('nav.parametres')}</span>
         </NavLink>
 
         <div
+          className="sidebar-annee-block"
           onClick={isViewingArchive ? exitView : undefined}
-          style={{
-            padding: '0.6rem 0.75rem',
-            borderRadius: '8px',
-            background: isViewingArchive ? 'color-mix(in srgb, var(--warning) 30%, #000)' : 'var(--sidebar-hover)',
-            marginBottom: '0.75rem',
-            cursor: isViewingArchive ? 'pointer' : 'default',
-            transition: 'background 0.15s',
-            border: isViewingArchive ? '1px solid var(--warning)' : 'none',
-          }}
+          style={{ cursor: isViewingArchive ? 'pointer' : 'default' }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: 'var(--sidebar-text)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('sidebar.anneeScolaire')}</span>
+          <div className="sidebar-annee-top">
+            <span className="sidebar-annee-dot" style={{ background: isViewingArchive ? 'var(--warning)' : active ? 'var(--success)' : 'var(--warning)' }} />
+            <span className="sidebar-annee-label-text">{displayLabel}</span>
             <Badge label={displayStatut} variant={badgeVariant} />
           </div>
-          <div style={{ color: 'var(--sidebar-text-active)', fontWeight: 600, fontSize: '0.95rem', marginTop: '0.2rem' }}>
-            {displayLabel}
-          </div>
           {isViewingArchive && (
-            <div style={{ color: 'var(--warning)', fontSize: '0.7rem', marginTop: '0.3rem' }}>
-              {t('sidebar.retourAnneeEnCours')}
-            </div>
+            <span className="sidebar-annee-exit">{t('sidebar.retourAnneeEnCours')}</span>
           )}
         </div>
 

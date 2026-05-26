@@ -9,13 +9,13 @@ import { getTypeLabel } from '../../utils/helpers';
 import { PageLoader } from '../../components/ui/PageLoader';
 
 const typeColors: Record<TypeSalle, string> = {
-  standard: '#2563eb',
-  laboratoire: '#7c3aed',
-  informatique: '#0891b2',
-  sport: '#16a34a',
-  arts: '#db2777',
-  amphi: '#d97706',
-  autre: '#64748b',
+  standard:    'var(--primary)',
+  laboratoire: 'var(--secondary)',
+  informatique:'var(--info)',
+  sport:       'var(--success)',
+  arts:        'var(--secondary)',
+  amphi:       'var(--warning)',
+  autre:       'var(--text-muted)',
 };
 
 const HEURE_DEBUT = 7;
@@ -170,8 +170,8 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
                   </div>
                   <div className="salle-stat-item">
                     <div className="salle-stat-value" style={{
-                      color: statsData.stats.taux_occupation > 70 ? '#dc2626'
-                        : statsData.stats.taux_occupation > 40 ? '#d97706' : '#16a34a',
+                      color: statsData.stats.taux_occupation > 70 ? 'var(--danger)'
+                        : statsData.stats.taux_occupation > 40 ? 'var(--warning)' : 'var(--success)',
                     }}>
                       {statsData.stats.taux_occupation}%
                     </div>
@@ -182,8 +182,8 @@ export function SalleDetailModal({ salle, onClose, onEdit }: SalleDetailModalPro
                   <div className="occupation-bar">
                     <div className="occupation-bar-fill" style={{
                       width: `${statsData.stats.taux_occupation}%`,
-                      background: statsData.stats.taux_occupation > 70 ? '#dc2626'
-                        : statsData.stats.taux_occupation > 40 ? '#d97706' : '#16a34a',
+                      background: statsData.stats.taux_occupation > 70 ? 'var(--danger)'
+                        : statsData.stats.taux_occupation > 40 ? 'var(--warning)' : 'var(--success)',
                     }} />
                   </div>
                   <span className="occupation-bar-label">{statsData.stats.taux_occupation}%</span>

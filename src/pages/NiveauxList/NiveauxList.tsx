@@ -218,7 +218,7 @@ function NiveauCard({
           )}
         </div>
         {niveau.ordre !== undefined && (
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('niveaux.ordre')} {niveau.ordre}</span>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('niveaux.ordre', { n: niveau.ordre })}</span>
         )}
       </div>
 

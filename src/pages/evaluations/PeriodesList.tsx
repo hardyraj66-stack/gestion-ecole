@@ -138,7 +138,7 @@ function PeriodeCard({
                   <span style={{ fontSize: '0.82rem', color: 'var(--text)', fontWeight: 500 }}>
                     {formatDate(periode.date_debut)}
                   </span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--border)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text)', fontWeight: 500 }}>
@@ -146,21 +146,21 @@ function PeriodeCard({
                   </span>
                 </div>
                 {dStart !== null && dStart >= 0 && (
-                  <p style={{ fontSize: '0.77rem', color: '#d97706', margin: 0, fontWeight: 600 }}>
+                  <p style={{ fontSize: '0.77rem', color: 'var(--warning)', margin: 0, fontWeight: 600 }}>
                     {dStart === 0 ? t('periodes.commenceAujourdhui') : t('periodes.commenceDans', { count: dStart })}
                   </p>
                 )}
                 {dEnd !== null && (
-                  <p style={{ fontSize: '0.77rem', color: '#16a34a', margin: 0, fontWeight: 600 }}>
+                  <p style={{ fontSize: '0.77rem', color: 'var(--success)', margin: 0, fontWeight: 600 }}>
                     {dEnd > 0 ? t('periodes.termineDans', { count: dEnd }) : t('periodes.termineAujourdhui')}
                   </p>
                 )}
                 {statut === 'terminee' && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6L9 17l-5-5"/>
                     </svg>
-                    <p style={{ fontSize: '0.77rem', color: '#16a34a', margin: 0, fontWeight: 600 }}>{t('periodes.periodTerminee')}</p>
+                    <p style={{ fontSize: '0.77rem', color: 'var(--success)', margin: 0, fontWeight: 600 }}>{t('periodes.periodTerminee')}</p>
                   </div>
                 )}
 
@@ -168,14 +168,14 @@ function PeriodeCard({
                   confirmTerminer ? (
                     <div style={{
                       display: 'flex', flexDirection: 'column', gap: '0.5rem',
-                      background: '#fef2f2', border: '1px solid #fecaca',
+                      background: 'var(--danger-light)', border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
                       borderRadius: 8, padding: '0.75rem',
                       marginTop: '0.25rem',
                     }}>
-                      <p style={{ margin: 0, fontSize: '0.78rem', color: '#991b1b', fontWeight: 600 }}>
+                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--danger)', fontWeight: 600 }}>
                         {t('periodes.confirmCloture')}
                       </p>
-                      <p style={{ margin: 0, fontSize: '0.73rem', color: '#dc2626', lineHeight: 1.4 }}>
+                      <p style={{ margin: 0, fontSize: '0.73rem', color: 'var(--danger)', lineHeight: 1.4, opacity: 0.85 }}>
                         {t('periodes.confirmClotureMsg')}
                       </p>
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
@@ -184,7 +184,7 @@ function PeriodeCard({
                           disabled={terminating}
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                            background: '#dc2626', border: 'none',
+                            background: 'var(--danger)', border: 'none',
                             borderRadius: 6, padding: '0.3rem 0.75rem',
                             fontSize: '0.75rem', color: 'white',
                             cursor: terminating ? 'not-allowed' : 'pointer',
@@ -203,9 +203,9 @@ function PeriodeCard({
                         <button
                           onClick={() => setConfirmTerminer(false)}
                           style={{
-                            background: 'var(--card-bg)', border: '1px solid #fecaca',
+                            background: 'var(--card-bg)', border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
                             borderRadius: 6, padding: '0.3rem 0.65rem',
-                            fontSize: '0.75rem', color: '#dc2626',
+                            fontSize: '0.75rem', color: 'var(--danger)',
                             cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
                           }}
                         >
@@ -220,9 +220,9 @@ function PeriodeCard({
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
                         marginTop: '0.25rem', alignSelf: 'flex-start',
-                        background: '#fef2f2', border: '1px solid #fecaca',
+                        background: 'var(--danger-light)', border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
                         borderRadius: 6, padding: '0.3rem 0.7rem',
-                        fontSize: '0.75rem', color: '#dc2626',
+                        fontSize: '0.75rem', color: 'var(--danger)',
                         cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
                         transition: 'all 0.15s',
                       }}
@@ -325,7 +325,7 @@ export function PeriodesList() {
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto' }}>
               <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
                 </svg>
               </div>
@@ -338,7 +338,7 @@ export function PeriodesList() {
             </div>
 
             {activePeriode ? (
-              <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto', border: '1px solid #bbf7d0' }}>
+              <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto', border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)' }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6L9 17l-5-5"/>
@@ -391,7 +391,7 @@ export function PeriodesList() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.875rem' }}>
                   <div style={{
                     width: 30, height: 30, borderRadius: 7, flexShrink: 0,
-                    background: (isActiveT || isCurrentT) ? '#16a34a' : 'var(--text)',
+                    background: (isActiveT || isCurrentT) ? '#16a34a' : 'var(--text-muted)',
                     color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '0.78rem', fontWeight: 700,
                   }}>T{tr}</div>
@@ -399,7 +399,7 @@ export function PeriodesList() {
                   {(isActiveT || isCurrentT) && (
                     <span style={{
                       fontSize: '0.7rem', fontWeight: 600, color: '#16a34a',
-                      background: 'var(--success-light)', border: '1px solid #bbf7d0',
+                      background: 'var(--success-light)', border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)',
                       borderRadius: 20, padding: '0.12rem 0.55rem',
                     }}>{t('periodes.actif')}</span>
                   )}

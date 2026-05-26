@@ -187,7 +187,7 @@ export function ClassesList() {
                 {selectedSalle && (
                   <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
                     background: editCapacite > selectedSalle.capacite ? 'var(--warning-light)' : 'var(--success-light)',
-                    border: `1px solid ${editCapacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
+                    border: `1px solid color-mix(in srgb, ${editCapacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)'} 30%, transparent)`,
                     color: editCapacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
                   }}>
                     <strong>{selectedSalle.nom}</strong> — {selectedSalle.capacite} places
@@ -197,7 +197,7 @@ export function ClassesList() {
               </>
             ) : (
               <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
-                background: 'var(--info-light)', border: '1px solid #a5f3fc', color: 'var(--info)',
+                background: 'var(--info-light)', border: '1px solid color-mix(in srgb, var(--info) 30%, transparent)', color: 'var(--info)',
               }}>
                 {t('classes.form.salleVariable')}
               </div>

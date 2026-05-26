@@ -131,7 +131,7 @@ export function CreateClasse() {
           </FormGrid>
 
           <div style={{ padding: '0.5rem 0.85rem', marginBottom: '1rem', fontSize: '0.85rem',
-            background: 'var(--info-light)', border: '1px solid #a5f3fc', borderRadius: 'var(--radius-sm)', color: 'var(--info)',
+            background: 'var(--info-light)', border: '1px solid color-mix(in srgb, var(--info) 30%, transparent)', borderRadius: 'var(--radius-sm)', color: 'var(--info)',
           }}>
             {t('classes.creer.infoAnnee')}
           </div>
@@ -160,7 +160,7 @@ export function CreateClasse() {
               {selectedSalle && (
                 <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
                   background: capacite > selectedSalle.capacite ? 'var(--warning-light)' : 'var(--success-light)',
-                  border: `1px solid ${capacite > selectedSalle.capacite ? '#fde68a' : '#bbf7d0'}`,
+                  border: `1px solid color-mix(in srgb, ${capacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)'} 30%, transparent)`,
                   color: capacite > selectedSalle.capacite ? 'var(--warning)' : 'var(--success)',
                 }}>
                   <strong>{selectedSalle.nom}</strong> — {t('classes.form.salleInfo', { nom: selectedSalle.nom, capacite: selectedSalle.capacite }).replace(selectedSalle.nom + ' — ', '')}
@@ -172,7 +172,7 @@ export function CreateClasse() {
 
           {!isFixe && (
             <div style={{ padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.85rem',
-              background: 'var(--info-light)', border: '1px solid #a5f3fc', color: 'var(--info)',
+              background: 'var(--info-light)', border: '1px solid color-mix(in srgb, var(--info) 30%, transparent)', color: 'var(--info)',
             }}>
               {t('classes.form.salleVariableCreation')}
             </div>

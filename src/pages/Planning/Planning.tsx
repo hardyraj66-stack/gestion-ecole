@@ -194,12 +194,12 @@ export function Planning() {
               {activePeriode && (() => {
                 const ap = activePeriode as any;
                 const typeLabel = ap.type === 'ds' ? t('notes.types.ds') : t('notes.types.evaluation');
-                const typeColor = ap.type === 'ds' ? '#2563eb' : '#0891b2';
-                const typeBg   = ap.type === 'ds' ? '#eff6ff' : '#ecfeff';
+                const typeColor = ap.type === 'ds' ? 'var(--primary)' : 'var(--info)';
+                const typeBg   = ap.type === 'ds' ? 'var(--primary-light)' : 'var(--info-light)';
                 return (
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '0.75rem',
-                    background: typeBg, border: `1px solid ${typeColor}30`,
+                    background: typeBg, border: `1px solid color-mix(in srgb, ${typeColor} 25%, transparent)`,
                     borderRadius: 'var(--radius-sm)', padding: '0.55rem 1rem',
                     marginBottom: '1rem',
                   }}>
@@ -218,7 +218,7 @@ export function Planning() {
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                       {t('planning.periodeDate', { debut: ap.date_debut, fin: ap.date_fin })}
                     </span>
-                    <span style={{ marginLeft: 'auto', fontSize: '0.73rem', color: '#16a34a', fontWeight: 600 }}>
+                    <span style={{ marginLeft: 'auto', fontSize: '0.73rem', color: 'var(--success)', fontWeight: 600 }}>
                       {t('planning.saisieActive')}
                     </span>
                   </div>
