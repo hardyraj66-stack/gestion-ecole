@@ -40,11 +40,13 @@ export class NiveauxService {
       items.splice(clampedOrdre, 0, { _id: targetId, ordre: targetOrdre });
     }
 
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].ordre !== i) {
-        await this.model.findByIdAndUpdate(items[i]._id, { ordre: i }).exec();
-      }
-    }
+    const ops = items
+      .map((item, i) => item.ordre !== i
+        ? { updateOne: { filter: { _id: item._id }, update: { $set: { ordre: i } } } }
+        : null)
+      .filter(Boolean);
+
+    if (ops.length > 0) await this.model.bulkWrite(ops as any);
   }
 
   async create(data: { nom: string; ordre?: number; description?: string; matiere_ids?: string[] }) {
