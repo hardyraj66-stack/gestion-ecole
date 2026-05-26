@@ -22,6 +22,9 @@ import { ProfesseursList } from './pages/Professeurs/ProfesseursList';
 import { ProfesseurDetail } from './pages/Professeurs/ProfesseurDetail';
 import { ProfesseurAssignments } from './pages/Professeurs/ProfesseurAssignments';
 import { PeriodesList } from './pages/evaluations/PeriodesList';
+import { EvaluationsList } from './pages/evaluations/EvaluationsList';
+import { EvaluationDetail } from './pages/evaluations/EvaluationDetail';
+import { CreateEvaluation } from './pages/evaluations/CreateEvaluation';
 import { Parametres } from './pages/Parametres/Parametres';
 
 function App() {
@@ -61,6 +64,9 @@ function App() {
             <Route path="annee-scolaire" element={<AnneeScolairePage />} />
 
             <Route path="evaluations" element={<PeriodesList />} />
+            <Route path="evaluations/liste" element={<EvaluationsList />} />
+            <Route path="evaluations/nouvelle" element={<CreateEvaluation />} />
+            <Route path="evaluations/:id" element={<EvaluationDetail />} />
 
             <Route path="parametres" element={<Parametres />} />
 

@@ -93,28 +93,40 @@ export function FicheIdentite({ eleve, classe, salleActuelle, creneaux, readOnly
   const classeOptions: SelectOption[] = classes.map((c: any) => ({ value: c.id, label: `${c.nom} (${c.niveau})` }));
 
   return (
-    <Card>
-      <div className="fiche-identite-header">
-        <div className="fiche-avatar-lg">
-          <Avatar initiales={getInitials(local)} genre={local.genre} size="lg" />
+    <Card className="fiche-identite-card">
+      {/* Hero banner */}
+      <div className="fiche-hero">
+        <div className="fiche-hero-bg" />
+        <div className="fiche-hero-content">
+          <div className="fiche-avatar-wrap">
+            <Avatar initiales={getInitials(local)} genre={local.genre} size="lg" />
+          </div>
+          <div className="fiche-hero-info">
+            <h2 className="fiche-nom">{local.prenom} {local.nom}</h2>
+            <div className="fiche-hero-meta">
+              <Badge label={local.genre === 'M' ? 'Garçon' : 'Fille'} variant={local.genre === 'M' ? 'info' : 'warning'} />
+              {classe?.nom && (
+                <span className="fiche-hero-classe">{classe.nom}{classe.niveau ? ` · ${classe.niveau}` : ''}</span>
+              )}
+              {age !== null && (
+                <span className="fiche-hero-age">{age} ans</span>
+              )}
+            </div>
+          </div>
+          {!readOnly && !editing && (
+            <button
+              className="fiche-edit-btn"
+              onClick={() => setEditing(true)}
+              title="Modifier les informations"
+            >
+              <Icon path="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" size={15} />
+            </button>
+          )}
         </div>
-        <div style={{ flex: 1 }}>
-          <h2 className="fiche-nom">{local.prenom} {local.nom}</h2>
-          <Badge label={local.genre === 'M' ? t('eleves.genres.masculin') : t('eleves.genres.feminin')} variant={local.genre === 'M' ? 'info' : 'warning'} />
-        </div>
-        {!readOnly && !editing && (
-          <button
-            className="famille-edit-btn"
-            onClick={() => setEditing(true)}
-            title={t('fiche.identite.modifierInfos')}
-          >
-            <Icon path="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" size={14} />
-          </button>
-        )}
       </div>
 
       {editing ? (
-        <div style={{ marginTop: '1rem' }}>
+        <div className="fiche-edit-form">
           <div className="famille-form-grid">
             <Input label={t('fiche.identite.form.prenom')} value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} />
             <Input label={t('fiche.identite.form.nom')} value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />

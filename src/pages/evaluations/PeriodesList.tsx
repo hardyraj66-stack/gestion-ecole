@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { API_BASE_URL } from '../../config/api';
 import { usePeriodes } from '../../contexts/PeriodeContext';
+import { useViewing } from '../../contexts/ViewingContext';
 import { usePeriodesData } from '../../hooks/usePeriodesData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
@@ -46,19 +47,19 @@ function PeriodeCard({
 }) {
   const { t } = useTranslation();
   const [confirmTerminer, setConfirmTerminer] = useState(false);
-  const statut  = getStatut(periode);
-  const sc      = {
+  const statut = getStatut(periode);
+  const sc = {
     active:          { label: t('periodes.statuts.enCours'),       variant: 'success' as const },
     future:          { label: t('periodes.statuts.aVenir'),        variant: 'warning' as const },
     terminee:        { label: t('periodes.statuts.terminee'),      variant: 'default' as const },
     'non-planifiee': { label: t('periodes.statuts.nonPlanifiee'),  variant: 'default' as const },
   }[statut];
-  const tc      = {
+  const tc = {
     ds:         { label: t('periodes.types.ds'),         variant: 'primary' as const, color: 'var(--primary)', bg: 'var(--primary-light)', accent: 'color-mix(in srgb, var(--primary) 40%, transparent)' },
     evaluation: { label: t('periodes.types.evaluation'), variant: 'info'    as const, color: 'var(--info)',    bg: 'var(--info-light)',    accent: 'color-mix(in srgb, var(--info) 40%, transparent)' },
   }[periode.type as 'ds' | 'evaluation'];
-  const dStart  = statut === 'future'  ? daysUntil(periode.date_debut) : null;
-  const dEnd    = statut === 'active'  ? daysUntil(periode.date_fin)   : null;
+  const dStart = statut === 'future'  ? daysUntil(periode.date_debut) : null;
+  const dEnd   = statut === 'active'  ? daysUntil(periode.date_fin)   : null;
 
   return (
     <div style={{
@@ -257,13 +258,15 @@ export function PeriodesList() {
   const { t } = useTranslation();
   const { active, preparation, loading: anneeLoading } = useAnnees();
   const { updatePeriode, terminerPeriode } = usePeriodes();
-  const annee = active || preparation;
+  const { viewing, isViewingArchive } = useViewing();
+  const annee = isViewingArchive ? viewing : (active || preparation);
   const annee_scolaire = annee?.label || '';
 
   const { data, loading, error } = usePeriodesData(annee_scolaire);
 
   const initDoneRef = useRef<string>('');
   useEffect(() => {
+    if (isViewingArchive) return;
     if (!anneeLoading && !loading && annee_scolaire && active && Array.isArray(data) && data.length === 0 && initDoneRef.current !== annee_scolaire) {
       initDoneRef.current = annee_scolaire;
       fetch(`${API_BASE_URL}/periodes/init`, {
@@ -272,7 +275,7 @@ export function PeriodesList() {
         body: JSON.stringify({ annee_scolaire }),
       });
     }
-  }, [anneeLoading, loading, annee_scolaire, active, data]);
+  }, [isViewingArchive, anneeLoading, loading, annee_scolaire, active, data]);
 
   const [editing, setEditing]     = useState<EditState | null>(null);
   const [saving, setSaving]       = useState(false);
@@ -410,7 +413,7 @@ export function PeriodesList() {
                       <PeriodeCard
                         key={p.id}
                         periode={p}
-                        locked={locked}
+                        locked={isViewingArchive || locked}
                         onEdit={() => { setEditing({ id: p.id, date_debut: p.date_debut || '', date_fin: p.date_fin || '' }); setSaveError(''); }}
                         isEditing={editing?.id === p.id}
                         editState={editing?.id === p.id ? editing : null}

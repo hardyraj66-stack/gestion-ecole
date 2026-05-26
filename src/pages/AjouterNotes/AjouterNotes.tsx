@@ -14,11 +14,13 @@ import { NotesStatsBar } from './NotesStatsBar';
 import { NotesTable, NoteRow } from './NotesTable';
 import { useViewing } from '../../contexts/ViewingContext';
 
+const TYPE_LABELS: Record<string, string> = { ds: 'DS', evaluation: 'Évaluation' };
+
 export function AjouterNotes() {
   const { t } = useTranslation();
   const { data, loading } = useNotesFiltersData();
   const { data: activePeriode, loading: loadingPeriode } = useActivePeriodeData();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive: readOnly, viewingLabel } = useViewing();
   const { create: createNote, update: updateNote } = useNotes();
 
   const [selectedClasseId, setSelectedClasseId] = useState('');
@@ -82,7 +84,7 @@ export function AjouterNotes() {
     setLoadingEleves(true);
     setSuccess(false);
     setError('');
-    const res = await readApi.notesEleves(selectedClasseId, selectedMatiereId, trimestre);
+    const res = await readApi.notesEleves(selectedClasseId, selectedMatiereId, trimestre, viewingLabel ?? undefined);
     if (!res) {
       setError(t('notes.erreurChargement'));
       setLoadingEleves(false);
@@ -147,6 +149,7 @@ export function AjouterNotes() {
     ? t('notes.subtitleFull', { classeNom: selectedClasseNom, matiereName: selectedMatiereName })
     : t('notes.subtitleDefault');
 
+  // Mode archive : lecture seule
   if (readOnly) {
     return (
       <div>

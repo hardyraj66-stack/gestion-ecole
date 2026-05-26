@@ -6,21 +6,31 @@ export class ReadController {
   constructor(private readonly service: ReadService) {}
 
   @Get('dashboard')
-  getDashboard(@Query('classesPage') cp?: string, @Query('classesLimit') cl?: string) {
-    return this.service.getDashboard(parseInt(cp!) || 1, parseInt(cl!) || 5);
+  getDashboard(
+    @Query('classesPage') cp?: string,
+    @Query('classesLimit') cl?: string,
+    @Query('anneeLabel') anneeLabel?: string,
+  ) {
+    return this.service.getDashboard(parseInt(cp!) || 1, parseInt(cl!) || 5, anneeLabel || undefined);
   }
 
   @Get('classes')
-  getClassesList(@Query('page') p?: string, @Query('limit') l?: string, @Query('search') s?: string, @Query('niveau') n?: string) {
-    return this.service.getClassesList(parseInt(p!) || 1, parseInt(l!) || 8, s || '', n || '');
+  getClassesList(
+    @Query('page') p?: string, @Query('limit') l?: string,
+    @Query('search') s?: string, @Query('niveau') n?: string,
+    @Query('anneeLabel') anneeLabel?: string,
+  ) {
+    return this.service.getClassesList(parseInt(p!) || 1, parseInt(l!) || 8, s || '', n || '', anneeLabel || undefined);
   }
 
   @Get('classes/:id/eleves')
   async getClasseEleves(
     @Param('id') id: string,
-    @Query('page') p?: string, @Query('limit') l?: string, @Query('search') s?: string, @Query('eleveId') eleveId?: string,
+    @Query('page') p?: string, @Query('limit') l?: string,
+    @Query('search') s?: string, @Query('eleveId') eleveId?: string,
+    @Query('anneeLabel') anneeLabel?: string,
   ) {
-    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '', eleveId || '');
+    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '', eleveId || '', anneeLabel || undefined);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -28,9 +38,10 @@ export class ReadController {
   @Get('eleves')
   getElevesList(
     @Query('page') p?: string, @Query('limit') l?: string,
-    @Query('search') s?: string, @Query('classeId') cid?: string, @Query('eleveId') eid?: string,
+    @Query('search') s?: string, @Query('classeId') cid?: string,
+    @Query('eleveId') eid?: string, @Query('anneeLabel') anneeLabel?: string,
   ) {
-    return this.service.getElevesList(parseInt(p!) || 1, parseInt(l!) || 12, s || '', cid || '', eid || '');
+    return this.service.getElevesList(parseInt(p!) || 1, parseInt(l!) || 12, s || '', cid || '', eid || '', anneeLabel || undefined);
   }
 
   @Get('matieres')
@@ -54,7 +65,9 @@ export class ReadController {
   }
 
   @Get('planning/classes')
-  getPlanningClasses() { return this.service.getPlanningClasses(); }
+  getPlanningClasses(@Query('anneeLabel') anneeLabel?: string) {
+    return this.service.getPlanningClasses(anneeLabel || undefined);
+  }
 
   @Get('planning/classe/:id')
   async getPlanningClasse(@Param('id') id: string) {
@@ -64,23 +77,30 @@ export class ReadController {
   }
 
   @Get('notes/filters')
-  getNotesFilters() { return this.service.getNotesFilters(); }
+  getNotesFilters(@Query('anneeLabel') anneeLabel?: string) {
+    return this.service.getNotesFilters(anneeLabel || undefined);
+  }
 
   @Get('notes/eleves')
   getNotesEleves(
     @Query('classeId') classeId: string,
     @Query('matiereId') matiereId: string,
     @Query('trimestre') trimestre: string,
+    @Query('anneeLabel') anneeLabel?: string,
   ) {
-    return this.service.getNotesEleves(classeId, matiereId, parseInt(trimestre) || 1);
+    return this.service.getNotesEleves(classeId, matiereId, parseInt(trimestre) || 1, anneeLabel || undefined);
   }
 
   @Get('notes')
   getNotesPage() { return this.service.getNotesPage(); }
 
   @Get('bulletin/:eleveId')
-  async getBulletin(@Param('eleveId') id: string, @Query('trimestre') t: string) {
-    const data = await this.service.getBulletin(id, parseInt(t) || 1);
+  async getBulletin(
+    @Param('eleveId') id: string,
+    @Query('trimestre') t: string,
+    @Query('anneeLabel') anneeLabel?: string,
+  ) {
+    const data = await this.service.getBulletin(id, parseInt(t) || 1, anneeLabel || undefined);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -93,6 +113,7 @@ export class ReadController {
     @Query('statut') statut?: string,
     @Query('page') p?: string,
     @Query('limit') l?: string,
+    @Query('anneeLabel') anneeLabel?: string,
   ) {
     return this.service.getEvaluationsList(
       classeId, matiereId,
@@ -100,6 +121,7 @@ export class ReadController {
       statut,
       parseInt(p!) || 1,
       parseInt(l!) || 10,
+      anneeLabel || undefined,
     );
   }
 
@@ -132,18 +154,24 @@ export class ReadController {
   getCreateEleveData() { return this.service.getCreateEleveData(); }
 
   @Get('eleves/:id/fiche')
-  async getEleveFiche(@Param('id') id: string) {
-    const data = await this.service.getEleveFiche(id);
+  async getEleveFiche(@Param('id') id: string, @Query('anneeLabel') anneeLabel?: string) {
+    const data = await this.service.getEleveFiche(id, anneeLabel || undefined);
     if (!data) throw new NotFoundException();
     return data;
   }
 
   @Get('niveaux')
-  getNiveaux() { return this.service.getNiveaux(); }
+  getNiveaux(@Query('anneeLabel') anneeLabel?: string) {
+    return this.service.getNiveaux(anneeLabel || undefined);
+  }
 
   @Get('niveaux/:niveau/classes')
-  getClassesParNiveau(@Param('niveau') niveau: string, @Query('dateNaissance') dn?: string) {
-    return this.service.getClassesParNiveau(decodeURIComponent(niveau), dn);
+  getClassesParNiveau(
+    @Param('niveau') niveau: string,
+    @Query('dateNaissance') dn?: string,
+    @Query('anneeLabel') anneeLabel?: string,
+  ) {
+    return this.service.getClassesParNiveau(decodeURIComponent(niveau), dn, anneeLabel || undefined);
   }
 
   @Get('professeurs/actifs')

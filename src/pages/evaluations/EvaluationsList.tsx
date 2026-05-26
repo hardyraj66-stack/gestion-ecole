@@ -61,7 +61,7 @@ export function EvaluationsList() {
   if (loading || !data) return <PageLoader />;
   if (error) return <Alert variant="error">{t('evaluations.erreur')}</Alert>;
 
-  const { items, total } = data;
+  const { items, total, totalPages } = data;
 
   const classesOptions: SelectOption[] = [
     { value: '', label: t('evaluations.toutesClasses') },

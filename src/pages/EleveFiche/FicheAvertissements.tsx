@@ -23,11 +23,12 @@ const TYPE_VARIANT: Record<string, any> = {
 interface Props {
   eleveId: string;
   anneeActive: string | null;
+  anneeLabel?: string;
   readOnly: boolean;
   onCountChange?: (count: number) => void;
 }
 
-export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountChange }: Props) {
+export function FicheAvertissements({ eleveId, anneeActive, anneeLabel, readOnly, onCountChange }: Props) {
   const { t } = useTranslation();
 
   const TYPE_OPTIONS: SelectOption[] = [
@@ -47,9 +48,10 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
+    const qs = anneeLabel ? `?anneeLabel=${encodeURIComponent(anneeLabel)}` : '';
     const [ra, rc] = await Promise.all([
-      fetch(`${API_BASE_URL}/suivi/${eleveId}/avertissements`),
-      fetch(`${API_BASE_URL}/suivi/${eleveId}/convocations`),
+      fetch(`${API_BASE_URL}/suivi/${eleveId}/avertissements${qs}`),
+      fetch(`${API_BASE_URL}/suivi/${eleveId}/convocations${qs}`),
     ]);
     if (ra.ok) {
       const avertList = await ra.json();
@@ -58,7 +60,7 @@ export function FicheAvertissements({ eleveId, anneeActive, readOnly, onCountCha
     }
     if (rc.ok) setConvocations(await rc.json());
     setLoading(false);
-  }, [eleveId]);
+  }, [eleveId, anneeLabel]);
 
   useEffect(() => { load(); }, [load]);
 

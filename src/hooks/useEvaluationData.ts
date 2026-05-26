@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { usePageFetch } from './usePageData';
+import { useViewing } from '../contexts/ViewingContext';
 import { readApi } from '../services/readApi';
 
 export function useEvaluationsListData(
@@ -9,10 +10,11 @@ export function useEvaluationsListData(
   statut?: string,
   page = 1,
 ) {
+  const { viewingLabel } = useViewing();
   return usePageFetch(
     useCallback(
-      () => readApi.evaluationsList(classeId, matiereId, trimestre, statut, page),
-      [classeId, matiereId, trimestre, statut, page],
+      () => readApi.evaluationsList(classeId, matiereId, trimestre, statut, page, viewingLabel ?? undefined),
+      [classeId, matiereId, trimestre, statut, page, viewingLabel],
     ),
     undefined,
     'evaluations',

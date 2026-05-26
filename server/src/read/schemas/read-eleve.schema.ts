@@ -10,6 +10,7 @@ const t = (_: any, ret: Record<string, any>) => {
 @Schema({ collection: 'read_eleves', timestamps: true, toJSON: { virtuals: true, transform: t } })
 export class ReadEleve extends Document {
   @Prop({ required: true }) source_id: string;
+  @Prop({ required: true, default: '' }) annee_scolaire: string;
   @Prop() nom: string;
   @Prop() prenom: string;
   @Prop() date_naissance: string;
@@ -27,5 +28,7 @@ export class ReadEleve extends Document {
 }
 
 export const ReadEleveSchema = SchemaFactory.createForClass(ReadEleve);
-ReadEleveSchema.index({ source_id: 1 }, { unique: true });
-ReadEleveSchema.index({ classe_id: 1 });
+// Un document par (élève × année scolaire)
+ReadEleveSchema.index({ source_id: 1, annee_scolaire: 1 }, { unique: true });
+ReadEleveSchema.index({ annee_scolaire: 1 });
+ReadEleveSchema.index({ classe_id: 1, annee_scolaire: 1 });
