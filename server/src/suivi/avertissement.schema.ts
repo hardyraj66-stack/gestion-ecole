@@ -17,3 +17,4 @@ export class Avertissement extends Document {
 
 export const AvertissementSchema = SchemaFactory.createForClass(Avertissement);
 AvertissementSchema.index({ eleve_id: 1 });
+AvertissementSchema.index({ eleve_id: 1, annee_scolaire: 1 });

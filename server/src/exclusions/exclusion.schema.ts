@@ -22,3 +22,4 @@ export class EleveExclu extends Document {
 
 export const EleveExcluSchema = SchemaFactory.createForClass(EleveExclu);
 EleveExcluSchema.index({ eleve_id: 1 });
+EleveExcluSchema.index({ eleve_id: 1, annee_scolaire: 1 });

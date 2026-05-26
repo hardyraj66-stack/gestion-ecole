@@ -23,3 +23,4 @@ export class EleveQuitte extends Document {
 
 export const EleveQuitteSchema = SchemaFactory.createForClass(EleveQuitte);
 EleveQuitteSchema.index({ eleve_id: 1 });
+EleveQuitteSchema.index({ eleve_id: 1, annee_scolaire: 1 });

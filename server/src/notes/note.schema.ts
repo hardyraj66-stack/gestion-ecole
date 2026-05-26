@@ -39,3 +39,6 @@ export class Note extends Document {
 }
 
 export const NoteSchema = SchemaFactory.createForClass(Note);
+NoteSchema.index({ eleve_id: 1, trimestre: 1, annulee: 1 });
+NoteSchema.index({ matiere_id: 1 });
+NoteSchema.index({ annee_scolaire: 1 });

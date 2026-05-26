@@ -24,3 +24,4 @@ export class Niveau extends Document {
 }
 
 export const NiveauSchema = SchemaFactory.createForClass(Niveau);
+NiveauSchema.index({ ordre: 1, nom: 1 });

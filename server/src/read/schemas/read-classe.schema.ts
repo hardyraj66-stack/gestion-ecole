@@ -23,3 +23,5 @@ export class ReadClasse extends Document {
 
 export const ReadClasseSchema = SchemaFactory.createForClass(ReadClasse);
 ReadClasseSchema.index({ source_id: 1 }, { unique: true });
+ReadClasseSchema.index({ annee_scolaire: 1 });
+ReadClasseSchema.index({ annee_scolaire: 1, niveau: 1 });

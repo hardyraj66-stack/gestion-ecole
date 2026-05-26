@@ -35,3 +35,4 @@ export class Matiere extends Document {
 }
 
 export const MatiereSchema = SchemaFactory.createForClass(Matiere);
+MatiereSchema.index({ actif: 1 });
