@@ -189,14 +189,14 @@ export function ProfesseurDetail() {
         )}
       </PageHeader>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.25rem', alignItems: 'start' }}>
+      <div className="prof-detail-layout">
 
         {/* Fiche */}
         <Card>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1rem' }}>
+          <div className="prof-fiche-hero">
             <Avatar initiales={initials} genre={p.genre} size="lg" />
-            <div style={{ marginTop: '0.75rem', fontWeight: 600, fontSize: '1rem' }}>{p.prenom} {p.nom}</div>
-            <div style={{ marginTop: '0.25rem' }}>
+            <div className="prof-fiche-name">{p.prenom} {p.nom}</div>
+            <div className="prof-fiche-badge">
               <Badge label={p.statut === 'actif' ? t('professeurs.statuts.actif') : t('professeurs.statuts.inactif')} variant={p.statut === 'actif' ? 'success' : 'default'} />
             </div>
           </div>
@@ -205,21 +205,21 @@ export function ProfesseurDetail() {
             { label: t('professeurs.detail.email'), value: p.email || '—' },
             { label: t('professeurs.detail.telephone'), value: p.telephone || '—' },
           ].map(item => (
-            <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.875rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>{item.label}</span>
-              <span style={{ fontWeight: 500 }}>{item.value}</span>
+            <div key={item.label} className="prof-fiche-row">
+              <span className="prof-fiche-label">{item.label}</span>
+              <span className="prof-fiche-value">{item.value}</span>
             </div>
           ))}
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', fontSize: '0.875rem' }}>
-            <span style={{ color: 'var(--text-muted)' }}>{t('professeurs.detail.affectations')}</span>
-            <span style={{ fontWeight: 600 }}>{assignments.length}</span>
+          <div className="prof-fiche-row-last">
+            <span className="prof-fiche-label">{t('professeurs.detail.affectations')}</span>
+            <span className="prof-fiche-count">{assignments.length}</span>
           </div>
         </Card>
 
         {/* Affectations */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <h3 style={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <div className="prof-assignments-header">
+            <h3 className="prof-assignments-title">
               {t('professeurs.detail.affectationsCount', { count: assignments.length })}
             </h3>
             {!readOnly && (
@@ -247,9 +247,9 @@ export function ProfesseurDetail() {
                   {assignments.map((a: any) => (
                     <TableRow key={a.id}>
                       <TableCell>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ width: 10, height: 10, borderRadius: '50%', background: a.matiere_couleur, flexShrink: 0, display: 'inline-block' }} />
-                          <span style={{ fontWeight: 500 }}>{a.matiere_nom}</span>
+                        <div className="prof-matiere-cell">
+                          <span className="prof-matiere-dot" style={{ background: a.matiere_couleur }} />
+                          <span className="prof-matiere-name">{a.matiere_nom}</span>
                         </div>
                       </TableCell>
                       <TableCell>{a.classe_nom}</TableCell>
@@ -306,8 +306,8 @@ export function ProfesseurDetail() {
           {assignError && <Alert variant="error">{assignError}</Alert>}
           <form id="assign-form" onSubmit={handleAddAssignment}>
             {/* Matière */}
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('professeurs.detail.affectationMatiere')}</div>
+            <div className="prof-assign-section">
+              <div className="prof-assign-section-label">{t('professeurs.detail.affectationMatiere')}</div>
               <MatierePills
                 matieres={matieres}
                 selectedIds={assignMatiere ? [assignMatiere] : []}
@@ -331,13 +331,13 @@ export function ProfesseurDetail() {
             </div>
 
             {/* Classes */}
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="prof-assign-section">
+              <div className="prof-assign-section-label">
                 <span>{t('professeurs.detail.affectationClasses')}</span>
-                {assignClasses.size > 0 && <span style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '0.1rem 0.5rem', borderRadius: '20px', textTransform: 'none', letterSpacing: 0 }}>{assignClasses.size}</span>}
-                {assignMatiere && <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— {t('professeurs.detail.affectationAide')}</span>}
+                {assignClasses.size > 0 && <span className="prof-assign-count-badge">{assignClasses.size}</span>}
+                {assignMatiere && <span className="prof-assign-hint">— {t('professeurs.detail.affectationAide')}</span>}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div className="prof-assign-classes">
                 {classes.map((c: any) => {
                   const selected = assignClasses.has(c.id);
                   const disabled = isClasseDisabled(c.id);
@@ -347,38 +347,24 @@ export function ProfesseurDetail() {
 
                   if (disabled) {
                     return (
-                      <span key={c.id} title={alreadyAssigned ? 'Déjà assigné' : 'Matière non enseignée dans ce niveau'} style={{
-                        padding: '0.3rem 0.7rem', borderRadius: '20px',
-                        border: `1.5px solid ${alreadyAssigned ? 'color-mix(in srgb, var(--success) 35%, transparent)' : 'var(--border)'}`,
-                        background: alreadyAssigned ? 'var(--success-light)' : 'transparent',
-                        color: alreadyAssigned ? 'var(--success)' : 'var(--text-muted)',
-                        fontSize: '0.8rem', fontWeight: 400,
-                        cursor: 'not-allowed', userSelect: 'none',
-                        textDecoration: alreadyAssigned ? 'none' : 'line-through',
-                        opacity: alreadyAssigned ? 0.7 : 0.45,
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                      }}>
-                        {alreadyAssigned && <span style={{ fontSize: '0.65rem' }}>✓</span>}
+                      <span
+                        key={c.id}
+                        title={alreadyAssigned ? 'Déjà assigné' : 'Matière non enseignée dans ce niveau'}
+                        className={`prof-assign-class-disabled${alreadyAssigned ? ' already-assigned' : ' niveau-blocked'}`}
+                      >
+                        {alreadyAssigned && <span className="prof-assign-class-check-sm">✓</span>}
                         {c.nom}
                       </span>
                     );
                   }
                   return (
-                    <button key={c.id} type="button"
+                    <button
+                      key={c.id}
+                      type="button"
                       onClick={() => setAssignClasses(prev => { const next = new Set(prev); selected ? next.delete(c.id) : next.add(c.id); return next; })}
-                      style={{
-                        padding: '0.3rem 0.75rem', borderRadius: '20px',
-                        border: `1.5px solid ${selected ? 'var(--primary)' : 'var(--border-color)'}`,
-                        background: selected ? 'var(--primary)' : 'var(--card-bg)',
-                        color: selected ? 'var(--text-on-color)' : 'var(--text)',
-                        fontSize: '0.825rem', fontWeight: selected ? 600 : 400,
-                        cursor: 'pointer',
-                        transition: 'all 0.12s',
-                        boxShadow: selected ? '0 1px 4px rgba(37,99,235,0.18)' : 'none',
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                      }}
+                      className={`prof-assign-class-btn${selected ? ' selected' : ''}`}
                     >
-                      {selected && <span style={{ fontSize: '0.7rem' }}>✓</span>}
+                      {selected && <span className="prof-assign-class-check">✓</span>}
                       {c.nom}
                     </button>
                   );

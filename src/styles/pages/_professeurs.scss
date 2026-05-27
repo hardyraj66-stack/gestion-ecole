@@ -1,0 +1,167 @@
+// ============================================================
+// PROFESSEURS
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// --- Layout detail ---
+.prof-detail-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+// --- Fiche identité ---
+.prof-fiche-hero {
+  @include flex-col(0);
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.prof-fiche-name {
+  margin-top: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.prof-fiche-badge { margin-top: 0.25rem; }
+
+.prof-fiche-row {
+  @include flex-between;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: $font-size-sm;
+}
+
+.prof-fiche-row-last {
+  @include flex-between;
+  padding: 0.45rem 0;
+  font-size: $font-size-sm;
+}
+
+.prof-fiche-label { color: var(--text-muted); }
+.prof-fiche-value { font-weight: 500; }
+.prof-fiche-count { font-weight: 600; }
+
+// --- Affectations header ---
+.prof-assignments-header {
+  @include flex-between;
+  margin-bottom: 0.75rem;
+}
+
+.prof-assignments-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+// --- Table matière cell ---
+.prof-matiere-cell {
+  @include flex-row(0.5rem);
+}
+
+.prof-matiere-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.prof-matiere-name { font-weight: 500; }
+
+// --- Assign form ---
+.prof-assign-section {
+  margin-bottom: 1rem;
+}
+
+.prof-assign-section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  @include flex-row(0.5rem);
+}
+
+.prof-assign-count-badge {
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border-radius: 20px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.prof-assign-hint {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.prof-assign-classes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.prof-assign-class-btn {
+  @include btn-reset;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.825rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.12s;
+  @include flex-row(0.25rem);
+
+  &.selected {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--text-on-color);
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.18);
+  }
+}
+
+.prof-assign-class-check { font-size: 0.7rem; }
+
+.prof-assign-class-disabled {
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  cursor: not-allowed;
+  user-select: none;
+  @include flex-row(0.25rem);
+
+  &.already-assigned {
+    border: 1.5px solid color-mix(in srgb, var(--success) 35%, transparent);
+    background: var(--success-light);
+    color: var(--success);
+    opacity: 0.7;
+  }
+
+  &.niveau-blocked {
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    opacity: 0.45;
+    text-decoration: line-through;
+  }
+}
+
+.prof-assign-class-check-sm { font-size: 0.65rem; }

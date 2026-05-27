@@ -61,42 +61,27 @@ function PeriodeCard({
   const dStart = statut === 'future'  ? daysUntil(periode.date_debut) : null;
   const dEnd   = statut === 'active'  ? daysUntil(periode.date_fin)   : null;
 
+  const cardStyle: React.CSSProperties = {
+    boxShadow: statut === 'active'
+      ? `0 0 0 2px ${tc.color}, var(--card-shadow)`
+      : 'var(--card-shadow)',
+  };
+
   return (
-    <div style={{
-      background: 'var(--card-bg)',
-      borderRadius: 'var(--radius)',
-      boxShadow: statut === 'active'
-        ? `0 0 0 2px ${tc.color}, var(--card-shadow)`
-        : 'var(--card-shadow)',
-      display: 'flex', flexDirection: 'column',
-      overflow: 'hidden',
-      transition: 'box-shadow 0.2s',
-    }}>
-      <div style={{ height: 3, background: tc.color, opacity: statut === 'terminee' ? 0.3 : 1 }} />
+    <div className="periode-card" style={cardStyle}>
+      <div className="periode-card-bar" style={{ background: tc.color, opacity: statut === 'terminee' ? 0.3 : 1 }} />
 
-      <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-              background: tc.bg, color: tc.color, borderRadius: 6,
-              padding: '0.18rem 0.55rem', fontSize: '0.78rem', fontWeight: 700,
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: tc.color, flexShrink: 0 }} />
+      <div className="periode-card-body">
+        <div className="periode-card-header">
+          <div className="periode-card-title-row">
+            <span className="badge" style={{ background: tc.bg, color: tc.color, borderRadius: 6, padding: '0.18rem 0.55rem', fontSize: '0.78rem', fontWeight: 700 }}>
+              <span className="periode-card-dot" style={{ background: tc.color }} />
               {tc.label}
             </span>
             <Badge variant={sc.variant} label={sc.label} />
           </div>
           {!isEditing && statut !== 'terminee' && !locked && (
-            <button onClick={onEdit} style={{
-              display: 'flex', alignItems: 'center', gap: '0.25rem',
-              background: 'transparent', border: '1px solid var(--border)',
-              borderRadius: 6, padding: '0.25rem 0.55rem',
-              fontSize: '0.73rem', color: 'var(--text-muted)',
-              cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
-              flexShrink: 0, transition: 'all 0.15s',
-            }}>
+            <button onClick={onEdit} className="periode-card-edit-btn">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -107,92 +92,69 @@ function PeriodeCard({
         </div>
 
         {isEditing && editState ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
+          <div className="periode-edit-form">
+            <div className="periode-edit-grid">
               <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('periodes.form.debut')}</label>
+                <label className="periode-edit-label">{t('periodes.form.debut')}</label>
                 <input type="date" value={editState.date_debut} onChange={e => onEditChange('date_debut', e.target.value)} className="input" />
               </div>
               <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('periodes.form.fin')}</label>
+                <label className="periode-edit-label">{t('periodes.form.fin')}</label>
                 <input type="date" value={editState.date_fin} onChange={e => onEditChange('date_fin', e.target.value)} className="input" />
               </div>
             </div>
-            {saveError && <p style={{ fontSize: '0.75rem', color: 'var(--danger)', margin: 0, lineHeight: 1.4 }}>{saveError}</p>}
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {saveError && <p className="periode-edit-error">{saveError}</p>}
+            <div className="d-flex-center">
               <Button variant="primary" size="sm" onClick={onSave} loading={saving}>{t('periodes.actions.enregistrer')}</Button>
               <Button variant="secondary" size="sm" onClick={onCancel}>{t('periodes.actions.annuler')}</Button>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div className="periode-info-list">
             {periode.date_debut && periode.date_fin ? (
               <>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  background: 'var(--bg-subtle)', borderRadius: 8, padding: '0.6rem 0.75rem',
-                }}>
+                <div className="periode-info-item">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tc.color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
                   </svg>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text)', fontWeight: 500 }}>
-                    {formatDate(periode.date_debut)}
-                  </span>
+                  <span className="periode-info-item-label">{formatDate(periode.date_debut)}</span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--border)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text)', fontWeight: 500 }}>
-                    {formatDate(periode.date_fin)}
-                  </span>
+                  <span className="periode-info-item-value">{formatDate(periode.date_fin)}</span>
                 </div>
                 {dStart !== null && dStart >= 0 && (
-                  <p style={{ fontSize: '0.77rem', color: 'var(--warning)', margin: 0, fontWeight: 600 }}>
+                  <p className="periode-warn-text">
                     {dStart === 0 ? t('periodes.commenceAujourdhui') : t('periodes.commenceDans', { count: dStart })}
                   </p>
                 )}
                 {dEnd !== null && (
-                  <p style={{ fontSize: '0.77rem', color: 'var(--success)', margin: 0, fontWeight: 600 }}>
+                  <p className="periode-success-text">
                     {dEnd > 0 ? t('periodes.termineDans', { count: dEnd }) : t('periodes.termineAujourdhui')}
                   </p>
                 )}
                 {statut === 'terminee' && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div className="periode-done-row">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6L9 17l-5-5"/>
                     </svg>
-                    <p style={{ fontSize: '0.77rem', color: 'var(--success)', margin: 0, fontWeight: 600 }}>{t('periodes.periodTerminee')}</p>
+                    <p className="periode-success-text">{t('periodes.periodTerminee')}</p>
                   </div>
                 )}
 
                 {(statut === 'active' || statut === 'future') && (
                   confirmTerminer ? (
-                    <div style={{
-                      display: 'flex', flexDirection: 'column', gap: '0.5rem',
-                      background: 'var(--danger-light)', border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
-                      borderRadius: 8, padding: '0.75rem',
-                      marginTop: '0.25rem',
-                    }}>
-                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--danger)', fontWeight: 600 }}>
-                        {t('periodes.confirmCloture')}
-                      </p>
-                      <p style={{ margin: 0, fontSize: '0.73rem', color: 'var(--danger)', lineHeight: 1.4, opacity: 0.85 }}>
-                        {t('periodes.confirmClotureMsg')}
-                      </p>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
+                    <div className="periode-archive-block">
+                      <p className="periode-archive-title">{t('periodes.confirmCloture')}</p>
+                      <p className="periode-archive-sub">{t('periodes.confirmClotureMsg')}</p>
+                      <div className="periode-archive-actions">
                         <button
                           onClick={() => { setConfirmTerminer(false); onTerminer(); }}
                           disabled={terminating}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                            background: 'var(--danger)', border: 'none',
-                            borderRadius: 6, padding: '0.3rem 0.75rem',
-                            fontSize: '0.75rem', color: 'white',
-                            cursor: terminating ? 'not-allowed' : 'pointer',
-                            fontFamily: 'inherit', fontWeight: 600,
-                          }}
+                          className="periode-archive-btn-primary"
                         >
                           {terminating ? (
-                            <span style={{ width: 10, height: 10, border: '1.5px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                            <span className="btn-spinner btn-spinner-sm" />
                           ) : (
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                               <path d="M20 6L9 17l-5-5"/>
@@ -200,15 +162,7 @@ function PeriodeCard({
                           )}
                           {t('periodes.confirmerBtn')}
                         </button>
-                        <button
-                          onClick={() => setConfirmTerminer(false)}
-                          style={{
-                            background: 'var(--card-bg)', border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
-                            borderRadius: 6, padding: '0.3rem 0.65rem',
-                            fontSize: '0.75rem', color: 'var(--danger)',
-                            cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
-                          }}
-                        >
+                        <button onClick={() => setConfirmTerminer(false)} className="periode-archive-btn-cancel">
                           {t('periodes.actions.annuler')}
                         </button>
                       </div>
@@ -217,15 +171,7 @@ function PeriodeCard({
                     <button
                       onClick={() => setConfirmTerminer(true)}
                       disabled={terminating}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-                        marginTop: '0.25rem', alignSelf: 'flex-start',
-                        background: 'var(--danger-light)', border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
-                        borderRadius: 6, padding: '0.3rem 0.7rem',
-                        fontSize: '0.75rem', color: 'var(--danger)',
-                        cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
-                        transition: 'all 0.15s',
-                      }}
+                      className="periode-archive-btn-soft"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 6L9 17l-5-5"/>
@@ -236,15 +182,11 @@ function PeriodeCard({
                 )}
               </>
             ) : (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                background: 'var(--bg-subtle)', borderRadius: 8, padding: '0.6rem 0.75rem',
-                color: 'var(--text-muted)',
-              }}>
+              <div className="periode-no-dates">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
                 </svg>
-                <span style={{ fontSize: '0.82rem' }}>{t('periodes.datesNonDefinies')}</span>
+                <span className="periode-no-dates-text">{t('periodes.datesNonDefinies')}</span>
               </div>
             )}
           </div>
@@ -322,45 +264,45 @@ export function PeriodesList() {
 
       {periodes.length > 0 && (
         <>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-            <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto' }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div className="periodes-stats-bar">
+            <div className="periodes-stat-card">
+              <div className="periodes-stat-icon periodes-stat-icon-primary">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
                 </svg>
               </div>
               <div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 700, lineHeight: 1, color: 'var(--text)' }}>
-                  {planned}<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>/6</span>
+                <div className="periodes-stat-value">
+                  {planned}<span>/6</span>
                 </div>
-                <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{t('periodes.periodesPlannifiees')}</div>
+                <div className="periodes-stat-label">{t('periodes.periodesPlannifiees')}</div>
               </div>
             </div>
 
             {activePeriode ? (
-              <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto', border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div className="periodes-stat-card periodes-stat-card-active">
+                <div className="periodes-stat-icon periodes-stat-icon-success">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6L9 17l-5-5"/>
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16a34a', lineHeight: 1 }}>
-                    {activePeriode.type === 'ds' ? t('periodes.types.ds') : t('periodes.types.evaluation')} T{activePeriode.trimestre} {t('periodes.enCours', { t: activePeriode.trimestre })}
+                  <div className="periodes-stat-value periodes-stat-value-success">
+                    {activePeriode.type === 'ds' ? t('periodes.types.ds') : t('periodes.types.evaluation')} T{activePeriode.trimestre}
                   </div>
-                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{t('periodes.saisieActive')}</div>
+                  <div className="periodes-stat-label">{t('periodes.saisieActive')}</div>
                 </div>
               </div>
             ) : (
-              <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 auto' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--warning-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div className="periodes-stat-card">
+                <div className="periodes-stat-icon periodes-stat-icon-warning">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, lineHeight: 1 }}>{t('periodes.aucunePeriode')}</div>
-                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{t('periodes.saisieBloquee')}</div>
+                  <div className="periodes-stat-value">{t('periodes.aucunePeriode')}</div>
+                  <div className="periodes-stat-label">{t('periodes.saisieBloquee')}</div>
                 </div>
               </div>
             )}
@@ -387,26 +329,17 @@ export function PeriodesList() {
             })();
 
             return (
-              <div key={tr} style={{ marginBottom: '1.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.875rem' }}>
-                  <div style={{
-                    width: 30, height: 30, borderRadius: 7, flexShrink: 0,
-                    background: (isActiveT || isCurrentT) ? '#16a34a' : 'var(--text-muted)',
-                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.78rem', fontWeight: 700,
-                  }}>T{tr}</div>
-                  <h3 style={{ fontWeight: 700, fontSize: '0.97rem', margin: 0, color: 'var(--text)' }}>{t('periodes.trimestre', { t: tr })}</h3>
+              <div key={tr} className="trimestre-section">
+                <div className="trimestre-header">
+                  <div className={`trimestre-badge${(isActiveT || isCurrentT) ? ' active' : ''}`}>T{tr}</div>
+                  <h3 className="trimestre-title">{t('periodes.trimestre', { t: tr })}</h3>
                   {(isActiveT || isCurrentT) && (
-                    <span style={{
-                      fontSize: '0.7rem', fontWeight: 600, color: '#16a34a',
-                      background: 'var(--success-light)', border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)',
-                      borderRadius: 20, padding: '0.12rem 0.55rem',
-                    }}>{t('periodes.actif')}</span>
+                    <span className="badge badge-success trimestre-active-badge">{t('periodes.actif')}</span>
                   )}
-                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                  <div className="trimestre-divider" />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-grid">
                   {[ds, eval_].map((p) => {
                     if (!p) return null;
                     return (
@@ -432,14 +365,8 @@ export function PeriodesList() {
             );
           })}
 
-          <div style={{
-            marginTop: '0.5rem', padding: '0.75rem 1rem',
-            background: 'var(--bg-subtle)', border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-sm)',
-          }}>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
-              {t('periodes.regles')}
-            </p>
+          <div className="periodes-rules-block">
+            <p className="periodes-rules-text">{t('periodes.regles')}</p>
           </div>
         </>
       )}

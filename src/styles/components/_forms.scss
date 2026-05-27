@@ -1,0 +1,259 @@
+// ============================================================
+// FORMS — inputs, selects, textareas, form layout
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// --- Groupe ---
+.form-group {
+  margin-bottom: $spacing-lg;
+
+  &.full-width { grid-column: 1 / -1; }
+}
+
+.form-label {
+  @include flex-row($spacing-sm);
+  margin-bottom: 0.4rem;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.label-badge { margin-left: $spacing-xs; }
+
+// --- Champs ---
+.input,
+.select,
+.textarea,
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.875rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: $font-size-base;
+  font-family: inherit;
+  background: var(--input-bg);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus { @include focus-ring(var(--primary)); }
+
+  &::placeholder {
+    color: var(--input-placeholder);
+  }
+}
+
+.input-error  { border-color: var(--danger) !important; }
+.input-readonly {
+  background: var(--bg-subtle) !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed;
+}
+
+// --- Input avec icône ---
+.input-wrapper    { position: relative; }
+.input-with-icon  { padding-left: 2.5rem; }
+.input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  @include flex-center;
+}
+
+// --- Hints & erreurs ---
+.form-hint  { font-size: $font-size-xs; color: var(--text-muted); margin-top: 0.3rem; }
+.form-error { font-size: $font-size-xs; color: var(--danger); margin-top: 0.3rem; }
+
+// --- Search input ---
+.search-input {
+  position: relative;
+  display: inline-block;
+
+  input {
+    padding-left: 2.5rem;
+    min-width: 200px;
+  }
+
+  svg {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+  }
+}
+
+// --- Form grid ---
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+
+  &.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  &.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-section {
+  margin-bottom: $spacing-2xl;
+}
+
+.form-section-title {
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: $spacing-2xl;
+}
+
+// --- Notes fields (inputs spéciaux pour saisie notes) ---
+.note-input-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.note-field {
+  width: 80px;
+  padding: 0.45rem 0.6rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: $font-size-base;
+  font-family: inherit;
+  font-weight: 600;
+  text-align: center;
+  background: var(--card-bg);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &:focus { @include focus-ring(var(--primary)); }
+  &::placeholder { color: var(--input-placeholder); font-weight: 400; }
+
+  &-good {
+    border-color: var(--success);
+    background: var(--success-light);
+    color: var(--success);
+  }
+
+  &-bad {
+    border-color: var(--danger);
+    background: var(--danger-light);
+    color: var(--danger);
+  }
+
+  &-readonly {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    border-color: var(--border);
+  }
+}
+
+.note-field-indicator {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.comment-field-wrapper { position: relative; }
+
+.comment-field {
+  width: 180px;
+  padding: 0.45rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: $font-size-sm;
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus { @include focus-ring(var(--primary)); }
+  &::placeholder { color: var(--input-placeholder); }
+
+  &-readonly {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    border-color: transparent;
+  }
+}
+
+// Legacy compat
+.notes-input { width: 80px !important; min-width: 80px !important; text-align: center; }
+.notes-input.note-good { border-color: var(--success); background: var(--success-light); }
+.notes-input.note-bad  { border-color: var(--danger);  background: var(--danger-light); }
+.comment-input { width: 150px !important; min-width: 150px !important; }
+
+// --- Équipements checkboxes ---
+.equipements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.equipement-checkbox {
+  @include flex-row($spacing-sm);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: $font-size-sm;
+  color: var(--text);
+  transition: $transition-fast;
+  user-select: none;
+
+  &:hover { border-color: var(--primary); background: var(--primary-light); }
+  &.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 500; }
+  input { accent-color: var(--primary); }
+}
+
+.pmr-toggle {
+  @include flex-row(0.65rem);
+  cursor: pointer;
+  font-size: $font-size-base;
+  color: var(--text);
+  user-select: none;
+  input { accent-color: var(--success); width: 16px; height: 16px; }
+}
+
+// --- Color picker ---
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.color-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-xs;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+
+  &:hover  { transform: scale(1.1); }
+  &.selected { border-color: var(--text); }
+}

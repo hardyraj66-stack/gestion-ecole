@@ -1,0 +1,319 @@
+// ============================================================
+// MODALS — modal partagée + confirm dialog
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// --- Overlay ---
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  @include flex-center;
+  z-index: $z-modal;
+  padding: $spacing-lg;
+  animation: fade-in 0.15s ease;
+}
+
+// --- Panel ---
+.modal-panel {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  @include flex-col(0);
+  max-height: 95vh;
+  width: 100%;
+  animation: modal-slide-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &.modal-lg { max-width: 700px; }
+  &.modal-xl { max-width: 1320px; }
+}
+
+// --- Header ---
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-xl $spacing-2xl $spacing-lg;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modal-subtitle {
+  @include flex-row($spacing-sm);
+  margin-top: 0.35rem;
+}
+
+.modal-close {
+  @include btn-reset;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s;
+  line-height: 1;
+
+  &:hover { background: var(--border); color: var(--text); }
+}
+
+// --- Body & footer ---
+.modal-body {
+  overflow-y: auto;
+  padding: $spacing-xl $spacing-2xl;
+  flex: 1;
+}
+
+.modal-footer {
+  @include flex-row(0.75rem);
+  justify-content: flex-end;
+  padding: $spacing-lg $spacing-2xl;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+// --- Section labels dans modals ---
+.section-label {
+  font-size: $font-size-2xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  margin-top: $spacing-xl;
+
+  &:first-child { margin-top: 0; }
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: $spacing-xl 0;
+}
+
+.section-title {
+  font-size: $font-size-base;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: $spacing-lg;
+}
+
+// --- Confirm dialog ---
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-confirm;
+  background: rgba(0,0,0,0.45);
+  @include flex-center;
+  padding: $spacing-lg;
+  animation: confirmFadeIn 0.15s ease;
+}
+
+.confirm-dialog {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 420px;
+  animation: confirmSlideIn 0.2s ease;
+  overflow: hidden;
+}
+
+.confirm-body {
+  display: flex;
+  gap: $spacing-lg;
+  padding: $spacing-2xl $spacing-2xl $spacing-lg;
+}
+
+.confirm-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  @include flex-center;
+}
+
+.confirm-content {
+  flex: 1;
+  padding-top: 0.1rem;
+}
+
+.confirm-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+.confirm-message {
+  font-size: $font-size-base;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: $spacing-lg $spacing-2xl $spacing-xl;
+}
+
+.confirm-btn {
+  padding: 0.55rem $spacing-xl;
+  border-radius: var(--radius-sm);
+  font-size: $font-size-base;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: $transition-fast;
+
+  &-cancel {
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    &:hover { background: var(--bg-subtle); }
+  }
+
+  &-confirm {
+    color: white;
+    &:hover { opacity: 0.9; }
+  }
+}
+
+// --- Classe popup (sélection classe dans CreateEleve) ---
+.classe-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,0.4);
+  @include flex-center;
+  padding: $spacing-lg;
+  animation: confirmFadeIn 0.15s ease;
+}
+
+.classe-popup {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow: hidden;
+  @include flex-col(0);
+  animation: confirmSlideIn 0.2s ease;
+}
+
+.classe-popup-header {
+  @include flex-between;
+  padding: $spacing-lg $spacing-xl;
+  border-bottom: 1px solid var(--border);
+
+  h3 { font-size: 1rem; font-weight: 600; }
+}
+
+.classe-popup-close {
+  @include btn-reset;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: $spacing-xs;
+  border-radius: 4px;
+
+  &:hover { background: var(--btn-ghost-hover); color: var(--text); }
+}
+
+.classe-popup-suggestion {
+  padding: $spacing-lg $spacing-xl;
+  background: var(--success-light);
+  border-bottom: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
+}
+
+.classe-popup-suggestion-header {
+  @include flex-row($spacing-sm);
+  font-size: $font-size-xs;
+  font-weight: 600;
+  color: var(--success);
+  margin-bottom: 0.6rem;
+}
+
+.classe-popup-suggestion-card {
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  border: 1.5px solid var(--success);
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover { box-shadow: 0 0 0 3px #16a34a20; }
+}
+
+.classe-popup-suggestion-main {
+  @include flex-between;
+  margin-bottom: 0.35rem;
+}
+
+.classe-popup-suggestion-name { font-weight: 700; font-size: 1rem; }
+
+.classe-popup-suggestion-meta {
+  display: flex;
+  gap: 0.4rem;
+  font-size: $font-size-xs;
+  color: var(--text-muted);
+  margin-bottom: $spacing-sm;
+}
+
+.classe-popup-suggestion-bar { margin-top: $spacing-xs; }
+
+.classe-popup-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.classe-popup-list-header {
+  padding: 0.6rem $spacing-xl;
+  font-size: $font-size-2xs;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.classe-popup-item {
+  @include flex-between;
+  padding: 0.7rem $spacing-xl;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover { background: var(--primary-light); }
+
+  &-selected { background: var(--primary-light); border-left: 3px solid var(--primary); }
+  &-full     { opacity: 0.5; cursor: not-allowed; &:hover { background: transparent; } }
+  &-warning  { border-left: 3px solid var(--warning); }
+}
+
+.classe-popup-suggestion-warning {
+  background: var(--warning-light);
+  border-bottom-color: color-mix(in srgb, var(--warning) 50%, transparent);
+
+  .classe-popup-suggestion-header { color: var(--warning); }
+  .classe-popup-suggestion-card   { border-color: var(--warning); }
+}
+
+.classe-popup-item-left  { @include flex-row($spacing-sm); }
+.classe-popup-item-name  { font-weight: 500; font-size: $font-size-base; }
+.classe-popup-item-right { @include flex-row($spacing-sm); }
+.classe-popup-item-count { font-size: $font-size-xs; color: var(--text-muted); font-weight: 500; }
+.classe-popup-item-places{ font-size: $font-size-2xs; color: var(--text-muted); min-width: 30px; text-align: right; }

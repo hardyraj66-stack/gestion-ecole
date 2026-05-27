@@ -1,0 +1,91 @@
+// ============================================================
+// THEMES — Variables CSS custom properties
+// Light mode (défaut), Dark mode, Couleurs personnalisées
+// ============================================================
+
+:root {
+  --primary:        #2563eb;
+  --primary-dark:   #1d4ed8;
+  --primary-light:  #eff6ff;
+  --secondary:      #7c3aed;
+  --secondary-light:#f3e8ff;
+  --success:        #16a34a;
+  --success-light:  #f0fdf4;
+  --warning:        #d97706;
+  --warning-light:  #fffbeb;
+  --danger:         #dc2626;
+  --danger-light:   #fef2f2;
+  --info:           #0891b2;
+  --info-light:     #ecfeff;
+
+  --sidebar-bg:          #0f172a;
+  --sidebar-hover:       #1e293b;
+  --sidebar-border:      #1e293b;
+  --sidebar-text:        #94a3b8;
+  --sidebar-text-active: #ffffff;
+
+  --sidebar-collapsed-width: 64px;
+  --sidebar-expanded-width:  260px;
+
+  --bg:           #f1f5f9;
+  --bg-subtle:    #f8fafc;
+  --card-bg:      #ffffff;
+  --card-shadow:  0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+  --text:         #0f172a;
+  --text-muted:   #64748b;
+  --text-on-color:#ffffff;
+  --border:       #e2e8f0;
+  --input-bg:          #ffffff;
+  --input-placeholder: #a1a1aa;
+  --table-hover:       #f8fafc;
+  --modal-header-bg:   #f8fafc;
+  --btn-ghost-hover:   #f1f5f9;
+  --overlay-bg:        rgba(255,255,255,0.6);
+  --planning-pause-stripe: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 4px, #eef2ff 4px, #eef2ff 8px);
+
+  --radius:    12px;
+  --radius-sm: 8px;
+}
+
+// ── Dark mode ──────────────────────────────────────────────
+[data-theme="dark"] {
+  --bg:           #0f172a;
+  --bg-subtle:    #1e293b;
+  --card-bg:      #243044;
+  --card-shadow:  0 1px 4px rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.25);
+  --text:         #f1f5f9;
+  --text-muted:   #94a3b8;
+  --text-on-color:#ffffff;
+  --border:       #334155;
+  --input-bg:          #0f172a;
+  --input-placeholder: #64748b;
+  --table-hover:       #334155;
+  --modal-header-bg:   #334155;
+  --btn-ghost-hover:   #334155;
+  --overlay-bg:        rgba(15,23,42,0.7);
+  --planning-pause-stripe: repeating-linear-gradient(45deg, #1e293b, #1e293b 4px, #1a1f35 4px, #1a1f35 8px);
+  --primary-light:  #1e3a5f;
+  --success-light:  #052e16;
+  --warning-light:  #1c0f00;
+  --danger-light:   #2d0a0a;
+  --info-light:     #042830;
+  --secondary-light:#2d1b4e;
+
+  --sidebar-bg:          #070d1a;
+  --sidebar-hover:       #131d30;
+  --sidebar-border:      #1a2540;
+  --sidebar-active-glow: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+// ── Thèmes couleurs ────────────────────────────────────────
+[data-color="violet"] { --primary: #7c3aed; --primary-dark: #6d28d9; --primary-light: #ede9fe; }
+[data-color="green"]  { --primary: #16a34a; --primary-dark: #15803d; --primary-light: #f0fdf4; }
+[data-color="red"]    { --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2; }
+[data-color="orange"] { --primary: #ea580c; --primary-dark: #c2410c; --primary-light: #fff7ed; }
+[data-color="indigo"] { --primary: #4f46e5; --primary-dark: #4338ca; --primary-light: #eef2ff; }
+
+[data-theme="dark"][data-color="violet"] { --primary-light: #3b1f6b; }
+[data-theme="dark"][data-color="green"]  { --primary-light: #052e16; }
+[data-theme="dark"][data-color="red"]    { --primary-light: #2d0a0a; }
+[data-theme="dark"][data-color="orange"] { --primary-light: #431407; }
+[data-theme="dark"][data-color="indigo"] { --primary-light: #1e1b4b; }

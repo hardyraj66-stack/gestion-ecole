@@ -1,0 +1,458 @@
+// ============================================================
+// SALLES
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// --- Filtres ---
+.salles-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-lg;
+  align-items: center;
+  margin-bottom: $spacing-xl;
+
+  @include mobile { flex-direction: column; align-items: flex-start; }
+}
+
+.salles-search {
+  @include flex-row($spacing-sm);
+}
+
+.salles-type-filters {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.salle-filter-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.3rem 0.85rem;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: $transition-fast;
+  font-family: inherit;
+
+  &:hover { border-color: var(--primary); color: var(--primary); }
+  &.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); font-weight: 600; }
+}
+
+// --- Create salle layout ---
+.create-salle-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: $spacing-2xl;
+  align-items: start;
+
+  @include tablet { grid-template-columns: 1fr; }
+}
+
+.salle-preview-card {
+  @include flex-col(0.6rem);
+}
+
+.salle-preview-nom { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.salle-preview-meta { display: flex; gap: $spacing-sm; align-items: center; }
+.salle-preview-desc { font-size: $font-size-sm; color: var(--text-muted); }
+.salle-preview-loc  { display: flex; gap: 0.75rem; font-size: 0.82rem; color: var(--text-muted); }
+.salle-preview-eqs  { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+// --- Detail modal ---
+.salle-detail-body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0;
+  padding: 0 !important;
+  overflow: hidden;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.salle-detail-left {
+  padding: $spacing-xl $spacing-xl $spacing-xl $spacing-2xl;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  max-height: calc(95vh - 100px);
+
+  @include tablet { border-right: none; border-bottom: 1px solid var(--border); max-height: none; }
+}
+
+.salle-detail-right {
+  padding: $spacing-xl $spacing-2xl;
+  overflow-y: auto;
+  max-height: calc(95vh - 100px);
+
+  @include tablet { max-height: none; padding-left: $spacing-xl; }
+}
+
+.salle-info-block { margin-bottom: $spacing-xl; }
+
+.salle-info-row {
+  @include flex-row($spacing-lg);
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.salle-desc-text { font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; }
+
+.equipements-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+// --- Salle stats ---
+.salle-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: $spacing-lg;
+}
+
+.salle-stat-item {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.salle-stat-value { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+.salle-stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+.occupation-bar-wrapper { @include flex-row(0.75rem); }
+
+.occupation-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.occupation-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.occupation-bar-label { font-size: $font-size-2xs; color: var(--text-muted); white-space: nowrap; }
+
+// --- Calendrier salle ---
+.salle-planning-empty {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: $spacing-3xl;
+  text-align: center;
+}
+
+.salle-calendrier {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: auto;
+  font-size: $font-size-xs;
+}
+
+.salle-cal-header {
+  display: flex;
+  background: var(--bg-subtle);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.salle-cal-time-col { width: 56px; flex-shrink: 0; }
+
+.salle-cal-jour {
+  flex: 1;
+  min-width: 110px;
+  text-align: center;
+  padding: 0.6rem $spacing-xs;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: $font-size-2xs;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-left: 1px solid var(--border);
+  @include flex-center;
+  gap: 0.4rem;
+
+  &.has-cours { color: var(--primary); background: var(--primary-light); }
+}
+
+.salle-cal-count {
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.7rem;
+  border-radius: 99px;
+  padding: 0.1rem 0.45rem;
+  font-weight: 700;
+}
+
+.salle-cal-body {
+  display: flex;
+  position: relative;
+  min-width: fit-content;
+}
+
+.salle-cal-body .salle-cal-time-col {
+  width: 56px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+}
+
+.salle-cal-hour {
+  height: 52px;
+  @include flex-row(0);
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 4px 8px 0 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+
+  &.salle-cal-hour-half {
+    border-bottom: 1px dashed var(--border);
+    font-weight: 400;
+    font-size: 0.62rem;
+  }
+}
+
+.salle-cal-col {
+  flex: 1;
+  min-width: 120px;
+  position: relative;
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.salle-cal-cell {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+
+  &-hour { border-bottom: 1px solid var(--border); background: var(--card-bg); }
+  &-half { border-bottom: 1px dashed var(--border); background: var(--bg-subtle); }
+}
+
+.salle-cal-creneau {
+  position: absolute;
+  left: 3px; right: 3px;
+  border-radius: $radius-xs;
+  cursor: default;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.salle-cal-creneau-inner {
+  padding: 5px 8px;
+  height: 100%;
+  @include flex-col(1px);
+  justify-content: center;
+}
+
+.salle-cal-classe {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.95);
+  @include truncate;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.salle-cal-mat {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  @include truncate;
+  line-height: 1.2;
+}
+
+.salle-cal-time {
+  font-size: 0.66rem;
+  color: rgba(255,255,255,0.75);
+  white-space: nowrap;
+  margin-top: 1px;
+  line-height: 1;
+}
+
+// --- SalleSelect ---
+.salle-select-trigger {
+  width: 100%;
+  @include flex-row($spacing-sm);
+  padding: $spacing-sm 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: left;
+  min-height: 38px;
+
+  &:hover   { border-color: var(--primary); }
+  &.open    { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  &.conflict { border-color: var(--danger); }
+  &.conflict.open { box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.salle-select-arrow       { margin-left: auto; color: var(--text-muted); font-size: 0.7rem; }
+.salle-select-placeholder { color: var(--text-muted); flex: 1; }
+.salle-select-loading     { color: var(--text-muted); flex: 1; }
+.salle-select-value       { @include flex-row(0.45rem); flex: 1; }
+.salle-select-conflict-hint { font-size: 0.72rem; color: var(--danger); margin-left: $spacing-xs; }
+
+.salle-select-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.green    { background: var(--success); }
+  &.red      { background: var(--danger); }
+  &.checking { background: var(--btn-ghost-hover); animation: pulse-dot 1s ease-in-out infinite; }
+}
+
+.salle-select-error {
+  margin-top: 0.35rem;
+  font-size: $font-size-xs;
+  color: var(--danger);
+  background: var(--danger-light);
+  border: 1px solid color-mix(in srgb, var(--danger) 50%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.65rem;
+}
+
+.salle-select-dropdown {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.salle-select-group { padding: 0.35rem 0; }
+.salle-select-group + .salle-select-group { border-top: 1px solid var(--border); }
+
+.salle-select-group-label {
+  padding: 0.3rem 0.85rem;
+  @include label-uppercase;
+}
+
+.salle-select-empty { padding: 0.85rem; font-size: $font-size-sm; color: var(--text-muted); text-align: center; }
+
+.salle-select-option {
+  width: 100%;
+  @include flex-row($spacing-sm);
+  padding: 0.55rem 0.85rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text);
+  text-align: left;
+  transition: background 0.1s;
+
+  &.available:hover    { background: var(--success-light); }
+  &.available.selected { background: color-mix(in srgb, var(--success) 20%, transparent); }
+  &.unavailable {
+    cursor: default;
+    opacity: 0.75;
+    padding: 0.45rem 0.85rem;
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-sm;
+  }
+}
+
+.salle-select-option-content { @include flex-col(0.1rem); }
+.salle-select-option-nom     { font-weight: 500; }
+.salle-select-option-meta    { font-size: $font-size-2xs; color: var(--text-muted); }
+
+.salle-select-option-status {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 99px;
+
+  &.free { background: color-mix(in srgb, var(--success) 20%, transparent); color: var(--success); }
+  &.busy { background: var(--danger-light); color: var(--danger); }
+}
+
+.salle-select-occupant { font-size: 0.73rem; color: var(--danger); padding-left: 0.05rem; }
+
+.salle-select-fixed {
+  @include flex-row(0.6rem);
+  padding: 0.55rem 0.85rem;
+  background: var(--primary-light);
+  border: 1.5px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+
+  &.conflict { background: var(--danger-light); border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
+}
+
+.salle-select-fixed-icon { font-size: 1rem; }
+.salle-select-fixed-nom  { font-weight: 600; color: var(--primary); flex: 1; }
+.salle-select-fixed.conflict .salle-select-fixed-nom { color: var(--danger); }
+
+.salle-select-fixed-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem $spacing-sm;
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  color: var(--primary-dark);
+  border-radius: 99px;
+
+  &.conflict { background: var(--danger-light); color: var(--danger); }
+}
+
+.salle-select-exceptionnel-btn {
+  display: block;
+  margin-top: 0.4rem;
+  padding: $spacing-xs 0.6rem;
+  font-size: 0.78rem;
+  color: var(--primary);
+  @include btn-reset;
+  border: 1px dashed var(--primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: var(--primary-light); }
+}
+
+.salle-select-exceptionnel-badge {
+  margin-left: $spacing-sm;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  background: var(--warning-light);
+  color: var(--warning);
+  border-radius: 99px;
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  vertical-align: middle;
+}
+
+.salle-select-retour-fixe-btn {
+  display: block;
+  margin-top: 0.4rem;
+  padding: $spacing-xs 0.6rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  @include btn-reset;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: var(--bg-subtle); }
+}

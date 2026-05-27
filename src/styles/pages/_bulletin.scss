@@ -1,0 +1,85 @@
+// ============================================================
+// BULLETIN
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.bulletin-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: $spacing-2xl;
+  align-items: flex-start;
+
+  @include tablet-portrait { grid-template-columns: 1fr; }
+}
+
+.student-card {
+  @include card-base;
+  padding: $spacing-2xl;
+  text-align: center;
+
+  .avatar-lg { margin: 0 auto $spacing-lg; }
+}
+
+.student-card-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: $spacing-xs;
+}
+
+.student-card-class {
+  color: var(--text-muted);
+  font-size: $font-size-base;
+  margin-bottom: $spacing-sm;
+}
+
+.student-card-email {
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+}
+
+.student-moyenne {
+  margin-top: $spacing-2xl;
+  padding-top: $spacing-2xl;
+  border-top: 1px solid var(--border);
+}
+
+.student-moyenne-label {
+  font-size: $font-size-sm;
+  color: var(--text-muted);
+  margin-bottom: $spacing-sm;
+}
+
+.student-moyenne-value {
+  font-size: $spacing-3xl;
+  font-weight: 700;
+}
+
+// --- Trimestre tabs ---
+.trimestre-tabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.trimestre-tab {
+  flex: 1;
+  padding: 0.75rem $spacing-lg;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+  font-size: $font-size-base;
+  font-family: inherit;
+
+  &:hover { background: var(--bg-subtle); }
+
+  &.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+}

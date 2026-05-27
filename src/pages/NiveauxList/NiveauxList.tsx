@@ -154,7 +154,7 @@ export function NiveauxList() {
           />
         </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div className="niveaux-grid">
           {niveaux.map((n: any) => (
             <NiveauCard
               key={n.id ?? n.niveau}
@@ -209,44 +209,46 @@ function NiveauCard({
     .filter(Boolean);
 
   return (
-    <Card style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{niveau.nom ?? niveau.niveau}</span>
-          {niveau.count !== undefined && (
-            <Badge label={t('niveaux.nbClasses', { count: niveau.count })} variant="default" />
+    <Card>
+      <div className="niveau-card-inner">
+        <div className="niveau-card-top">
+          <div className="niveau-card-title-row">
+            <span className="niveau-card-name">{niveau.nom ?? niveau.niveau}</span>
+            {niveau.count !== undefined && (
+              <Badge label={t('niveaux.nbClasses', { count: niveau.count })} variant="default" />
+            )}
+          </div>
+          {niveau.ordre !== undefined && (
+            <span className="niveau-card-ordre">{t('niveaux.ordre', { n: niveau.ordre })}</span>
           )}
         </div>
-        {niveau.ordre !== undefined && (
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('niveaux.ordre', { n: niveau.ordre })}</span>
+
+        {niveau.description && (
+          <p className="niveau-card-desc">{niveau.description}</p>
+        )}
+
+        {(niveau.matiere_ids?.length > 0) ? (
+          <div className="niveau-card-matieres">
+            {matiereNames.map((nom: string) => (
+              <Badge key={nom} label={nom} variant="info" />
+            ))}
+          </div>
+        ) : (
+          <p className="niveau-card-all-matieres">
+            {t('niveaux.toutesMatieresAutorisees')}
+          </p>
+        )}
+
+        {!readOnly && (
+          <div className="niveau-card-actions">
+            <Button variant="secondary" size="sm" onClick={onEdit} style={{ flex: 1 }}>{t('niveaux.modifier')}</Button>
+            {(niveau.count ?? 0) === 0
+              ? <Button variant="danger" size="sm" onClick={onDelete}>{t('niveaux.supprimer')}</Button>
+              : <span className="niveau-card-non-supprimable">{t('niveaux.nonSupprimable')}</span>
+            }
+          </div>
         )}
       </div>
-
-      {niveau.description && (
-        <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>{niveau.description}</p>
-      )}
-
-      {(niveau.matiere_ids?.length > 0) ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-          {matiereNames.map((nom: string) => (
-            <Badge key={nom} label={nom} variant="info" />
-          ))}
-        </div>
-      ) : (
-        <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          {t('niveaux.toutesMatieresAutorisees')}
-        </p>
-      )}
-
-      {!readOnly && (
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
-          <Button variant="secondary" size="sm" onClick={onEdit} style={{ flex: 1 }}>{t('niveaux.modifier')}</Button>
-          {(niveau.count ?? 0) === 0
-            ? <Button variant="danger" size="sm" onClick={onDelete}>{t('niveaux.supprimer')}</Button>
-            : <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', alignSelf: 'center', paddingRight: '0.25rem' }}>{t('niveaux.nonSupprimable')}</span>
-          }
-        </div>
-      )}
     </Card>
   );
 }
@@ -281,8 +283,8 @@ function EditNiveauModal({
         </>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem' }}>
+      <div className="niveau-edit-form">
+        <div className="niveau-edit-grid">
           <Input
             label={t('niveaux.form.nom')}
             value={form.nom}
@@ -308,13 +310,13 @@ function EditNiveauModal({
         />
 
         <div>
-          <label className="form-label">
+          <label className="form-label niveau-edit-matieres-header">
             {t('niveaux.form.matieres')}
-            {' '}<span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({t('niveaux.creer.form.matieresInfo')})</span>
+            {' '}<span className="niveau-edit-matieres-label">({t('niveaux.creer.form.matieresInfo')})</span>
           </label>
-          <div style={{ marginTop: '0.4rem', maxHeight: 200, overflowY: 'auto', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: 8 }}>
+          <div className="niveau-edit-matieres-scroll">
             {allMatieres.length === 0 ? (
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{t('niveaux.form.aucuneMatiere')}</span>
+              <span className="niveau-edit-matieres-empty">{t('niveaux.form.aucuneMatiere')}</span>
             ) : (
               <MatierePills
                 matieres={allMatieres}
@@ -324,7 +326,7 @@ function EditNiveauModal({
             )}
           </div>
           {form.matiere_ids.length > 0 && (
-            <p style={{ margin: '0.35rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            <p className="niveau-edit-matieres-count">
               {t('niveaux.nbMatieres', { count: form.matiere_ids.length })}
             </p>
           )}

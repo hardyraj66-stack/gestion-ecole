@@ -1,0 +1,135 @@
+// ============================================================
+// MIXINS — GestionÉcole
+// ============================================================
+@use 'variables' as *;
+
+// --- Flex utilities ---
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-row($gap: $spacing-sm) {
+  display: flex;
+  align-items: center;
+  gap: $gap;
+}
+
+@mixin flex-col($gap: $spacing-sm) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+// --- Card ---
+@mixin card-base {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+}
+
+// --- Bouton icône (reset) ---
+@mixin btn-reset {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+// --- Truncate texte ---
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// --- Focus ring ---
+@mixin focus-ring($color: var(--primary)) {
+  outline: none;
+  border-color: $color;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #{$color} 20%, transparent);
+}
+
+// --- Badge de statut ---
+@mixin status-badge($bg, $color) {
+  background: $bg;
+  color: $color;
+}
+
+// --- Overlay modal ---
+@mixin modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// --- Responsive breakpoints ---
+@mixin mobile {
+  @media (max-width: 768px) { @content; }
+}
+
+@mixin tablet {
+  @media (max-width: 1024px) { @content; }
+}
+
+@mixin desktop-md {
+  @media (max-width: 1200px) { @content; }
+}
+
+@mixin tablet-portrait {
+  @media (max-width: 900px) { @content; }
+}
+
+// --- Texte uppercase label ---
+@mixin label-uppercase {
+  font-size: $font-size-2xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+// --- Fade-in animation ---
+@mixin fade-in($name: fade-in) {
+  @keyframes #{$name} {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  animation: #{$name} 0.15s ease;
+}
+
+// --- Slide up animation ---
+@mixin slide-in-up($name: slide-up) {
+  @keyframes #{$name} {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  animation: #{$name} 0.18s ease;
+}
+
+// --- Opaque scrollbar hidden ---
+@mixin scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+// --- Collapsed/expanded sidebar labels ---
+@mixin sidebar-label-hidden {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.18s 0.05s, transform 0.2s 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@mixin sidebar-label-visible {
+  opacity: 1;
+  transform: translateX(0);
+}

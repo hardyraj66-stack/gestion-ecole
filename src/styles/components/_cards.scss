@@ -1,0 +1,351 @@
+// ============================================================
+// CARDS
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.card {
+  @include card-base;
+  padding: $spacing-2xl;
+
+  &-padding-none { padding: 0; }
+  &-padding-sm   { padding: $spacing-lg; }
+  &-padding-lg   { padding: $spacing-3xl; }
+}
+
+.card-header {
+  @include flex-between;
+  margin-bottom: $spacing-lg;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+// --- Add card (dashed) ---
+.add-card {
+  @include card-base;
+  border: 2px dashed var(--border);
+  @include flex-col(0.75rem);
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-3xl;
+  transition: $transition-base;
+  cursor: pointer;
+  min-height: 200px;
+
+  &:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+
+    .add-card-icon {
+      background: var(--primary);
+      color: white;
+    }
+  }
+}
+
+.add-card-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--btn-ghost-hover);
+  border-radius: 50%;
+  @include flex-center;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  transition: $transition-base;
+}
+
+.add-card-text {
+  color: var(--text-muted);
+  font-size: $font-size-base;
+  font-weight: 500;
+}
+
+// --- Matiere card ---
+.matiere-card {
+  @include card-base;
+  padding: $spacing-xl;
+  border-top: 4px solid var(--primary);
+  @include flex-col(0.75rem);
+}
+
+.matiere-card-header {
+  @include flex-between;
+}
+
+.matiere-code {
+  width: 48px;
+  height: 48px;
+  border-radius: $radius-sm;
+  @include flex-center;
+  font-weight: 600;
+  font-size: $font-size-sm;
+}
+
+.matiere-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+
+  [data-theme="dark"] & { color: #f1f5f9; }
+}
+
+.matiere-card-desc {
+  font-size: $font-size-sm;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.matiere-card-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.matiere-edit-btn {
+  @include btn-reset;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: $radius-xs;
+  @include flex-center;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover { color: var(--primary); background: var(--primary-light); }
+}
+
+.matiere-edit-header {
+  @include flex-row(0.75rem);
+  margin-bottom: 0.75rem;
+}
+
+.matiere-edit-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.matiere-edit-error {
+  font-size: 0.82rem;
+  color: var(--danger);
+  margin-bottom: $spacing-sm;
+}
+
+.matiere-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.matiere-coef-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: $spacing-xs;
+}
+
+.matiere-coef-badge {
+  @include flex-row($spacing-xs);
+}
+
+.matiere-coef-badge-niveau {
+  font-size: $font-size-3xs;
+  color: var(--text-muted);
+  font-weight: 500;
+
+  [data-theme="dark"] & { color: #cbd5e1; }
+}
+
+.matiere-coef-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.matiere-coef-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+}
+
+.matiere-coef-empty {
+  font-size: $font-size-xs;
+  color: var(--text-muted);
+  margin-bottom: $spacing-sm;
+}
+
+.matiere-coef-row {
+  @include flex-row($spacing-sm);
+  margin-bottom: 0.4rem;
+}
+
+.matiere-coef-niveau {
+  flex: 1;
+  font-size: 0.83rem;
+  color: var(--text);
+}
+
+.matiere-coef-input {
+  width: 70px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: $radius-xs;
+  font-size: $font-size-sm;
+  text-align: center;
+  outline: none;
+
+  &:focus { border-color: var(--primary); }
+}
+
+.matiere-coef-remove {
+  @include btn-reset;
+  color: var(--text-muted);
+  @include flex-center;
+  padding: 3px;
+  border-radius: 4px;
+  transition: color 0.15s;
+  &:hover { color: var(--danger); }
+}
+
+.matiere-coef-add { margin-top: $spacing-sm; }
+
+.matiere-coef-add-select {
+  font-size: 0.82rem;
+  padding: 4px 8px;
+  border: 1px dashed var(--border);
+  border-radius: $radius-xs;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+
+  &:hover { border-color: var(--primary); color: var(--primary); }
+}
+
+// --- Salle card ---
+.salle-card {
+  @include card-base;
+  padding: $spacing-xl;
+  border-top: 4px solid var(--primary);
+  @include flex-col(0.75rem);
+}
+
+.salle-card-header {
+  @include flex-between;
+  align-items: flex-start;
+}
+
+.salle-card-badges {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.salle-type-badge {
+  @include flex-row(0.35rem);
+  padding: 0.25rem 0.6rem;
+  border-radius: $radius-xs;
+  font-size: $font-size-2xs;
+  font-weight: 500;
+
+  svg { width: 14px; height: 14px; }
+}
+
+.salle-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.salle-card-desc {
+  font-size: $font-size-sm;
+  color: var(--text-muted);
+}
+
+.salle-card-actions {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: auto;
+}
+
+.salle-card-equipements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+// --- Preview card (CreateMatiere) ---
+.preview-card {
+  @include card-base;
+  padding: $spacing-xl;
+  border-top: 4px solid var(--primary);
+}
+
+.preview-title {
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: $spacing-lg;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// --- Classe card ---
+.classe-card-inner {
+  @include flex-col(0.85rem);
+}
+
+.classe-card-header  { @include flex-between; }
+
+.classe-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.classe-card-meta {
+  @include flex-row($spacing-lg);
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+}
+
+.classe-card-meta-item {
+  @include flex-row(0.35rem);
+}
+
+.classe-card-meta svg { width: 16px; height: 16px; }
+
+.classe-card-capacity-text {
+  @include flex-between;
+  font-size: $font-size-sm;
+  margin-bottom: 0.4rem;
+}
+
+.classe-card-capacity-label { color: var(--text-muted); }
+.classe-card-capacity-value { font-weight: 600; }
+
+.classe-card-actions {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+
+  .btn { flex: 1; }
+}
+
+// Dark mode
+[data-theme="dark"] {
+  .card { border: 1px solid #2d3f5a; }
+
+  .matiere-code {
+    filter: brightness(1.25) saturate(1.2);
+  }
+}

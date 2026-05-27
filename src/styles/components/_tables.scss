@@ -1,0 +1,130 @@
+// ============================================================
+// TABLES
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.table-wrapper { overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+    padding: 0.75rem $spacing-lg;
+    font-size: $font-size-2xs;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    background: var(--bg-subtle);
+  }
+
+  td {
+    padding: 0.875rem $spacing-lg;
+    border-bottom: 1px solid var(--border);
+    font-size: $font-size-base;
+    vertical-align: middle;
+  }
+
+  tbody tr:hover { background: var(--bg-subtle); }
+
+  tfoot td {
+    font-weight: 600;
+    background: var(--bg-subtle);
+  }
+}
+
+// --- Salles table ---
+.salles-table-wrapper {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  margin-bottom: $spacing-lg;
+}
+
+.salles-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead th {
+    background: var(--bg-subtle);
+    padding: 0.75rem $spacing-lg;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: $font-size-2xs;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: var(--bg-subtle); }
+  }
+
+  td {
+    padding: 0.85rem $spacing-lg;
+    vertical-align: middle;
+  }
+}
+
+.salle-nom-link {
+  @include btn-reset;
+  font-weight: 600;
+  color: var(--primary);
+  font-size: $font-size-base;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.salle-capacite  { font-size: 0.82rem; color: var(--text-muted); white-space: nowrap; }
+.salle-localisation { font-size: 0.82rem; color: var(--text-muted); }
+.salle-equipements { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+
+.salle-row-actions {
+  @include flex-row(0.4rem);
+}
+
+// --- Eleve name link dans tableau ---
+.eleve-name-link {
+  color: var(--primary);
+  transition: color 0.15s;
+}
+tr:hover .eleve-name-link { text-decoration: underline; }
+
+// --- Notes stats bar ---
+.notes-stats-bar {
+  display: flex;
+  gap: $spacing-3xl;
+  padding: 0.75rem $spacing-lg;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.notes-stat {
+  @include flex-row($spacing-sm);
+  font-size: $font-size-base;
+}
+
+.notes-stat-label { color: var(--text-muted); }
+.notes-stat-value { font-weight: 600; color: var(--text); }
+
+// --- Dashboard classes table ---
+.dashboard-classes-table-wrapper {
+  overflow-x: auto;
+  margin-top: $spacing-sm;
+}
+
+@include mobile {
+  .salles-table-wrapper { overflow-x: auto; }
+}

@@ -1,0 +1,42 @@
+// ============================================================
+// GESTIONÉCOLE — Point d'entrée SCSS
+// Architecture : themes → reset → composants → layout → pages
+// ============================================================
+
+// --- 1. Variables SCSS (valeurs statiques) ---
+@use 'variables' as *;
+
+// --- 2. Thèmes & CSS custom properties (dynamiques) ---
+@use 'themes';
+
+// --- 3. Reset & base ---
+@use 'reset';
+
+// --- 4. Utilities ---
+@use 'utilities';
+
+// --- 5. Composants partagés ---
+@use 'components/buttons';
+@use 'components/forms';
+@use 'components/cards';
+@use 'components/modals';
+@use 'components/badges';
+@use 'components/tables';
+@use 'components/alerts';
+@use 'components/shared';
+
+// --- 6. Layout ---
+@use 'layout/sidebar';
+@use 'layout/layout';
+
+// --- 7. Pages ---
+@use 'pages/dashboard';
+@use 'pages/planning';
+@use 'pages/fiche-eleve';
+@use 'pages/bulletin';
+@use 'pages/salles';
+@use 'pages/settings';
+@use 'pages/evaluations';
+@use 'pages/annee-scolaire';
+@use 'pages/professeurs';
+@use 'pages/niveaux';

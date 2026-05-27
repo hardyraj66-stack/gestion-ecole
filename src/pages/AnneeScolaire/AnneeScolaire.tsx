@@ -133,8 +133,8 @@ export function AnneeScolairePage() {
       {success && <Alert variant="success">{success}</Alert>}
 
       {!isViewingArchive && showForm && (
-        <Card style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('anneeScolaire.preparerTitre')}</h3>
+        <Card className="annee-prepare-section">
+          <h3 className="annee-prepare-title">{t('anneeScolaire.preparerTitre')}</h3>
           <form onSubmit={handleCreate}>
             <FormGrid columns={3}>
               <Input label={t('anneeScolaire.form.label')} value={formLabel} onChange={e => setFormLabel(e.target.value)} placeholder={t('anneeScolaire.form.labelPlaceholder')} required />
@@ -151,10 +151,10 @@ export function AnneeScolairePage() {
 
       {/* Pipeline */}
       <Card style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
-        <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>{t('anneeScolaire.cycleTransition')}</h3>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <h3 className="annee-card-section-title">{t('anneeScolaire.cycleTransition')}</h3>
+        <div className="annee-pipeline">
           {(['active', 'terminee', 'preparation'] as AnneeStatut[]).map((s, i) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div key={s} className="d-flex-center" style={{ gap: '0.5rem' }}>
               <PipelineStep label={statutConfig[s].label} active={active?.statut === s || preparation?.statut === s} />
               {i < 2 && <PipelineArrow />}
             </div>
@@ -164,19 +164,19 @@ export function AnneeScolairePage() {
 
       {/* Année active */}
       {active && (
-        <Card style={{ marginBottom: '1rem', borderLeft: '4px solid var(--success)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Card className="annee-active-card">
+          <div className="annee-active-header">
+            <div className="annee-active-info">
+              <div className="annee-active-title-row">
+                <div className="annee-active-icon">
                   <Icon path={statutConfig.active.icon} size={20} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{active.label}</h3>
+                  <h3 className="annee-active-name">{active.label}</h3>
                   <Badge label={t('anneeScolaire.anneeActive')} variant="success" />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              <div className="annee-active-stats">
                 <StatItem label={t('anneeScolaire.colonnes.periode')} value={`${formatDate(active.debut)} → ${formatDate(active.fin)}`} />
                 <StatItem label={t('anneeScolaire.colonnes.classes')} value={activeClasses} />
                 <StatItem label={t('anneeScolaire.colonnes.eleves')} value={activeEleves} />
@@ -190,22 +190,22 @@ export function AnneeScolairePage() {
 
       {/* En préparation */}
       {preparation && (
-        <Card style={{ marginBottom: '1rem', borderLeft: '4px solid var(--warning)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--warning-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Card className="annee-prep-card">
+          <div className="annee-prep-header">
+            <div className="annee-prep-info">
+              <div className="annee-prep-title-row">
+                <div className="annee-prep-icon">
                   <Icon path={statutConfig.preparation.icon} size={20} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{preparation.label}</h3>
+                  <h3 className="annee-prep-name">{preparation.label}</h3>
                   <Badge label={t('anneeScolaire.enPreparation')} variant="warning" />
                 </div>
               </div>
               <StatItem label={t('anneeScolaire.colonnes.periode')} value={`${formatDate(preparation.debut)} → ${formatDate(preparation.fin)}`} />
             </div>
             {!isViewingArchive && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className="annee-prep-actions">
                 {!active && <Button variant="primary" onClick={() => handleDemarrer(preparation)} disabled={submitting} loading={submitting}>{t('anneeScolaire.demarrerEmoji')}</Button>}
                 <Button variant="danger" size="sm" onClick={() => handleDelete(preparation)}>{t('anneeScolaire.actions.supprimer')}</Button>
               </div>
@@ -217,19 +217,19 @@ export function AnneeScolairePage() {
 
       {/* Historique */}
       <Card>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('anneeScolaire.historique')}</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <h3 className="annee-prepare-title">{t('anneeScolaire.historique')}</h3>
+        <div className="annee-historique-list">
           {annees.map(annee => {
             const cfg = statutConfig[annee.statut];
             return (
-              <div key={annee.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: annee.statut === 'active' ? 'var(--success-light)' : 'var(--card-bg)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div key={annee.id} className={`annee-historique-item${annee.statut === 'active' ? ' active' : ''}`}>
+                <div className="annee-historique-item-left">
                   <Badge label={cfg.label} variant={cfg.variant} />
-                  <span style={{ fontWeight: 600 }}>{annee.label}</span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatDate(annee.debut)} → {formatDate(annee.fin)}</span>
+                  <span className="annee-historique-label">{annee.label}</span>
+                  <span className="annee-historique-dates">{formatDate(annee.debut)} → {formatDate(annee.fin)}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('anneeScolaire.nbActions', { count: annee.historique.length })}</span>
+                <div className="annee-historique-item-right">
+                  <span className="annee-historique-count">{t('anneeScolaire.nbActions', { count: annee.historique.length })}</span>
                   {annee.statut === 'terminee' && (
                     <Button variant="outline" size="sm" onClick={async () => { await viewAnnee(annee); navigate('/dashboard'); }}>{t('anneeScolaire.actions.consulter')}</Button>
                   )}
@@ -242,13 +242,13 @@ export function AnneeScolairePage() {
 
       {/* Journal d'audit */}
       <Card style={{ marginTop: '1rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>{t('anneeScolaire.journalAudit')}</h3>
-        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+        <h3 className="annee-prepare-title">{t('anneeScolaire.journalAudit')}</h3>
+        <div className="annee-audit-container">
           {annees.flatMap(a => a.historique.map(h => ({ ...h, anneeLabel: a.label }))).sort((a, b) => b.date.localeCompare(a.date)).map((entry, i) => (
             <AuditEntry key={i} details={entry.details} date={entry.date} context={entry.anneeLabel} color={auditColor(entry.action)} />
           ))}
           {annees.every(a => a.historique.length === 0) && (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>{t('anneeScolaire.aucunEvenement')}</p>
+            <p className="annee-audit-empty">{t('anneeScolaire.aucunEvenement')}</p>
           )}
         </div>
       </Card>

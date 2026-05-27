@@ -1,0 +1,163 @@
+// ============================================================
+// ANNEE SCOLAIRE
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// --- Cycle transition pipeline ---
+.annee-pipeline {
+  @include flex-row($spacing-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.annee-card-section-title {
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: $spacing-lg;
+}
+
+// --- Annee active card ---
+.annee-active-card {
+  margin-bottom: $spacing-lg;
+  border-left: 4px solid var(--success);
+}
+
+.annee-active-header {
+  @include flex-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: $spacing-lg;
+}
+
+.annee-active-info {
+  flex: 1;
+}
+
+.annee-active-title-row {
+  @include flex-row(0.75rem);
+  margin-bottom: 0.75rem;
+}
+
+.annee-active-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--success-light);
+  @include flex-center;
+}
+
+.annee-active-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.annee-active-stats {
+  display: flex;
+  gap: $spacing-3xl;
+  flex-wrap: wrap;
+}
+
+.annee-active-stat {
+  @include flex-col(0.15rem);
+}
+
+.annee-active-stat-label { @include label-uppercase; }
+.annee-active-stat-value { font-weight: 600; font-size: $font-size-base; }
+
+// --- Préparation card ---
+.annee-prep-card {
+  margin-bottom: $spacing-lg;
+  border-left: 4px solid var(--warning);
+}
+
+.annee-prep-header {
+  @include flex-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: $spacing-lg;
+}
+
+.annee-prep-info { flex: 1; }
+
+.annee-prep-title-row {
+  @include flex-row(0.75rem);
+  margin-bottom: 0.75rem;
+}
+
+.annee-prep-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--warning-light);
+  @include flex-center;
+}
+
+.annee-prep-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.annee-prep-actions {
+  @include flex-row($spacing-sm);
+}
+
+// --- Historique ---
+.annee-historique-list {
+  @include flex-col(0.75rem);
+}
+
+.annee-historique-item {
+  @include flex-between;
+  padding: 0.75rem $spacing-lg;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+
+  &.active { background: var(--success-light); }
+  &:not(.active) { background: var(--card-bg); }
+}
+
+.annee-historique-item-left {
+  @include flex-row(0.75rem);
+}
+
+.annee-historique-label { font-weight: 600; }
+
+.annee-historique-dates {
+  font-size: $font-size-xs;
+  color: var(--text-muted);
+}
+
+.annee-historique-item-right {
+  @include flex-row($spacing-sm);
+}
+
+.annee-historique-count {
+  font-size: $font-size-2xs;
+  color: var(--text-muted);
+}
+
+// --- Audit journal ---
+.annee-audit-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.annee-audit-empty {
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  text-align: center;
+  padding: $spacing-lg;
+}
+
+// --- Section préparer ---
+.annee-prepare-section {
+  margin-bottom: $spacing-2xl;
+}
+
+.annee-prepare-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: $spacing-lg;
+}

@@ -1,0 +1,331 @@
+// ============================================================
+// SIDEBAR
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--sidebar-collapsed-width);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  @include flex-col(0);
+  z-index: $z-sidebar;
+  overflow: hidden;
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: width;
+
+  &.sidebar-expanded {
+    width: var(--sidebar-expanded-width);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+  }
+
+  &.sidebar-archive {
+    border-right: 3px solid var(--warning);
+  }
+}
+
+// --- Brand ---
+.sidebar-brand {
+  @include flex-row(0);
+  padding: 0;
+  height: 64px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--sidebar-border);
+  overflow: hidden;
+}
+
+.sidebar-brand-icon-wrap {
+  width: var(--sidebar-collapsed-width);
+  min-width: var(--sidebar-collapsed-width);
+  height: 64px;
+  @include flex-center;
+  flex-shrink: 0;
+}
+
+.sidebar-brand-icon-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: contain;
+  filter: none;
+  transition: filter 0.2s;
+}
+
+.sidebar-brand-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  @include sidebar-label-hidden;
+  @include flex-center;
+  padding-right: $spacing-lg;
+}
+
+.sidebar.sidebar-expanded .sidebar-brand-label {
+  @include sidebar-label-visible;
+}
+
+.sidebar-logo-full {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  max-width: 160px;
+}
+
+// --- Nav ---
+.sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  padding: 0.75rem 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  @include scrollbar-none;
+}
+
+.nav-item {
+  @include flex-row(0);
+  padding: 0;
+  height: 44px;
+  border-radius: 0;
+  color: var(--sidebar-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-active);
+  }
+
+  &.active {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-active);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--primary);
+    }
+  }
+}
+
+// Icône — toujours 64px centré
+.nav-item-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  min-width: 20px;
+  margin-left: calc((var(--sidebar-collapsed-width) - 20px) / 2);
+  margin-right: calc(var(--sidebar-expanded-width) - var(--sidebar-collapsed-width) - 20px);
+  opacity: 0.7;
+  transition: opacity 0.15s, margin 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item:hover .nav-item-icon,
+.nav-item.active .nav-item-icon { opacity: 1; }
+
+.nav-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  @include sidebar-label-hidden;
+}
+
+.sidebar.sidebar-expanded {
+  .nav-item-icon {
+    margin-left: 1.1rem;
+    margin-right: 0.75rem;
+  }
+
+  .nav-item-label {
+    @include sidebar-label-visible;
+  }
+}
+
+// Divider
+.sidebar-divider {
+  height: 1px;
+  background: var(--sidebar-border);
+  margin: $spacing-sm 0;
+  opacity: 0.6;
+}
+
+// --- Footer ---
+.sidebar-footer {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--sidebar-border);
+  overflow: hidden;
+}
+
+// Année block
+.sidebar-annee-block {
+  height: 52px;
+  @include flex-col;
+  justify-content: center;
+  padding: 0 0.75rem;
+  overflow: hidden;
+  transition: background 0.15s;
+  border-radius: 0;
+  cursor: default;
+
+  &:hover {
+    background: color-mix(in srgb, var(--warning) 10%, transparent);
+    cursor: pointer;
+  }
+}
+
+.sidebar-annee-top {
+  @include flex-row($spacing-sm);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sidebar-annee-dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: calc((var(--sidebar-collapsed-width) - 8px) / 2 - 0.75rem);
+  transition: margin 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.sidebar-expanded .sidebar-annee-dot {
+  margin-left: 0.25rem;
+}
+
+.sidebar-annee-label-text {
+  color: var(--sidebar-text-active);
+  font-weight: 600;
+  font-size: 0.825rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  @include sidebar-label-hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar.sidebar-expanded .sidebar-annee-label-text {
+  @include sidebar-label-visible;
+}
+
+.sidebar-annee-top .badge {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.18s 0.05s, transform 0.2s 0.05s;
+  pointer-events: none;
+}
+
+.sidebar.sidebar-expanded .sidebar-annee-top .badge {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.sidebar-annee-exit {
+  font-size: 0.68rem;
+  color: var(--warning);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.15s 0.05s, transform 0.18s 0.05s;
+  white-space: nowrap;
+  padding-left: 0.75rem;
+}
+
+.sidebar.sidebar-expanded .sidebar-annee-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+// User block
+.sidebar-user {
+  @include flex-row(0);
+  padding: $spacing-sm 0;
+  overflow: hidden;
+  height: 52px;
+}
+
+.sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background: var(--primary);
+  border-radius: 50%;
+  @include flex-center;
+  color: white;
+  font-weight: 600;
+  font-size: $font-size-xs;
+  flex-shrink: 0;
+  margin-left: calc((var(--sidebar-collapsed-width) - 36px) / 2);
+  margin-right: 0;
+  transition: margin 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.sidebar-expanded .sidebar-avatar {
+  margin-left: 0.75rem;
+  margin-right: 0.75rem;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+  @include sidebar-label-hidden;
+  overflow: hidden;
+}
+
+.sidebar.sidebar-expanded .sidebar-user-info {
+  @include sidebar-label-visible;
+}
+
+.sidebar-user-name {
+  color: white;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  @include truncate;
+}
+
+.sidebar-user-role {
+  color: var(--sidebar-text);
+  font-size: 0.72rem;
+  @include truncate;
+}
+
+// --- Dark mode overrides ---
+[data-theme="dark"] {
+  .sidebar.sidebar-expanded {
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .nav-item.active {
+    background: var(--sidebar-active-glow);
+    color: #e2eeff;
+
+    &::before { background: var(--primary); }
+  }
+
+  .nav-item:hover { background: var(--sidebar-hover); color: #e2eeff; }
+
+  .sidebar-brand { border-bottom-color: #1a2540; }
+
+  .sidebar-brand-icon-img {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--primary) 50%, transparent));
+  }
+
+  .sidebar-footer { border-top-color: #1a2540; }
+  .sidebar-divider { background: #1a2540; }
+}

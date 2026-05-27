@@ -1,0 +1,109 @@
+// ============================================================
+// BUTTONS
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+  border: none;
+  font-family: inherit;
+  font-size: $font-size-base;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-sm);
+
+  &-primary {
+    background: var(--primary);
+    color: white;
+    &:hover { background: var(--primary-dark); }
+    &:disabled, &.btn-disabled {
+      background: color-mix(in srgb, var(--primary) 50%, var(--bg-subtle));
+      cursor: not-allowed;
+    }
+  }
+
+  &-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    &:hover { background: var(--bg-subtle); }
+  }
+
+  &-outline {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    &:hover { background: var(--primary-light); }
+  }
+
+  &-danger {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+    &:hover { background: var(--danger-light); }
+  }
+
+  &-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    padding: 0;
+    &:hover { text-decoration: underline; }
+  }
+
+  &-icon {
+    padding: 0.5rem;
+    background: transparent;
+    color: var(--text-muted);
+    &:hover {
+      background: var(--btn-ghost-hover);
+      color: var(--text);
+    }
+  }
+
+  // Sizes
+  &-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: $font-size-xs;
+    border-radius: $radius-xs;
+  }
+
+  &-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  &-full { width: 100%; }
+
+  &-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Spinner dans btn
+  &-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+
+    &-sm {
+      width: 10px;
+      height: 10px;
+    }
+  }
+
+  &-icon-wrapper {
+    display: flex;
+    align-items: center;
+  }
+}

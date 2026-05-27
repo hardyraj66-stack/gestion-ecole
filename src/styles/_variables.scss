@@ -1,0 +1,60 @@
+// ============================================================
+// VARIABLES SCSS — GestionÉcole Design System
+// Ces variables SCSS correspondent aux CSS custom properties.
+// Les overrides dynamiques (dark mode, thèmes couleur) restent
+// en CSS custom properties dans _themes.scss.
+// ============================================================
+
+// --- Couleurs sémantiques (reprises des CSS vars) ---
+$primary:          #2563eb;
+$primary-dark:     #1d4ed8;
+$primary-light:    #eff6ff;
+$secondary:        #7c3aed;
+$secondary-light:  #f3e8ff;
+$success:          #16a34a;
+$success-light:    #f0fdf4;
+$warning:          #d97706;
+$warning-light:    #fffbeb;
+$danger:           #dc2626;
+$danger-light:     #fef2f2;
+$info:             #0891b2;
+$info-light:       #ecfeff;
+
+// --- Layout ---
+$sidebar-collapsed-width:  64px;
+$sidebar-expanded-width:   260px;
+
+// --- Radius ---
+$radius:    12px;
+$radius-sm: 8px;
+$radius-xs: 6px;
+
+// --- Typographie ---
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+$font-size-base: 0.9rem;
+$font-size-sm:   0.85rem;
+$font-size-xs:   0.8rem;
+$font-size-2xs:  0.75rem;
+$font-size-3xs:  0.72rem;
+
+// --- Z-index ---
+$z-sidebar:  200;
+$z-modal:    1000;
+$z-popover:  50;
+$z-confirm:  9999;
+$z-tooltip:  1500;
+$z-ctx-menu: 2000;
+
+// --- Transitions communes ---
+$transition-base:  all 0.2s ease;
+$transition-fast:  all 0.15s ease;
+$transition-slow:  all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+// --- Spacing ---
+$spacing-xs:  0.25rem;
+$spacing-sm:  0.5rem;
+$spacing-md:  0.75rem;
+$spacing-lg:  1rem;
+$spacing-xl:  1.25rem;
+$spacing-2xl: 1.5rem;
+$spacing-3xl: 2rem;

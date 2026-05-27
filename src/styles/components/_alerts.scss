@@ -1,0 +1,98 @@
+// ============================================================
+// ALERTS & NOTIFICATIONS
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.alert {
+  padding: 0.875rem $spacing-lg;
+  border-radius: var(--radius-sm);
+  margin-bottom: $spacing-lg;
+  font-size: $font-size-base;
+  @include flex-row($spacing-sm);
+
+  &-success {
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
+  }
+
+  &-error {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  }
+
+  &-warning {
+    background: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 50%, transparent);
+  }
+
+  &-info {
+    background: var(--info-light);
+    color: var(--info);
+    border: 1px solid color-mix(in srgb, var(--info) 40%, transparent);
+  }
+}
+
+// --- Escalade bannière ---
+.escalade-banner {
+  @include flex-between;
+  gap: $spacing-lg;
+  background: var(--danger-light);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem $spacing-lg;
+  margin-bottom: 0.75rem;
+}
+
+.escalade-banner-left {
+  @include flex-row(0.65rem);
+  align-items: flex-start;
+  color: var(--danger);
+  flex: 1;
+
+  svg { flex-shrink: 0; margin-top: 2px; }
+}
+
+.escalade-banner-title {
+  font-size: $font-size-sm;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.escalade-banner-sub {
+  font-size: 0.78rem;
+  color: var(--danger);
+  margin-top: 0.1rem;
+}
+
+// --- Statut info blocs ---
+.statut-form-warning {
+  @include flex-row($spacing-sm);
+  align-items: flex-start;
+  background: var(--warning-light);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  font-size: $font-size-xs;
+  color: var(--warning);
+  margin-bottom: 0.75rem;
+}
+
+.statut-info {
+  @include flex-row(0.75rem);
+  align-items: flex-start;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-top: $spacing-sm;
+
+  svg { flex-shrink: 0; margin-top: 2px; }
+
+  &-danger  { background: var(--danger-light);  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);  color: var(--danger); }
+  &-warning { background: var(--warning-light); border: 1px solid var(--warning); color: var(--warning); }
+}
+
+.statut-info-title { font-size: $font-size-sm; font-weight: 600; }
+.statut-info-sub   { font-size: 0.78rem; opacity: 0.8; margin-top: 0.15rem; }

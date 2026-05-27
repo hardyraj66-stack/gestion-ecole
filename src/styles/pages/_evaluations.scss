@@ -1,0 +1,373 @@
+// ============================================================
+// EVALUATIONS & PERIODES
+// ============================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// --- Notes filters ---
+.notes-filters-row {
+  display: flex;
+  gap: $spacing-lg;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.notes-filter-group {
+  @include flex-col(0.375rem);
+  min-width: 0;
+
+  &:nth-child(1) { flex: 1.2; min-width: 180px; }
+  &:nth-child(2) { flex: 1.5; min-width: 200px; }
+  &:nth-child(3) { flex: 0.8; min-width: 140px; }
+
+  &.notes-filter-action { flex: 0 0 auto; }
+
+  // Uniforme avec les autres champs
+  .search-suggestions-container { width: 100%; }
+
+  .search-suggestions-container .search-input input {
+    width: 100%;
+    min-width: unset;
+    height: auto;
+    padding: 0.6rem 2.4rem 0.6rem 2.4rem;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    font-size: $font-size-base;
+  }
+
+  .search-suggestions-container .search-input input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+    background: var(--card-bg);
+  }
+
+  .niveau-filter-btn {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.6rem 0.875rem;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    font-size: $font-size-base;
+  }
+
+  .niveau-filter-btn-active {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+
+    &:hover { background: var(--primary-light); }
+  }
+
+  .popover-container { width: 100%; }
+
+  .form-group  { margin-bottom: 0; }
+  .form-label  { display: none; }
+}
+
+.notes-filter-label {
+  font-size: $font-size-xs;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+// --- Période card styles (inline → classes) ---
+.periode-card {
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  @include flex-col(0);
+  flex: 1;
+}
+
+.periode-card-bar {
+  height: 3px;
+}
+
+.periode-card-body {
+  padding: $spacing-xl;
+  @include flex-col($spacing-lg);
+  flex: 1;
+}
+
+.periode-card-header {
+  @include flex-between;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.periode-card-title-row {
+  @include flex-row($spacing-sm);
+  flex-wrap: wrap;
+}
+
+.periode-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.periode-card-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.periode-card-edit-btn {
+  @include btn-reset;
+  padding: 0.2rem 0.55rem;
+  border-radius: $radius-xs;
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: $transition-fast;
+  white-space: nowrap;
+
+  &:hover { background: var(--btn-ghost-hover); color: var(--text); }
+}
+
+// --- Form édition période ---
+.periode-edit-form {
+  @include flex-col(0.75rem);
+}
+
+.periode-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem;
+}
+
+.periode-edit-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: $spacing-xs;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.periode-edit-error {
+  font-size: $font-size-2xs;
+  color: var(--danger);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.periode-edit-actions {
+  @include flex-row($spacing-sm);
+}
+
+// --- Statuts période (info items) ---
+.periode-info-list {
+  @include flex-col($spacing-sm);
+}
+
+.periode-info-item {
+  @include flex-row($spacing-sm);
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  font-size: 0.82rem;
+}
+
+.periode-info-item-label { color: var(--text); font-weight: 500; flex: 1; }
+.periode-info-item-value { font-weight: 500; }
+
+.periode-warn-text   { font-size: 0.77rem; color: var(--warning); margin: 0; font-weight: 600; }
+.periode-success-text{ font-size: 0.77rem; color: var(--success); margin: 0; font-weight: 600; }
+.periode-done-row    { @include flex-row(0.4rem); }
+
+// --- Période archive / danger block ---
+.periode-archive-block {
+  @include flex-col($spacing-sm);
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--danger);
+  background: var(--danger-light);
+}
+
+.periode-archive-title {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.periode-archive-sub {
+  margin: 0;
+  font-size: 0.73rem;
+  color: var(--danger);
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.periode-archive-actions { @include flex-row($spacing-sm); margin-top: 0.15rem; }
+
+.periode-archive-btn-primary {
+  @include btn-reset;
+  padding: 0.3rem 0.7rem;
+  border-radius: $radius-xs;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--danger);
+  color: white;
+  transition: opacity 0.12s;
+
+  &:hover { opacity: 0.85; }
+}
+
+.periode-archive-btn-cancel {
+  @include btn-reset;
+  padding: 0.3rem 0.7rem;
+  border-radius: $radius-xs;
+  border: 1px solid var(--danger);
+  font-size: 0.78rem;
+  color: var(--danger);
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+}
+
+.periode-no-dates {
+  @include flex-row($spacing-sm);
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border);
+}
+
+.periode-no-dates-text { font-size: 0.82rem; color: var(--text-muted); }
+
+// --- Périodes stats bar ---
+.periodes-stats-bar {
+  display: flex;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-3xl;
+  flex-wrap: wrap;
+}
+
+.periodes-stat-card {
+  @include card-base;
+  padding: $spacing-lg $spacing-xl;
+  @include flex-row(0.875rem);
+  flex: 0 0 auto;
+}
+
+.periodes-stat-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  @include flex-center;
+  flex-shrink: 0;
+}
+
+.periodes-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+
+  span {
+    font-size: $font-size-xs;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+}
+
+.periodes-stat-label {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+// stat card variants
+.periodes-stat-card-active {
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.periodes-stat-icon-primary  { background: var(--primary-light); }
+.periodes-stat-icon-success  { background: var(--success-light); }
+.periodes-stat-icon-warning  { background: var(--warning-light); }
+
+.periodes-stat-value-success { color: #16a34a; }
+
+// --- Trimestre section ---
+.trimestre-section {
+  margin-bottom: 1.75rem;
+}
+
+.trimestre-header {
+  @include flex-row(0.5rem);
+  margin-bottom: 0.875rem;
+  align-items: center;
+}
+
+.trimestre-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  background: var(--text-muted);
+  color: white;
+  @include flex-center;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  &.active { background: #16a34a; }
+}
+
+.trimestre-title {
+  font-weight: 700;
+  font-size: 0.97rem;
+  margin: 0;
+  color: var(--text);
+}
+
+.trimestre-active-badge { font-size: 0.7rem; }
+
+.trimestre-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+// --- Rules info block ---
+.periodes-rules-block {
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.periodes-rules-text {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+// --- Terminer btn variant (outline/soft) ---
+.periode-archive-btn-soft {
+  @include btn-reset;
+  align-self: flex-start;
+  padding: 0.3rem 0.7rem;
+  border-radius: $radius-xs;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  transition: opacity 0.12s;
+
+  &:hover { opacity: 0.85; }
+}
