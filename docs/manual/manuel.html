@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manuel d'utilisation — GestionÉcole</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #2563eb;
+      --primary-light: #dbeafe;
+      --sidebar-width: 280px;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --tip: #10b981;
+      --tip-light: #d1fae5;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.65;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      padding-bottom: 2rem;
+    }
+
+    #sidebar-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    #sidebar-header h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    #sidebar-header p {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 0.2rem;
+    }
+
+    #sidebar nav { padding: 0.75rem 0; }
+
+    #sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 1.5rem;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    #sidebar nav a:hover,
+    #sidebar nav a.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-left-color: var(--primary);
+    }
+
+    #sidebar nav a .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      background: var(--border);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    #sidebar nav a.active .num {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* ── MAIN ── */
+    #main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    #topbar {
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    #topbar #breadcrumb {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    #topbar #breadcrumb span { color: var(--primary); font-weight: 600; }
+
+    #topbar #print-btn {
+      padding: 0.4rem 1rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    #topbar #print-btn:hover { background: #1d4ed8; }
+
+    /* ── CONTENT ── */
+    #content {
+      padding: 2.5rem;
+      max-width: 900px;
+    }
+
+    /* ── CHAPTERS ── */
+    .chapter {
+      display: none;
+    }
+
+    .chapter.visible {
+      display: block;
+    }
+
+    /* ── COVER ── */
+    #cover {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+      border-radius: 16px;
+      color: #fff;
+      margin-bottom: 2.5rem;
+    }
+
+    #cover h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    #cover p {
+      font-size: 1rem;
+      opacity: 0.85;
+      margin-bottom: 2rem;
+    }
+
+    #cover .quick-start {
+      display: inline-flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    #cover .quick-start a {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.3);
+      transition: background 0.15s;
+    }
+
+    #cover .quick-start a:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── TOC ── */
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .toc-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      text-align: left;
+    }
+
+    .toc-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .toc-card .toc-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .toc-card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 0.25rem;
+      color: var(--text);
+    }
+
+    .toc-card p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* ── CHAPTER HEADER ── */
+    .chapter-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .chapter-header .tag {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .chapter-header h2 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    /* ── HEADINGS ── */
+    .chapter h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 2rem 0 0.6rem;
+      color: var(--text);
+      border-left: 3px solid var(--primary);
+      padding-left: 0.75rem;
+    }
+
+    .chapter h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 1.25rem 0 0.4rem;
+      color: var(--text);
+    }
+
+    .chapter p {
+      margin-bottom: 0.85rem;
+      font-size: 0.93rem;
+    }
+
+    /* ── LISTS ── */
+    .chapter ul, .chapter ol {
+      padding-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .chapter li {
+      font-size: 0.93rem;
+      margin-bottom: 0.3rem;
+    }
+
+    /* ── ORDERED STEPS ── */
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin-bottom: 0.6rem;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.6rem;
+      height: 1.6rem;
+      min-width: 1.6rem;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 0.1rem;
+    }
+
+    /* ── TABLES ── */
+    .chapter table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.88rem;
+    }
+
+    .chapter th {
+      background: var(--bg);
+      padding: 0.6rem 0.9rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+    }
+
+    .chapter td {
+      padding: 0.55rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .chapter tr:last-child td { border-bottom: none; }
+    .chapter tr:hover td { background: var(--bg); }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-radius: 8px;
+      padding: 0.9rem 1.1rem;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+
+    .callout .icon { font-size: 1rem; flex-shrink: 0; line-height: 1.5; }
+
+    .callout.warning { background: var(--warning-light); border-left: 4px solid var(--warning); }
+    .callout.tip    { background: var(--tip-light);     border-left: 4px solid var(--tip);     }
+    .callout.danger { background: var(--danger-light);  border-left: 4px solid var(--danger);  }
+
+    /* ── CODE ── */
+    .flow {
+      background: var(--text);
+      color: #7dd3fc;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.88rem;
+      margin: 0.75rem 0 1.25rem;
+      overflow-x: auto;
+    }
+
+    .flow .arrow { color: #94a3b8; }
+
+    code {
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.85em;
+      font-family: 'Courier New', monospace;
+      color: #dc2626;
+    }
+
+    /* ── STATUS BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge.green  { background: #d1fae5; color: #065f46; }
+    .badge.red    { background: #fee2e2; color: #991b1b; }
+    .badge.gray   { background: #f1f5f9; color: #475569; }
+    .badge.orange { background: #fef3c7; color: #92400e; }
+    .badge.blue   { background: #dbeafe; color: #1e40af; }
+
+    /* ── NAV FOOTER ── */
+    .chapter-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .chapter-nav button {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chapter-nav button:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .chapter-nav button.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .chapter-nav button.primary:hover { background: #1d4ed8; }
+    .chapter-nav button:disabled { opacity: 0.3; cursor: default; }
+
+    /* ── HR ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* ── PRINT ── */
+    @media print {
+      #sidebar, #topbar { display: none; }
+      #main { margin-left: 0; }
+      #content { padding: 1rem; max-width: 100%; }
+      .chapter { display: block !important; page-break-before: always; }
+      .chapter-nav { display: none; }
+      #cover { background: none; color: var(--text); border: 2px solid var(--primary); }
+      #cover .quick-start { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); transition: transform 0.25s; }
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0; }
+      #content { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <h1>📚 GestionÉcole</h1>
+    <p>Manuel d'utilisation</p>
+  </div>
+  <nav>
+    <a href="#" onclick="showChapter(0)" id="nav-0" class="active">
+      <span class="num">—</span> Accueil &amp; sommaire
+    </a>
+    <a href="#" onclick="showChapter(1)" id="nav-1">
+      <span class="num">1</span> Année scolaire
+    </a>
+    <a href="#" onclick="showChapter(2)" id="nav-2">
+      <span class="num">2</span> Classes
+    </a>
+    <a href="#" onclick="showChapter(3)" id="nav-3">
+      <span class="num">3</span> Élèves
+    </a>
+    <a href="#" onclick="showChapter(4)" id="nav-4">
+      <span class="num">4</span> Notes &amp; Évaluations
+    </a>
+    <a href="#" onclick="showChapter(5)" id="nav-5">
+      <span class="num">5</span> Planning
+    </a>
+    <a href="#" onclick="showChapter(6)" id="nav-6">
+      <span class="num">6</span> Matières &amp; Niveaux
+    </a>
+    <a href="#" onclick="showChapter(7)" id="nav-7">
+      <span class="num">7</span> Salles
+    </a>
+    <a href="#" onclick="showChapter(8)" id="nav-8">
+      <span class="num">8</span> Professeurs
+    </a>
+    <a href="#" onclick="showChapter(9)" id="nav-9">
+      <span class="num">9</span> Paramètres
+    </a>
+    <a href="#" onclick="showChapter(10)" id="nav-10">
+      <span class="num">10</span> Tableau de bord
+    </a>
+  </nav>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<div id="main">
+  <div id="topbar">
+    <div id="breadcrumb">Manuel · <span id="breadcrumb-current">Accueil</span></div>
+    <button id="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+  </div>
+
+  <div id="content">
+
+    <!-- ══════════ CHAPTER 0 — ACCUEIL ══════════ -->
+    <div class="chapter visible" id="ch-0">
+
+      <div id="cover">
+        <h1>📚 GestionÉcole</h1>
+        <p>Manuel d'utilisation complet — Administration scolaire</p>
+        <div class="quick-start">
+          <a href="#" onclick="showChapter(1)">1. Année scolaire</a>
+          <a href="#" onclick="showChapter(6)">2. Niveaux &amp; Matières</a>
+          <a href="#" onclick="showChapter(2)">3. Classes</a>
+          <a href="#" onclick="showChapter(3)">4. Élèves</a>
+          <a href="#" onclick="showChapter(4)">5. Notes</a>
+        </div>
+      </div>
+
+      <h3>À propos de l'application</h3>
+      <p><strong>GestionÉcole</strong> est une application de gestion scolaire complète permettant de gérer :</p>
+      <ul>
+        <li>Les classes et les niveaux scolaires</li>
+        <li>Les élèves et leur suivi (assiduité, avertissements, statut)</li>
+        <li>Les matières et les coefficients par niveau</li>
+        <li>La saisie et le suivi des notes</li>
+        <li>Le planning hebdomadaire des cours</li>
+        <li>Les salles de l'établissement</li>
+        <li>Les professeurs et leurs affectations</li>
+        <li>Les évaluations (DS et contrôles)</li>
+        <li>Les années scolaires et les archives</li>
+      </ul>
+
+      <h3>Accès à l'application</h3>
+      <p>Ouvrir un navigateur et accéder à l'URL fournie par votre administrateur (en local : <code>http://localhost:5173</code>). L'application ne nécessite pas de connexion — elle est destinée à un usage en réseau local sécurisé au sein de l'établissement.</p>
+
+      <h3>Navigation</h3>
+      <p>La barre latérale gauche donne accès à toutes les sections de l'application :</p>
+      <table>
+        <thead><tr><th>Section</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Tableau de bord</strong></td><td>Vue synthétique de l'établissement</td></tr>
+          <tr><td><strong>Classes</strong></td><td>Gestion des classes</td></tr>
+          <tr><td><strong>Élèves</strong></td><td>Gestion des élèves</td></tr>
+          <tr><td><strong>Matières</strong></td><td>Gestion des matières</td></tr>
+          <tr><td><strong>Notes</strong></td><td>Saisie des notes</td></tr>
+          <tr><td><strong>Planning</strong></td><td>Planning hebdomadaire</td></tr>
+          <tr><td><strong>Salles</strong></td><td>Gestion des salles</td></tr>
+          <tr><td><strong>Niveaux</strong></td><td>Niveaux scolaires</td></tr>
+          <tr><td><strong>Professeurs</strong></td><td>Gestion des professeurs</td></tr>
+          <tr><td><strong>Évaluations</strong></td><td>Gestion des évaluations</td></tr>
+          <tr><td><strong>Année scolaire</strong></td><td>Gestion du cycle scolaire</td></tr>
+          <tr><td><strong>Paramètres</strong></td><td>Personnalisation de l'interface</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Mise à jour en temps réel</h3>
+      <p>L'application se met à jour automatiquement : si un collègue effectue une modification sur un autre poste, votre écran se rafraîchit sans intervention de votre part.</p>
+
+      <h3>Mode archive</h3>
+      <p>Il est possible de consulter les données d'une année scolaire passée en mode lecture seule. Un bandeau orange s'affiche en haut de l'écran pour indiquer ce mode. Toutes les pages fonctionnent normalement, mais aucune modification n'est possible.</p>
+
+      <h3>Sommaire</h3>
+      <div class="toc-grid">
+        <div class="toc-card" onclick="showChapter(1)">
+          <div class="toc-num">Chapitre 1</div>
+          <h3>Année scolaire</h3>
+          <p>Cycle annuel, préparation, démarrage, clôture, archives</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(2)">
+          <div class="toc-num">Chapitre 2</div>
+          <h3>Classes</h3>
+          <p>Créer, filtrer, consulter les classes</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(3)">
+          <div class="toc-num">Chapitre 3</div>
+          <h3>Élèves</h3>
+          <p>Inscription, fiche élève, assiduité, statut, bulletin</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(4)">
+          <div class="toc-num">Chapitre 4</div>
+          <h3>Notes &amp; Évaluations</h3>
+          <p>Saisie directe, évaluations, publication, bulletins</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(5)">
+          <div class="toc-num">Chapitre 5</div>
+          <h3>Planning</h3>
+          <p>Grille hebdomadaire, créneaux, drag-and-drop</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(6)">
+          <div class="toc-num">Chapitre 6</div>
+          <h3>Matières &amp; Niveaux</h3>
+          <p>Niveaux scolaires, matières, coefficients</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(7)">
+          <div class="toc-num">Chapitre 7</div>
+          <h3>Salles</h3>
+          <p>Salles, équipements, disponibilité, statistiques</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(8)">
+          <div class="toc-num">Chapitre 8</div>
+          <h3>Professeurs</h3>
+          <p>Professeurs, affectations, désactivation</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(9)">
+          <div class="toc-num">Chapitre 9</div>
+          <h3>Paramètres</h3>
+          <p>Thème sombre, couleur, langue</p>
+        </div>
+        <div class="toc-card" onclick="showChapter(10)">
+          <div class="toc-num">Chapitre 10</div>
+          <h3>Tableau de bord</h3>
+          <p>Statistiques, convocations, actions rapides</p>
+        </div>
+      </div>
+
+      <div class="chapter-nav">
+        <button disabled>← Précédent</button>
+        <button class="primary" onclick="showChapter(1)">Commencer → Année scolaire →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 1 — ANNÉE SCOLAIRE ══════════ -->
+    <div class="chapter" id="ch-1">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 1</div>
+        <h2>Gestion de l'année scolaire</h2>
+      </div>
+
+      <h3>Cycle d'une année scolaire</h3>
+      <p>Chaque année scolaire passe par 3 états :</p>
+      <div class="flow">
+        <span>En préparation</span>
+        <span class="arrow"> → </span>
+        <span>Active</span>
+        <span class="arrow"> → </span>
+        <span>Terminée</span>
+      </div>
+      <ul>
+        <li><strong>En préparation</strong> : l'année est configurée mais pas encore démarrée. Les classes et matières peuvent être créées.</li>
+        <li><strong>Active</strong> : l'année est en cours. Les notes, absences et évaluations sont saisies.</li>
+        <li><strong>Terminée</strong> : l'année est clôturée. Les données sont archivées et consultables.</li>
+      </ul>
+
+      <hr />
+
+      <h3>Préparer une nouvelle année</h3>
+      <ol class="steps">
+        <li>Aller dans <strong>Année scolaire</strong></li>
+        <li>Cliquer sur <strong>Préparer une nouvelle année</strong></li>
+        <li>Renseigner le <strong>label</strong> (ex. "2025-2026"), la <strong>date de début</strong> et la <strong>date de fin</strong></li>
+        <li>Cliquer sur <strong>Enregistrer</strong></li>
+      </ol>
+      <div class="callout warning">
+        <span class="icon">⚠️</span>
+        <span>Une seule année peut être "en préparation" à la fois.</span>
+      </div>
+
+      <hr />
+
+      <h3>Démarrer une année</h3>
+      <ol class="steps">
+        <li>Dans <strong>Année scolaire</strong>, repérer l'année en préparation</li>
+        <li>Cliquer sur <strong>Démarrer l'année</strong></li>
+        <li>Confirmer dans la boîte de dialogue</li>
+      </ol>
+      <p>L'année passe en statut <span class="badge green">Active</span>. Si une autre année était active, elle passe automatiquement en <span class="badge gray">Terminée</span>.</p>
+      <div class="callout danger">
+        <span class="icon">🚨</span>
+        <span>Cette action est <strong>irréversible</strong>. Assurez-vous que toutes les classes et matières sont correctement configurées avant de démarrer.</span>
+      </div>
+
+      <hr />
+
+      <h3>Clôturer une année</h3>
+      <ol class="steps">
+        <li>Dans <strong>Année scolaire</strong>, cliquer sur <strong>Clôturer l'année</strong></li>
+        <li>Confirmer dans la boîte de dialogue</li>
+      </ol>
+      <p>L'année passe en statut <span class="badge gray">Terminée</span>. Les données restent accessibles en mode archive.</p>
+
+      <hr />
+
+      <h3>Consulter une archive</h3>
+      <ol class="steps">
+        <li>Dans <strong>Année scolaire</strong>, section <strong>Archives</strong></li>
+        <li>Cliquer sur <strong>Consulter</strong> pour l'année souhaitée</li>
+        <li>Un bandeau orange s'affiche : <em>"Mode consultation — Année XXXX-XXXX — Données en lecture seule"</em></li>
+        <li>Naviguer normalement dans l'application — tout est consultable</li>
+        <li>Cliquer sur <strong>Quitter</strong> dans le bandeau orange pour revenir au mode live</li>
+      </ol>
+
+      <hr />
+
+      <h3>Historique des actions</h3>
+      <p>Chaque action sur une année (démarrage, clôture) est consignée dans l'historique visible sur la page <strong>Année scolaire</strong>, avec la date et les détails.</p>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(0)">← Accueil</button>
+        <button class="primary" onclick="showChapter(2)">Classes →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 2 — CLASSES ══════════ -->
+    <div class="chapter" id="ch-2">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 2</div>
+        <h2>Gestion des classes</h2>
+      </div>
+
+      <h3>Consulter les classes</h3>
+      <p>La page <strong>Classes</strong> affiche toutes les classes de l'année active sous forme de cartes. Chaque carte affiche le nom, le niveau, la salle assignée (ou "Variable"), le nombre d'élèves/capacité et une barre de remplissage.</p>
+
+      <h4>Filtrer les classes</h4>
+      <ul>
+        <li><strong>Recherche</strong> : saisir le nom ou une partie du nom de la classe</li>
+        <li><strong>Filtre par niveau</strong> : sélectionner un niveau dans la liste déroulante</li>
+      </ul>
+
+      <hr />
+
+      <h3>Créer une classe</h3>
+      <ol class="steps">
+        <li>Cliquer sur <strong>Nouvelle classe</strong></li>
+        <li>Remplir le <strong>nom</strong> (ex : "6ème A"), le <strong>niveau</strong>, la <strong>capacité</strong></li>
+        <li>Choisir le <strong>type de salle</strong> :
+          <ul>
+            <li><em>Salle fixe</em> : la classe a toujours la même salle → sélectionner la salle</li>
+            <li><em>Salle variable</em> : la salle est choisie pour chaque cours dans le planning</li>
+          </ul>
+        </li>
+        <li>Cliquer sur <strong>Créer la classe</strong></li>
+      </ol>
+      <div class="callout tip">
+        <span class="icon">💡</span>
+        <span>L'année scolaire est automatiquement renseignée avec l'année active.</span>
+      </div>
+
+      <hr />
+
+      <h3>Voir les élèves d'une classe</h3>
+      <p>Depuis la liste des classes, cliquer sur <strong>Voir les élèves</strong> sur la carte d'une classe. La page affiche les informations de la classe, la liste des élèves avec leur statut, et un champ de recherche par nom/prénom.</p>
+
+      <hr />
+
+      <h3>Voir le planning d'une classe</h3>
+      <p>Depuis la liste des classes, cliquer sur <strong>Planning</strong> sur la carte d'une classe.</p>
+
+      <hr />
+
+      <h3>Désactiver une classe</h3>
+      <p>Une classe peut être désactivée (elle n'apparaît plus dans les listes) mais ses données sont conservées. Cette action est accessible depuis la fiche de la classe.</p>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(1)">← Année scolaire</button>
+        <button class="primary" onclick="showChapter(3)">Élèves →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 3 — ÉLÈVES ══════════ -->
+    <div class="chapter" id="ch-3">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 3</div>
+        <h2>Gestion des élèves</h2>
+      </div>
+
+      <h3>Consulter la liste des élèves</h3>
+      <p>La page <strong>Élèves</strong> affiche tous les élèves de l'établissement. Filtres disponibles : recherche par nom/prénom, filtre par classe.</p>
+
+      <h4>Statuts des élèves</h4>
+      <table>
+        <thead><tr><th>Statut</th><th>Signification</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge green">Actif</span></td><td>Élève en cours de scolarité</td></tr>
+          <tr><td><span class="badge red">Exclu</span></td><td>Élève exclu de l'établissement</td></tr>
+          <tr><td><span class="badge gray">Parti</span></td><td>Élève ayant quitté l'établissement</td></tr>
+        </tbody>
+      </table>
+
+      <hr />
+
+      <h3>Inscrire un nouvel élève</h3>
+      <ol class="steps">
+        <li>Cliquer sur <strong>Nouvel élève</strong></li>
+        <li>Remplir la section <strong>Identité</strong> : Nom, Prénom, Date de naissance, Genre, Classe d'affectation, Email/Téléphone/Adresse (optionnels)</li>
+        <li>Remplir optionnellement la section <strong>Famille</strong> : père, mère, tuteur</li>
+        <li>Cliquer sur <strong>Enregistrer l'élève</strong></li>
+      </ol>
+
+      <hr />
+
+      <h3>Fiche élève — 5 onglets</h3>
+      <p>Cliquer sur un élève pour accéder à sa fiche complète :</p>
+
+      <h4>Onglet Identité</h4>
+      <p>Informations personnelles. Bouton <strong>Modifier</strong> pour mettre à jour.</p>
+
+      <h4>Onglet Famille</h4>
+      <p>Informations des parents/tuteur.</p>
+
+      <h4>Onglet Assiduité</h4>
+      <p>Tableau de toutes les absences et retards. Bouton <strong>Ajouter une absence</strong> : choisir type (absence/retard), date, durée, motif, justifiée ou non. Compteurs : total absences, retards, justifiées.</p>
+
+      <h4>Onglet Avertissements</h4>
+      <p>Liste des avertissements et des convocations des parents.</p>
+      <div class="callout warning">
+        <span class="icon">⚠️</span>
+        <span>Après <strong>3 avertissements</strong>, une convocation est automatiquement générée.</span>
+      </div>
+
+      <h4>Onglet Statut</h4>
+      <p>Gestion du statut de l'élève :</p>
+      <ul>
+        <li><strong>Exclure</strong> : renseigner la raison → l'élève passe en statut <span class="badge red">Exclu</span></li>
+        <li><strong>Élève parti</strong> : choisir motif, date de départ → statut <span class="badge gray">Parti</span></li>
+        <li><strong>Réintégrer</strong> : l'élève repasse en statut <span class="badge green">Actif</span></li>
+      </ul>
+
+      <hr />
+
+      <h3>Bulletin de notes</h3>
+      <p>Depuis la fiche élève → <strong>Bulletin</strong>. Affiche pour le trimestre sélectionné : matières avec DS/Évaluation/Moyenne/Coefficient, et la moyenne générale pondérée.</p>
+      <p>Codes couleur des notes : <span style="color:#ef4444;font-weight:600">Rouge</span> &lt; 8 · <span style="color:#f59e0b;font-weight:600">Orange</span> 8–10 · <span style="color:#eab308;font-weight:600">Jaune</span> 10–14 · <span style="color:#10b981;font-weight:600">Vert</span> ≥ 14</p>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(2)">← Classes</button>
+        <button class="primary" onclick="showChapter(4)">Notes &amp; Évaluations →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 4 — NOTES & ÉVALUATIONS ══════════ -->
+    <div class="chapter" id="ch-4">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 4</div>
+        <h2>Notes et Évaluations</h2>
+      </div>
+
+      <h3>Deux façons de saisir des notes</h3>
+
+      <h4>1. Saisie directe (page Notes)</h4>
+      <p>Pour saisir des notes rapidement sans créer d'évaluation formelle.</p>
+      <ol class="steps">
+        <li>Aller dans <strong>Notes</strong></li>
+        <li>Sélectionner la <strong>classe</strong>, la <strong>matière</strong>, le <strong>trimestre</strong> et le <strong>type</strong> (DS ou Évaluation)</li>
+        <li>La liste des élèves de la classe s'affiche</li>
+        <li>Pour chaque élève : saisir la note (0–20)</li>
+        <li>Cliquer sur <strong>Enregistrer</strong></li>
+      </ol>
+      <div class="callout tip">
+        <span class="icon">💡</span>
+        <span>Si une note existe déjà pour cet élève/matière/trimestre/type, elle est affichée et peut être modifiée.</span>
+      </div>
+
+      <h4>Annuler une note</h4>
+      <p>Cliquer sur <strong>Annuler</strong> à côté d'une note. Elle est marquée comme annulée (ne compte plus dans les calculs) mais reste dans la base de données.</p>
+
+      <hr />
+
+      <h4>2. Via les évaluations (page Évaluations)</h4>
+      <p>Plus structuré : permet de créer une évaluation formelle, saisir toutes les notes, puis la publier.</p>
+
+      <h4>Créer une évaluation</h4>
+      <ol class="steps">
+        <li>Aller dans <strong>Évaluations → Liste → Nouvelle évaluation</strong></li>
+        <li>Remplir le <strong>type</strong> (DS ou Évaluation), la <strong>classe</strong>, la <strong>matière</strong>, le <strong>trimestre</strong>, la <strong>date</strong></li>
+        <li>Cliquer sur <strong>Créer</strong> → redirigé vers la page de saisie</li>
+      </ol>
+
+      <h4>Saisir les notes d'une évaluation</h4>
+      <p>Sur la page de détail (statut : <span class="badge orange">Brouillon</span>) : pour chaque élève, saisir la note ou cocher <strong>Absent</strong>. Cliquer sur <strong>Enregistrer les notes</strong>.</p>
+      <div class="callout tip">
+        <span class="icon">💡</span>
+        <span>Un élève absent ne reçoit pas de note — il n'est pas pénalisé dans le calcul du bulletin.</span>
+      </div>
+
+      <h4>Publier une évaluation</h4>
+      <ol class="steps">
+        <li>Quand toutes les notes sont saisies, cliquer sur <strong>Publier</strong></li>
+        <li>Confirmer</li>
+      </ol>
+      <p>La publication : verrouille l'évaluation, crée automatiquement les notes dans la base de données, affiche les statistiques finales.</p>
+      <div class="callout danger">
+        <span class="icon">🚨</span>
+        <span>Une évaluation publiée ne peut pas être supprimée ni modifiée.</span>
+      </div>
+
+      <hr />
+
+      <h3>Périodes d'évaluation</h3>
+      <p><strong>Évaluations → Périodes</strong> — configure les dates des périodes DS et Évaluation pour chaque trimestre. Cliquer sur les champs de dates pour les modifier. Bouton <strong>Terminer</strong> pour clôturer une période.</p>
+
+      <hr />
+
+      <h3>Consulter le bulletin d'un élève</h3>
+      <p>Depuis la fiche d'un élève → <strong>Bulletin</strong>. Affiche pour chaque trimestre toutes les matières avec DS, Évaluation, Moyenne, Coefficient, la moyenne générale pondérée et la mention.</p>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(3)">← Élèves</button>
+        <button class="primary" onclick="showChapter(5)">Planning →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 5 — PLANNING ══════════ -->
+    <div class="chapter" id="ch-5">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 5</div>
+        <h2>Planning</h2>
+      </div>
+
+      <h3>Accéder au planning</h3>
+      <p>Deux façons d'accéder au planning : menu <strong>Planning</strong> (planning global avec sélecteur de classe), ou depuis une classe via le bouton "Planning" sur la carte.</p>
+
+      <h3>Lire la grille de planning</h3>
+      <p>La grille affiche une semaine type (Lundi → Samedi) avec les heures en colonne gauche. Chaque créneau est représenté par un bloc coloré (couleur de la matière) affichant le nom de la matière, la salle, le professeur et les horaires.</p>
+
+      <hr />
+
+      <h3>Ajouter un créneau</h3>
+      <ol class="steps">
+        <li>Cliquer sur une cellule vide (icône "+" au survol)</li>
+        <li>Remplir la <strong>matière</strong>, le <strong>jour</strong>, l'<strong>heure de début</strong>, l'<strong>heure de fin</strong>, la <strong>salle</strong></li>
+        <li>Cliquer sur <strong>Créer le créneau</strong></li>
+      </ol>
+      <div class="callout warning">
+        <span class="icon">⚠️</span>
+        <span>Si la salle est déjà occupée sur ce créneau par une autre classe, un message d'erreur s'affiche.</span>
+      </div>
+
+      <hr />
+
+      <h3>Modifier un créneau</h3>
+      <ol class="steps">
+        <li>Cliquer sur un créneau existant</li>
+        <li>Modifier les champs souhaités dans la modale</li>
+        <li>Cliquer sur <strong>Enregistrer</strong></li>
+      </ol>
+
+      <hr />
+
+      <h3>Déplacer un créneau (glisser-déposer)</h3>
+      <ol class="steps">
+        <li>Cliquer et maintenir sur un créneau</li>
+        <li>Le faire glisser vers la nouvelle cellule horaire</li>
+        <li>Relâcher</li>
+      </ol>
+      <p>Si la destination est occupée (conflit de salle ou de classe), le déplacement est annulé.</p>
+
+      <hr />
+
+      <h3>Supprimer un créneau</h3>
+      <ol class="steps">
+        <li>Cliquer sur le créneau</li>
+        <li>Cliquer sur <strong>Supprimer</strong> dans la modale</li>
+        <li>Confirmer</li>
+      </ol>
+
+      <hr />
+
+      <h3>Sélecteur de salle disponible</h3>
+      <p>Lors de la création ou modification d'un créneau, le sélecteur de salle indique pour chaque salle :</p>
+      <ul>
+        <li>✅ <strong>Disponible</strong> : la salle est libre sur ce créneau</li>
+        <li>❌ <strong>Occupée</strong> : utilisée par une autre classe (avec le nom de la classe affiché)</li>
+      </ul>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(4)">← Notes &amp; Évaluations</button>
+        <button class="primary" onclick="showChapter(6)">Matières &amp; Niveaux →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 6 — MATIÈRES & NIVEAUX ══════════ -->
+    <div class="chapter" id="ch-6">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 6</div>
+        <h2>Matières et Niveaux</h2>
+      </div>
+
+      <h3>Niveaux scolaires</h3>
+      <p>Les niveaux définissent la structure de l'établissement (ex : 6ème, 5ème, 4ème, 3ème, 2nde, 1ère, Terminale).</p>
+
+      <h4>Consulter les niveaux</h4>
+      <p>Aller dans <strong>Niveaux</strong>. Chaque niveau affiche son nom, son ordre, les matières associées et le nombre de classes.</p>
+
+      <h4>Créer un niveau</h4>
+      <ol class="steps">
+        <li>Cliquer sur <strong>Nouveau niveau</strong></li>
+        <li>Remplir le <strong>nom</strong> (ex : "6ème"), l'<strong>ordre</strong> (ex : 1), une <strong>description</strong> (optionnel) et les <strong>matières</strong> enseignées</li>
+        <li>Cliquer sur <strong>Enregistrer</strong></li>
+      </ol>
+
+      <h4>Modifier ou supprimer un niveau</h4>
+      <p>Cliquer sur <strong>Modifier</strong> à côté du niveau. Pour supprimer, utiliser le bouton <strong>Supprimer</strong>.</p>
+      <div class="callout warning">
+        <span class="icon">⚠️</span>
+        <span>Un niveau ne peut pas être supprimé s'il a des classes actives.</span>
+      </div>
+
+      <hr />
+
+      <h3>Matières</h3>
+      <p>La page <strong>Matières</strong> affiche toutes les matières avec leur code, couleur et coefficients.</p>
+
+      <h4>Créer une matière</h4>
+      <ol class="steps">
+        <li>Cliquer sur <strong>Nouvelle matière</strong></li>
+        <li>Remplir le <strong>nom</strong> (ex : "Mathématiques"), le <strong>code</strong> (ex : "MATH"), la <strong>description</strong> (optionnel), la <strong>couleur</strong></li>
+        <li>Renseigner les <strong>coefficients par niveau</strong> : pour chaque niveau, indiquer le coefficient de la matière</li>
+        <li>Une <strong>prévisualisation</strong> de la carte s'affiche en temps réel</li>
+        <li>Cliquer sur <strong>Créer la matière</strong></li>
+      </ol>
+      <div class="callout tip">
+        <span class="icon">💡</span>
+        <span>Le coefficient peut différer selon le niveau : les Mathématiques peuvent avoir un coefficient 4 en Terminale et 3 en 2nde.</span>
+      </div>
+
+      <h4>Modifier une matière</h4>
+      <p>Depuis la liste des matières → cliquer sur la carte → <strong>Modifier</strong>.</p>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(5)">← Planning</button>
+        <button class="primary" onclick="showChapter(7)">Salles →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 7 — SALLES ══════════ -->
+    <div class="chapter" id="ch-7">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 7</div>
+        <h2>Salles</h2>
+      </div>
+
+      <h3>Consulter les salles</h3>
+      <p>La page <strong>Salles</strong> affiche toutes les salles de l'établissement sous forme de cartes : nom, type, capacité, bâtiment, étage, équipements, accessibilité PMR.</p>
+
+      <h4>Filtrer les salles</h4>
+      <ul>
+        <li><strong>Recherche</strong> : par nom de salle</li>
+        <li><strong>Type</strong> : filtrer par type de salle</li>
+      </ul>
+
+      <hr />
+
+      <h3>Créer une salle</h3>
+      <ol class="steps">
+        <li>Cliquer sur <strong>Nouvelle salle</strong></li>
+        <li>Remplir le <strong>nom</strong>, la <strong>capacité</strong>, le <strong>type</strong>, le <strong>bâtiment</strong> et l'<strong>étage</strong> (optionnels)</li>
+        <li>Cocher les <strong>équipements</strong> disponibles et l'<strong>accessibilité PMR</strong></li>
+        <li>Cliquer sur <strong>Enregistrer</strong></li>
+      </ol>
+
+      <h4>Types de salle</h4>
+      <table>
+        <thead><tr><th>Type</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>Salle de classe</td><td>Cours standard</td></tr>
+          <tr><td>Laboratoire</td><td>Sciences expérimentales</td></tr>
+          <tr><td>Salle informatique</td><td>Cours d'informatique</td></tr>
+          <tr><td>Salle de sport</td><td>Éducation physique</td></tr>
+          <tr><td>Salle arts</td><td>Arts plastiques / musique</td></tr>
+          <tr><td>Amphi</td><td>Amphithéâtre</td></tr>
+          <tr><td>Autre</td><td>Usage divers</td></tr>
+        </tbody>
+      </table>
+
+      <hr />
+
+      <h3>Voir le détail d'une salle</h3>
+      <p>Cliquer sur <strong>Détail</strong> sur la carte d'une salle. Affiche : toutes les informations, <strong>statistiques d'occupation</strong> (créneaux/semaine, taux d'occupation), et la liste des créneaux utilisant cette salle.</p>
+
+      <hr />
+
+      <h3>Modifier et supprimer une salle</h3>
+      <p>Cliquer sur <strong>Modifier</strong> sur la carte. Pour supprimer, utiliser le bouton <strong>Supprimer</strong> dans la modale d'édition.</p>
+      <div class="callout warning">
+        <span class="icon">⚠️</span>
+        <span>La suppression peut être bloquée si des créneaux de planning utilisent cette salle. Retirer d'abord la salle des créneaux concernés.</span>
+      </div>
+
+      <hr />
+
+      <h3>Disponibilité des salles</h3>
+      <p>La disponibilité en temps réel est consultable dans le <strong>planning</strong> lors de la création d'un créneau. Le sélecteur indique quelles salles sont libres sur le créneau demandé.</p>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(6)">← Matières &amp; Niveaux</button>
+        <button class="primary" onclick="showChapter(8)">Professeurs →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 8 — PROFESSEURS ══════════ -->
+    <div class="chapter" id="ch-8">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 8</div>
+        <h2>Professeurs</h2>
+      </div>
+
+      <h3>Consulter la liste des professeurs</h3>
+      <p>La page <strong>Professeurs</strong> affiche tous les professeurs de l'établissement avec leur statut (<span class="badge green">Actif</span> / <span class="badge gray">Inactif</span>). Utiliser le champ de recherche pour filtrer par nom ou prénom.</p>
+
+      <hr />
+
+      <h3>Ajouter un professeur</h3>
+      <ol class="steps">
+        <li>Cliquer sur <strong>Nouveau professeur</strong></li>
+        <li>Remplir : Nom, Prénom, Email, Téléphone, Genre</li>
+        <li>Cliquer sur <strong>Enregistrer</strong></li>
+      </ol>
+      <p>Le professeur est créé avec le statut <span class="badge green">Actif</span> par défaut.</p>
+
+      <hr />
+
+      <h3>Fiche professeur</h3>
+      <p>Cliquer sur <strong>Fiche</strong> pour accéder à la page de détail. Affiche les informations personnelles et la liste des <strong>affectations</strong> (classe et matière enseignée).</p>
+
+      <ul>
+        <li><strong>Modifier les informations</strong> → modale d'édition</li>
+        <li><strong>Désactiver</strong> → passe en statut <span class="badge gray">Inactif</span>, n'apparaît plus dans les sélecteurs du planning</li>
+        <li><strong>Activer</strong> → bouton disponible si le professeur est inactif</li>
+      </ul>
+
+      <hr />
+
+      <h3>Affectations (classes et matières)</h3>
+      <p>La page <strong>Affectations</strong> permet de définir quel professeur enseigne quelle matière dans quelle classe.</p>
+      <ol class="steps">
+        <li>Aller dans <strong>Professeurs → Affectations</strong></li>
+        <li>La grille affiche toutes les combinaisons classe × matière</li>
+        <li>Pour chaque case, sélectionner le professeur dans la liste déroulante</li>
+        <li>Les modifications sont sauvegardées automatiquement</li>
+      </ol>
+      <div class="callout tip">
+        <span class="icon">💡</span>
+        <span>Ces affectations servent à pré-remplir le professeur lors de la création de créneaux de planning.</span>
+      </div>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(7)">← Salles</button>
+        <button class="primary" onclick="showChapter(9)">Paramètres →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 9 — PARAMÈTRES ══════════ -->
+    <div class="chapter" id="ch-9">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 9</div>
+        <h2>Paramètres et personnalisation</h2>
+      </div>
+
+      <h3>Accéder aux paramètres</h3>
+      <p>Cliquer sur <strong>Paramètres</strong> en bas de la barre latérale.</p>
+
+      <hr />
+
+      <h3>Thème sombre / clair</h3>
+      <p>Dans la section <strong>Apparence</strong> :</p>
+      <ul>
+        <li><strong>Clair</strong> : interface avec fond blanc (défaut)</li>
+        <li><strong>Sombre</strong> : interface avec fond sombre, idéale pour une utilisation en faible luminosité</li>
+      </ul>
+      <p>Le changement est immédiat et persisté entre les sessions.</p>
+
+      <hr />
+
+      <h3>Couleur principale</h3>
+      <p>Choisir parmi 6 couleurs prédéfinies :</p>
+      <ul>
+        <li>🔵 Bleu (défaut)</li>
+        <li>🟣 Violet</li>
+        <li>🟢 Vert</li>
+        <li>🟡 Orange</li>
+        <li>🩷 Rose</li>
+        <li>🔷 Indigo</li>
+      </ul>
+      <p>La couleur est appliquée aux boutons, liens actifs, barres de progression et éléments interactifs.</p>
+
+      <hr />
+
+      <h3>Langue d'interface</h3>
+      <p>Trois langues sont disponibles :</p>
+      <ul>
+        <li><strong>Français</strong> (défaut)</li>
+        <li><strong>English</strong></li>
+        <li><strong>Malagasy</strong></li>
+      </ul>
+      <p>Le changement est immédiat — toute l'interface est traduite.</p>
+
+      <hr />
+
+      <h3>Persistance des préférences</h3>
+      <p>Les préférences sont enregistrées dans le navigateur (IndexedDB). Elles sont conservées même après fermeture du navigateur, mais sont spécifiques à l'appareil et au navigateur utilisés.</p>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(8)">← Professeurs</button>
+        <button class="primary" onclick="showChapter(10)">Tableau de bord →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ CHAPTER 10 — TABLEAU DE BORD ══════════ -->
+    <div class="chapter" id="ch-10">
+      <div class="chapter-header">
+        <div class="tag">Chapitre 10</div>
+        <h2>Tableau de bord</h2>
+      </div>
+
+      <h3>Vue d'ensemble</h3>
+      <p>Le tableau de bord est la page d'accueil de l'application. Il donne une vue synthétique et rapide de l'établissement.</p>
+
+      <hr />
+
+      <h3>Statistiques globales</h3>
+      <p>Quatre compteurs s'affichent en haut de page :</p>
+      <ul>
+        <li><strong>Nombre de classes</strong> actives dans l'année</li>
+        <li><strong>Nombre d'élèves</strong> actifs</li>
+        <li><strong>Nombre de matières</strong></li>
+        <li><strong>Nombre de salles</strong></li>
+      </ul>
+      <p>Ces chiffres correspondent toujours à l'année scolaire en cours (ou à l'année consultée en mode archive).</p>
+
+      <hr />
+
+      <h3>Liste des classes</h3>
+      <p>Un tableau liste les classes avec, pour chacune : nom/niveau, nombre d'élèves/capacité, taux de remplissage. Les classes sont paginées (5 par page). Cliquer sur une classe → accès direct à la liste des élèves.</p>
+
+      <hr />
+
+      <h3>Convocations en attente</h3>
+      <p>Un encadré liste les convocations des parents qui n'ont pas encore eu lieu : nom de l'élève, date de convocation prévue, raison. Permet de suivre rapidement les rendez-vous à venir avec les familles.</p>
+
+      <hr />
+
+      <h3>Élèves récemment inscrits</h3>
+      <p>Liste les 5 derniers élèves inscrits dans l'établissement avec leur classe. Cliquer sur un élève → accès à sa fiche.</p>
+
+      <hr />
+
+      <h3>Actions rapides</h3>
+      <p>Des boutons d'accès rapide permettent d'aller directement aux actions les plus courantes :</p>
+      <ul>
+        <li>Nouvelle classe</li>
+        <li>Nouvel élève</li>
+        <li>Saisir des notes</li>
+        <li>Voir le planning</li>
+      </ul>
+
+      <div class="chapter-nav">
+        <button onclick="showChapter(9)">← Paramètres</button>
+        <button class="primary" onclick="showChapter(0)">↩ Retour à l'accueil</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+  const titles = [
+    'Accueil',
+    'Année scolaire',
+    'Classes',
+    'Élèves',
+    'Notes & Évaluations',
+    'Planning',
+    'Matières & Niveaux',
+    'Salles',
+    'Professeurs',
+    'Paramètres',
+    'Tableau de bord'
+  ];
+
+  function showChapter(n) {
+    document.querySelectorAll('.chapter').forEach(c => c.classList.remove('visible'));
+    document.querySelectorAll('#sidebar nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('ch-' + n).classList.add('visible');
+    document.getElementById('nav-' + n).classList.add('active');
+    document.getElementById('breadcrumb-current').textContent = titles[n];
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+  }
+</script>
+</body>
+</html>
