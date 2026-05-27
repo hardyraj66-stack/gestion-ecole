@@ -68,7 +68,7 @@ export function CreateEvaluation() {
       classe_id: classeId,
       matiere_id: matiereId,
       trimestre: parseInt(trimestre) as 1 | 2 | 3,
-      annee_scolaire: anneeActive?.label || '',
+      anneeScolaireId: anneeActive?.id || '',
       date,
     });
     if (result) {

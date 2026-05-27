@@ -34,11 +34,17 @@ export class Note extends Document {
   @Prop({ default: false })
   annulee: boolean;
 
+  /** @deprecated Utiliser anneeScolaireId — conservé pour doublon temporaire et affichage */
   @Prop({ default: '' })
   annee_scolaire: string;
+
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ default: '' })
+  anneeScolaireId: string;
 }
 
 export const NoteSchema = SchemaFactory.createForClass(Note);
 NoteSchema.index({ eleve_id: 1, trimestre: 1, annulee: 1 });
 NoteSchema.index({ matiere_id: 1 });
 NoteSchema.index({ annee_scolaire: 1 });
+NoteSchema.index({ anneeScolaireId: 1 });

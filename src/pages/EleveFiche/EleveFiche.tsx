@@ -19,17 +19,17 @@ import { FicheStatut } from './FicheStatut';
 export function EleveFiche() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   const { data, loading, error, readOnly } = useEleveFicheData(id || '');
   const [statut, setStatut] = useState<EleveStatut | null>(null);
   const [nbAvertissements, setNbAvertissements] = useState(0);
-  // anneeLabel passé aux sous-composants pour isoler les données de suivi par année
-  const anneeLabel = viewingLabel ?? undefined;
+  // anneeId passé aux sous-composants pour isoler les données de suivi par année
+  const anneeId = viewingId ?? undefined;
 
   if (loading || !data) return <PageLoader />;
   if (error) return <Alert variant="error">{t('fiche.erreurChargement')}</Alert>;
 
-  const { eleve, classe, salleActuelle, creneaux, anneeActive } = data;
+  const { eleve, classe, salleActuelle, creneaux, anneeActive, anneeActiveId } = data;
   const statutCourant: EleveStatut = statut ?? (eleve.statut as EleveStatut) ?? 'actif';
 
   const statutSuffix = statutCourant === 'exclu' ? t('eleves.statuts.exclu') : statutCourant === 'parti' ? t('eleves.statuts.parti') : '';
@@ -61,7 +61,7 @@ export function EleveFiche() {
             eleveId={id!}
             nomComplet={`${eleve.prenom} ${eleve.nom}`}
             statut={statutCourant}
-            anneeActive={anneeActive}
+            anneeActiveId={anneeActiveId ?? anneeActive ?? null}
             nbAvertissements={nbAvertissements}
             readOnly={readOnly}
             onStatutChange={setStatut}
@@ -72,12 +72,12 @@ export function EleveFiche() {
           <FicheShortcuts eleveId={id!} classeId={eleve.classe_id} />
           <FicheAvertissements
             eleveId={id!}
-            anneeActive={anneeActive}
-            anneeLabel={anneeLabel}
+            anneeActiveId={anneeActiveId ?? anneeActive ?? null}
+            anneeId={anneeId}
             readOnly={readOnly}
             onCountChange={setNbAvertissements}
           />
-          <FicheAssiduité eleveId={id!} anneeLabel={anneeLabel} readOnly={readOnly} />
+          <FicheAssiduité eleveId={id!} anneeId={anneeId} readOnly={readOnly} />
         </div>
       </div>
     </div>

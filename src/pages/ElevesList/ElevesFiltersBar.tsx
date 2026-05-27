@@ -33,17 +33,17 @@ export function ElevesFiltersBar({
   hasEleveFilter,
 }: ElevesFiltersBarProps) {
   const { t } = useTranslation();
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
 
   const fetchSuggestions = useCallback(async (query: string): Promise<Suggestion[]> => {
-    const data = await readApi.elevesList(1, 8, query, '', undefined, viewingLabel ?? undefined);
+    const data = await readApi.elevesList(1, 8, query, '', undefined, viewingId ?? undefined);
     if (!data?.eleves) return [];
     return (data.eleves as any[]).map((e: any) => ({
       id: e.id,
       label: `${e.prenom} ${e.nom}`,
       sublabel: e.classe_nom || undefined,
     }));
-  }, [viewingLabel]);
+  }, [viewingId]);
 
   const handleSuggestionSelect = (s: Suggestion) => {
     onSuggestionSelect(s.id);

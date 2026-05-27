@@ -8,13 +8,14 @@
 
 <h2>Schéma MongoDB</h2>
 <pre><code>{
-  nom:            String   (requis)     // "6ème A"
-  niveau:         String   (requis)     // "6ème"
-  annee_scolaire: String   (requis)     // "2024-2025"
-  capacite:       Number   (défaut: 30) // places max
-  salle:          String   (requis)     // "Salle 101"
-  salle_type:     Enum     ['fixe','variable']  // mode de salle
-  createdAt, updatedAt                  // timestamps auto
+  nom:              String   (requis)     // "6ème A"
+  niveau:           String   (requis)     // "6ème"
+  anneeScolaireId:  String   (requis)     // _id MongoDB de l'AnneeScolaire
+  annee_scolaire:   String               // label conservé pour affichage "2024-2025"
+  capacite:         Number   (défaut: 30) // places max
+  salle:            String   (requis)     // "Salle 101"
+  salle_type:       Enum     ['fixe','variable']  // mode de salle
+  createdAt, updatedAt                    // timestamps auto
 }</code></pre>
 
 <h2>Endpoints API</h2>
@@ -22,7 +23,7 @@
 <tr><th>Méthode</th><th>Route</th><th>Description</th><th>Body</th></tr>
 <tr><td><span class="badge b-get">GET</span></td><td><code>/classes</code></td><td>Toutes les classes</td><td>—</td></tr>
 <tr><td><span class="badge b-get">GET</span></td><td><code>/classes/:id</code></td><td>Une classe</td><td>—</td></tr>
-<tr><td><span class="badge b-post">POST</span></td><td><code>/classes</code></td><td>Créer une classe</td><td><code>{ nom, niveau, annee_scolaire, capacite, salle, salle_type }</code></td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/classes</code></td><td>Créer une classe (anneeScolaireId injecté automatiquement par le serveur)</td><td><code>{ nom, niveau, capacite, salle, salle_type }</code></td></tr>
 <tr><td><span class="badge b-patch">PATCH</span></td><td><code>/classes/:id</code></td><td>Modifier</td><td>Champs partiels</td></tr>
 <tr><td><span class="badge b-delete">DELETE</span></td><td><code>/classes/:id</code></td><td>Supprimer</td><td>—</td></tr>
 </table>

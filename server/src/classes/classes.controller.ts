@@ -17,7 +17,7 @@ export class ClassesController {
   async create(@Body() body: any) {
     const anneeActive = await this.anneesService.findActive();
     if (!anneeActive) throw new BadRequestException('Aucune année scolaire active. Activez une année scolaire avant de créer une classe.');
-    const payload = { ...body, annee_scolaire: anneeActive.label };
+    const payload = { ...body, annee_scolaire: anneeActive.label, anneeScolaireId: (anneeActive as any)._id.toString() };
     const item = await this.service.create(payload);
     this.events.emit('classe:created', item);
     this.viewBuilder.onClasseWrite(item.id);

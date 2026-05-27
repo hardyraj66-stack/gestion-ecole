@@ -22,13 +22,13 @@ const TYPE_VARIANT: Record<string, any> = {
 
 interface Props {
   eleveId: string;
-  anneeActive: string | null;
-  anneeLabel?: string;
+  anneeActiveId: string | null;
+  anneeId?: string;
   readOnly: boolean;
   onCountChange?: (count: number) => void;
 }
 
-export function FicheAvertissements({ eleveId, anneeActive, anneeLabel, readOnly, onCountChange }: Props) {
+export function FicheAvertissements({ eleveId, anneeActiveId, anneeId, readOnly, onCountChange }: Props) {
   const { t } = useTranslation();
 
   const TYPE_OPTIONS: SelectOption[] = [
@@ -43,12 +43,12 @@ export function FicheAvertissements({ eleveId, anneeActive, anneeLabel, readOnly
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showConvForm, setShowConvForm] = useState(false);
-  const [form, setForm] = useState({ motif: '', type: 'comportement', commentaire: '', date: new Date().toISOString().slice(0, 10), annee_scolaire: anneeActive || '' });
+  const [form, setForm] = useState({ motif: '', type: 'comportement', commentaire: '', date: new Date().toISOString().slice(0, 10) });
   const [convForm, setConvForm] = useState({ raison: '', commentaire: '', date: new Date().toISOString().slice(0, 10) });
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
-    const qs = anneeLabel ? `?anneeLabel=${encodeURIComponent(anneeLabel)}` : '';
+    const qs = anneeId ? `?anneeId=${encodeURIComponent(anneeId)}` : '';
     const [ra, rc] = await Promise.all([
       fetch(`${API_BASE_URL}/suivi/${eleveId}/avertissements${qs}`),
       fetch(`${API_BASE_URL}/suivi/${eleveId}/convocations${qs}`),
@@ -60,7 +60,7 @@ export function FicheAvertissements({ eleveId, anneeActive, anneeLabel, readOnly
     }
     if (rc.ok) setConvocations(await rc.json());
     setLoading(false);
-  }, [eleveId, anneeLabel]);
+  }, [eleveId, anneeId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -69,7 +69,7 @@ export function FicheAvertissements({ eleveId, anneeActive, anneeLabel, readOnly
     setSubmitting(true);
     const res = await fetch(`${API_BASE_URL}/suivi/${eleveId}/avertissements`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, annee_scolaire: form.annee_scolaire || anneeActive }),
+      body: JSON.stringify({ ...form, anneeScolaireId: anneeActiveId || '' }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -161,7 +161,6 @@ export function FicheAvertissements({ eleveId, anneeActive, anneeLabel, readOnly
             <div className="suivi-form-grid">
               <Select label={t('fiche.avertissements.type')} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} options={TYPE_OPTIONS} />
               <Input label={t('fiche.avertissements.date')} type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
-              <Input label={t('fiche.avertissements.anneeScolaire')} value={form.annee_scolaire} onChange={e => setForm(f => ({ ...f, annee_scolaire: e.target.value }))} placeholder={anneeActive || t('fiche.avertissements.anneePlaceholder')} />
             </div>
             <Input label={t('fiche.avertissements.motif')} value={form.motif} onChange={e => setForm(f => ({ ...f, motif: e.target.value }))} placeholder={t('fiche.avertissements.motifPlaceholder')} fullWidth />
             <Textarea label={t('fiche.avertissements.commentaire')} value={form.commentaire} onChange={e => setForm(f => ({ ...f, commentaire: e.target.value }))} placeholder={t('fiche.avertissements.detailsPlaceholder')} />

@@ -35,7 +35,8 @@ server/src/
 <tr><td><code>classe_id</code></td><td>String</td><td>required</td></tr>
 <tr><td><code>matiere_id</code></td><td>String</td><td>required</td></tr>
 <tr><td><code>trimestre</code></td><td>Number</td><td>enum : 1 | 2 | 3, required</td></tr>
-<tr><td><code>annee_scolaire</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>anneeScolaireId</code></td><td>String</td><td>ID MongoDB de l'AnneeScolaire, required</td></tr>
+<tr><td><code>annee_scolaire</code></td><td>String</td><td>label conservé pour affichage (ex: "2024-2025")</td></tr>
 <tr><td><code>date</code></td><td>String</td><td>required (ISO)</td></tr>
 <tr><td><code>statut</code></td><td>String</td><td>enum : 'brouillon' | 'publie', défaut : 'brouillon'</td></tr>
 <tr><td><code>notes</code></td><td>NoteEvaluation[]</td><td>défaut : []</td></tr>
@@ -91,27 +92,28 @@ server/src/
 <tr><th>Champ</th><th>Type</th><th>Contraintes</th></tr>
 <tr><td><code>trimestre</code></td><td>Number</td><td>enum : 1 | 2 | 3, required</td></tr>
 <tr><td><code>type</code></td><td>String</td><td>enum : 'ds' | 'evaluation', required</td></tr>
-<tr><td><code>annee_scolaire</code></td><td>String</td><td>required</td></tr>
+<tr><td><code>anneeScolaireId</code></td><td>String</td><td>ID MongoDB de l'AnneeScolaire, required</td></tr>
+<tr><td><code>annee_scolaire</code></td><td>String</td><td>label conservé pour affichage (ex: "2024-2025")</td></tr>
 <tr><td><code>date_debut</code></td><td>String | null</td><td>défaut : null</td></tr>
 <tr><td><code>date_fin</code></td><td>String | null</td><td>défaut : null</td></tr>
 <tr><td><code>terminee</code></td><td>Boolean</td><td>défaut : false</td></tr>
 </table>
 
 <div class="callout callout-info">
-<p>Index unique : <code>(trimestre, type, annee_scolaire)</code> — 6 périodes max par année scolaire (3 trimestres × 2 types).</p>
+<p>Index unique : <code>(trimestre, type, anneeScolaireId)</code> — 6 périodes max par année scolaire (3 trimestres × 2 types).</p>
 </div>
 
 <h2>API Périodes</h2>
 
-<h3><span class="badge b-get">GET</span> <code>/periodes?annee_scolaire=2024-2025</code></h3>
-<p>Retourne les 6 périodes de l'année scolaire. Crée celles manquantes automatiquement.</p>
+<h3><span class="badge b-get">GET</span> <code>/periodes?anneeScolaireId={id}</code></h3>
+<p>Retourne les 6 périodes de l'année scolaire. Crée celles manquantes automatiquement. <code>anneeScolaireId</code> est l'<code>_id</code> MongoDB de l'AnneeScolaire.</p>
 
 <h3><span class="badge b-get">GET</span> <code>/periodes/active</code></h3>
 <p>Retourne la période en cours (date_debut ≤ aujourd'hui ≤ date_fin et non terminée).</p>
 
 <h3><span class="badge b-post">POST</span> <code>/periodes/init</code></h3>
 <p>Initialise les 6 périodes pour une année scolaire si elles n'existent pas encore.</p>
-<pre><code>{ "annee_scolaire": "2024-2025" }
+<pre><code>{ "anneeScolaireId": "6847a1c2f0e12345678abcde" }
 </code></pre>
 
 <h3><span class="badge b-patch">PATCH</span> <code>/periodes/:id</code></h3>

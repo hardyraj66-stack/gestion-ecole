@@ -10,7 +10,10 @@ const t = (_: any, ret: Record<string, any>) => {
 @Schema({ collection: 'read_eleves', timestamps: true, toJSON: { virtuals: true, transform: t } })
 export class ReadEleve extends Document {
   @Prop({ required: true }) source_id: string;
+  /** Label de l'année pour l'affichage (ex: "2024-2025") */
   @Prop({ required: true, default: '' }) annee_scolaire: string;
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ default: '' }) anneeScolaireId: string;
   @Prop() nom: string;
   @Prop() prenom: string;
   @Prop() date_naissance: string;
@@ -28,7 +31,11 @@ export class ReadEleve extends Document {
 }
 
 export const ReadEleveSchema = SchemaFactory.createForClass(ReadEleve);
-// Un document par (élève × année scolaire)
+// Un document par (élève × année scolaire) — doublon index pendant la migration
 ReadEleveSchema.index({ source_id: 1, annee_scolaire: 1 }, { unique: true });
 ReadEleveSchema.index({ annee_scolaire: 1 });
 ReadEleveSchema.index({ classe_id: 1, annee_scolaire: 1 });
+// Index normalisé par ID — non-unique pendant la migration (sera rendu unique en Phase 4)
+ReadEleveSchema.index({ source_id: 1, anneeScolaireId: 1 });
+ReadEleveSchema.index({ anneeScolaireId: 1 });
+ReadEleveSchema.index({ classe_id: 1, anneeScolaireId: 1 });

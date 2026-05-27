@@ -16,6 +16,8 @@ interface ViewingContextType {
   viewing: AnneeScolaire | null;
   /** Label de l'année consultée (ex: "2022-2023"), null si mode live */
   viewingLabel: string | null;
+  /** ID MongoDB de l'année consultée, null si mode live */
+  viewingId: string | null;
   /** Les données snapshot de l'année consultée */
   snapshot: Snapshot | null;
   /** true pendant le chargement du snapshot */
@@ -61,9 +63,10 @@ export function ViewingProvider({ children }: { children: ReactNode }) {
 
   const isViewingArchive = useMemo(() => viewing !== null, [viewing]);
   const viewingLabel = useMemo(() => viewing?.label ?? null, [viewing]);
+  const viewingId = useMemo(() => viewing?.id ?? null, [viewing]);
 
   return (
-    <ViewingContext.Provider value={{ viewing, viewingLabel, snapshot, loadingSnapshot, viewAnnee, exitView, isViewingArchive }}>
+    <ViewingContext.Provider value={{ viewing, viewingLabel, viewingId, snapshot, loadingSnapshot, viewAnnee, exitView, isViewingArchive }}>
       {children}
     </ViewingContext.Provider>
   );

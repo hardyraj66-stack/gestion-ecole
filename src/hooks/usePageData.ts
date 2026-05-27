@@ -8,7 +8,7 @@ import { onDataChange, Channel } from '../services/socketService';
  * - re-fetch quand le fetcher change (page, search, classeId...)
  * - re-fetch socket ciblé par channel (mode live uniquement)
  * - possibilité d'un refresh silencieux (sans loader plein écran)
- * - en mode archive, le fetcher reçoit viewingLabel via le hook spécialisé
+ * - en mode archive, le fetcher reçoit viewingId via le hook spécialisé
  */
 export function usePageFetch<T>(
   fetcher: () => Promise<T | null>,
@@ -47,7 +47,7 @@ export function usePageFetch<T>(
       return;
     }
 
-    // Live ou archive via anneeLabel injecté dans le fetcher
+    // Live ou archive via anneeId injecté dans le fetcher
     try {
       const result = await fetcher();
       setData(result);
@@ -92,33 +92,33 @@ export function usePageFetch<T>(
 // ============ HOOKS PAR PAGE ============
 
 export function useDashboardData(classesPage = 1) {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.dashboard(classesPage, 5, viewingLabel ?? undefined), [classesPage, viewingLabel]),
+    useCallback(() => readApi.dashboard(classesPage, 5, viewingId ?? undefined), [classesPage, viewingId]),
     undefined, 'classes',
   );
 }
 
 export function useClassesListData(page = 1, search = '', niveau = '') {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.classesList(page, 8, search, niveau, viewingLabel ?? undefined), [page, search, niveau, viewingLabel]),
+    useCallback(() => readApi.classesList(page, 8, search, niveau, viewingId ?? undefined), [page, search, niveau, viewingId]),
     undefined, 'classes',
   );
 }
 
 export function useClasseElevesData(classeId: string, page = 1, search = '', eleveId = '') {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.classeEleves(classeId, page, 10, search, eleveId, viewingLabel ?? undefined), [classeId, page, search, eleveId, viewingLabel]),
+    useCallback(() => readApi.classeEleves(classeId, page, 10, search, eleveId, viewingId ?? undefined), [classeId, page, search, eleveId, viewingId]),
     undefined, 'eleves',
   );
 }
 
 export function useElevesListData(page = 1, search = '', classeId = '', eleveId = '') {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.elevesList(page, 12, search, classeId, eleveId, viewingLabel ?? undefined), [page, search, classeId, eleveId, viewingLabel]),
+    useCallback(() => readApi.elevesList(page, 12, search, classeId, eleveId, viewingId ?? undefined), [page, search, classeId, eleveId, viewingId]),
     undefined, 'eleves',
   );
 }
@@ -138,9 +138,9 @@ export function useSallesListData(page = 1, type = '', search = '') {
 }
 
 export function usePlanningClasses() {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.planningClasses(viewingLabel ?? undefined), [viewingLabel]),
+    useCallback(() => readApi.planningClasses(viewingId ?? undefined), [viewingId]),
     undefined, 'classes',
   );
 }
@@ -157,33 +157,33 @@ export function useNotesPageData() {
 }
 
 export function useNotesFiltersData() {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.notesFilters(viewingLabel ?? undefined), [viewingLabel]),
+    useCallback(() => readApi.notesFilters(viewingId ?? undefined), [viewingId]),
     undefined, 'notes',
   );
 }
 
 export function useBulletinData(eleveId: string, trimestre: number) {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.bulletin(eleveId, trimestre, viewingLabel ?? undefined), [eleveId, trimestre, viewingLabel]),
+    useCallback(() => readApi.bulletin(eleveId, trimestre, viewingId ?? undefined), [eleveId, trimestre, viewingId]),
     undefined, 'notes',
   );
 }
 
 export function useEleveFicheData(eleveId: string) {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.eleveFiche(eleveId, viewingLabel ?? undefined), [eleveId, viewingLabel]),
+    useCallback(() => readApi.eleveFiche(eleveId, viewingId ?? undefined), [eleveId, viewingId]),
     undefined, 'eleves',
   );
 }
 
 export function useNiveauxListData() {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.niveaux(viewingLabel ?? undefined), [viewingLabel]),
+    useCallback(() => readApi.niveaux(viewingId ?? undefined), [viewingId]),
     undefined, 'niveaux',
   );
 }

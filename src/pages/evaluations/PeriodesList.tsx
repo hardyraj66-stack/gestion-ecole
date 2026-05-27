@@ -202,22 +202,23 @@ export function PeriodesList() {
   const { updatePeriode, terminerPeriode } = usePeriodes();
   const { viewing, isViewingArchive } = useViewing();
   const annee = isViewingArchive ? viewing : (active || preparation);
+  const anneeId = annee?.id || '';
   const annee_scolaire = annee?.label || '';
 
-  const { data, loading, error } = usePeriodesData(annee_scolaire);
+  const { data, loading, error } = usePeriodesData(anneeId);
 
   const initDoneRef = useRef<string>('');
   useEffect(() => {
     if (isViewingArchive) return;
-    if (!anneeLoading && !loading && annee_scolaire && active && Array.isArray(data) && data.length === 0 && initDoneRef.current !== annee_scolaire) {
-      initDoneRef.current = annee_scolaire;
+    if (!anneeLoading && !loading && anneeId && active && Array.isArray(data) && data.length === 0 && initDoneRef.current !== anneeId) {
+      initDoneRef.current = anneeId;
       fetch(`${API_BASE_URL}/periodes/init`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ annee_scolaire }),
+        body: JSON.stringify({ anneeScolaireId: anneeId }),
       });
     }
-  }, [isViewingArchive, anneeLoading, loading, annee_scolaire, active, data]);
+  }, [isViewingArchive, anneeLoading, loading, anneeId, active, data]);
 
   const [editing, setEditing]     = useState<EditState | null>(null);
   const [saving, setSaving]       = useState(false);

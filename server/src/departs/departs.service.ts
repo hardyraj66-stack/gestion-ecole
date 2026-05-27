@@ -21,7 +21,7 @@ export class DepartsService {
     return this.quitteModel.findOne({ eleve_id: eleveId }).exec();
   }
 
-  async enregistrerDepart(eleveId: string, data: { raison: string; motif: string; commentaire?: string; annee_scolaire: string }) {
+  async enregistrerDepart(eleveId: string, data: { raison: string; motif: string; commentaire?: string; anneeScolaireId: string }) {
     const eleve = await this.eleveModel.findById(eleveId).exec();
     if (!eleve) throw new BadRequestException('Élève introuvable');
     const statutActuel = eleve.statut ?? 'actif';
@@ -42,7 +42,7 @@ export class DepartsService {
       raison: data.raison,
       motif: data.motif,
       commentaire: data.commentaire || '',
-      annee_scolaire: data.annee_scolaire,
+      anneeScolaireId: data.anneeScolaireId,
     }).save();
 
     await this.eleveModel.findByIdAndUpdate(eleveId, { statut: 'parti' }).exec();

@@ -5,6 +5,7 @@ export interface Classe {
   nom: string;
   niveau: string;
   annee_scolaire: string;
+  anneeScolaireId?: string;
   capacite: number;
   salle: string;
   salle_type: SalleType;
@@ -50,6 +51,7 @@ export interface Avertissement {
   eleve_id: string;
   motif: string;
   annee_scolaire: string;
+  anneeScolaireId?: string;
   date: string;
   commentaire?: string;
   type: 'comportement' | 'degats' | 'absence' | 'autre';
@@ -77,6 +79,7 @@ export interface EleveExclu {
   commentaire?: string;
   nb_avertissements_au_moment: number;
   annee_scolaire: string;
+  anneeScolaireId?: string;
 }
 
 export interface EleveQuitte {
@@ -91,6 +94,7 @@ export interface EleveQuitte {
   commentaire?: string;
   motif: 'changement_ecole' | 'demenagement' | 'raison_familiale' | 'autre';
   annee_scolaire: string;
+  anneeScolaireId?: string;
 }
 
 export interface Absence {
@@ -148,6 +152,7 @@ export interface PeriodeEvaluation {
   trimestre: Trimestre;
   type: PeriodeType;
   annee_scolaire: string;
+  anneeScolaireId?: string;
   date_debut: string | null;
   date_fin: string | null;
 }

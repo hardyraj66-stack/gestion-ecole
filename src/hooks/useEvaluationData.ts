@@ -10,11 +10,11 @@ export function useEvaluationsListData(
   statut?: string,
   page = 1,
 ) {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   return usePageFetch(
     useCallback(
-      () => readApi.evaluationsList(classeId, matiereId, trimestre, statut, page, viewingLabel ?? undefined),
-      [classeId, matiereId, trimestre, statut, page, viewingLabel],
+      () => readApi.evaluationsList(classeId, matiereId, trimestre, statut, page, viewingId ?? undefined),
+      [classeId, matiereId, trimestre, statut, page, viewingId],
     ),
     undefined,
     'evaluations',

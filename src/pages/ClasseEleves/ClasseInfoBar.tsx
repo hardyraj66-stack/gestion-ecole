@@ -21,15 +21,15 @@ interface ClasseInfoBarProps {
 
 export function ClasseInfoBar({ classe, filteredCount, totalCount, inputValue, hasFilter, onInputChange, onCommit, onSuggestionSelect, onReset }: ClasseInfoBarProps) {
   const { t } = useTranslation();
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   const isVariable = classe.salle_type === 'variable';
   const pct = Math.round((totalCount / classe.capacite) * 100);
   const pleine = pct >= 100;
 
   const fetchSuggestions = useCallback(async (q: string): Promise<Suggestion[]> => {
-    const res = await readApi.classeEleves(classe.source_id || classe.id, 1, 8, q, undefined, viewingLabel ?? undefined);
+    const res = await readApi.classeEleves(classe.source_id || classe.id, 1, 8, q, undefined, viewingId ?? undefined);
     return (res.eleves || []).map((e: any) => ({ id: e.id, label: `${e.prenom} ${e.nom}`, sublabel: e.email || undefined }));
-  }, [classe.source_id, classe.id, viewingLabel]);
+  }, [classe.source_id, classe.id, viewingId]);
 
   const handleSelect = (s: Suggestion) => {
     onSuggestionSelect(s.id, s.label);

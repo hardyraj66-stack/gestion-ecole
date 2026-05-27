@@ -200,9 +200,11 @@ export class ViewBuilderService implements OnModuleInit {
     const historique = (eleve as any).historique_classes as any[] || [];
 
     for (const h of historique) {
+      const hAnneeId = h.anneeScolaireId || '';
       ops.push({ updateOne: {
         filter: { source_id: eleveId, annee_scolaire: h.annee_scolaire },
         update: { $set: { source_id: eleveId, annee_scolaire: h.annee_scolaire,
+          anneeScolaireId: hAnneeId,
           classe_id: h.classe_id, classe_nom: h.classe_nom || '', classe_niveau: h.niveau || '',
           ...base }},
         upsert: true,
@@ -210,11 +212,13 @@ export class ViewBuilderService implements OnModuleInit {
     }
 
     const anneeActuelle = classe ? (classe as any).annee_scolaire || '' : '';
+    const anneeActuelleId = classe ? (classe as any).anneeScolaireId || '' : '';
     const dejaDansHistorique = historique.some((h: any) => h.annee_scolaire === anneeActuelle);
     if (!dejaDansHistorique) {
       ops.push({ updateOne: {
         filter: { source_id: eleveId, annee_scolaire: anneeActuelle },
         update: { $set: { source_id: eleveId, annee_scolaire: anneeActuelle,
+          anneeScolaireId: anneeActuelleId,
           classe_id: eleve.classe_id, classe_nom: classe?.nom || '',
           classe_niveau: (classe as any)?.niveau || '',
           ...base }},
@@ -266,6 +270,7 @@ export class ViewBuilderService implements OnModuleInit {
         eleve_nom: eleve?.nom || '', eleve_prenom: eleve?.prenom || '',
         matiere_nom: mat?.nom || '', matiere_code: mat?.code || '',
         annee_scolaire: (note as any).annee_scolaire || '',
+        anneeScolaireId: (note as any).anneeScolaireId || '',
       }},
       { upsert: true },
     ).exec();
@@ -346,6 +351,7 @@ export class ViewBuilderService implements OnModuleInit {
         matiere_id: ev.matiere_id, matiere_nom: matiere?.nom || '',
         matiere_code: matiere?.code || '',
         trimestre: ev.trimestre, annee_scolaire: ev.annee_scolaire,
+        anneeScolaireId: ev.anneeScolaireId || '',
         date: ev.date, statut: ev.statut,
         notes: notesEnrichies,
         nb_notes_saisies: notesSaisies.length,
@@ -378,7 +384,8 @@ export class ViewBuilderService implements OnModuleInit {
       const sid = c._id.toString();
       const nb = eleves.filter(e => e.classe_id === sid).length;
       return { updateOne: { filter: { source_id: sid }, update: { $set: {
-        source_id: sid, nom: c.nom, niveau: c.niveau, annee_scolaire: c.annee_scolaire,
+        source_id: sid, nom: c.nom, niveau: c.niveau, annee_scolaire: (c as any).annee_scolaire,
+        anneeScolaireId: (c as any).anneeScolaireId || '',
         capacite: c.capacite, salle: c.salle, salle_type: c.salle_type,
         nb_eleves: nb, taux: c.capacite > 0 ? Math.min(Math.round((nb / c.capacite) * 100), 100) : 0,
       }}, upsert: true }};
@@ -409,10 +416,12 @@ export class ViewBuilderService implements OnModuleInit {
       // Entrée pour chaque année via historique_classes
       const historique = (e as any).historique_classes as any[] || [];
       for (const h of historique) {
+        const hAnneeId = h.anneeScolaireId || '';
         ops.push({ updateOne: {
           filter: { source_id: sid, annee_scolaire: h.annee_scolaire },
           update: { $set: {
             source_id: sid, annee_scolaire: h.annee_scolaire,
+            anneeScolaireId: hAnneeId,
             classe_id: h.classe_id, classe_nom: h.classe_nom || '', classe_niveau: h.niveau || '',
             ...base,
           }},
@@ -423,12 +432,14 @@ export class ViewBuilderService implements OnModuleInit {
       // Entrée pour l'année courante (classe_id actuelle)
       const cl = cm.get(e.classe_id);
       const anneeActuelle = cl ? (cl as any).annee_scolaire || '' : '';
+      const anneeActuelleId = cl ? (cl as any).anneeScolaireId || '' : '';
       const dejaDansHistorique = historique.some((h: any) => h.annee_scolaire === anneeActuelle);
       if (!dejaDansHistorique) {
         ops.push({ updateOne: {
           filter: { source_id: sid, annee_scolaire: anneeActuelle },
           update: { $set: {
             source_id: sid, annee_scolaire: anneeActuelle,
+            anneeScolaireId: anneeActuelleId,
             classe_id: e.classe_id, classe_nom: cl?.nom || '', classe_niveau: (cl as any)?.niveau || '',
             ...base,
           }},
@@ -473,6 +484,7 @@ export class ViewBuilderService implements OnModuleInit {
         eleve_nom: el?.nom || '', eleve_prenom: el?.prenom || '',
         matiere_nom: mat?.nom || '', matiere_code: mat?.code || '',
         annee_scolaire: (n as any).annee_scolaire || '',
+        anneeScolaireId: (n as any).anneeScolaireId || '',
       }}, upsert: true }};
     });
     const ids = notes.map(n => n._id.toString());
@@ -588,6 +600,7 @@ export class ViewBuilderService implements OnModuleInit {
               matiere_code: matiere?.code || '',
               trimestre: ev.trimestre,
               annee_scolaire: ev.annee_scolaire,
+              anneeScolaireId: ev.anneeScolaireId || '',
               date: ev.date,
               statut: ev.statut,
               notes: notesEnrichies,

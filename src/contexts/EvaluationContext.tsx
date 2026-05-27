@@ -8,7 +8,7 @@ interface CreateEvaluationDto {
   classe_id: string;
   matiere_id: string;
   trimestre: 1 | 2 | 3;
-  annee_scolaire: string;
+  anneeScolaireId: string;
   date: string;
 }
 

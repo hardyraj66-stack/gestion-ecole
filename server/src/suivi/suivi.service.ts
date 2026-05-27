@@ -17,61 +17,62 @@ export class SuiviService {
     @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
   ) {}
 
-  private async getAnneeActiveLabel(): Promise<string> {
+  /** Retourne l'ID de l'année scolaire active */
+  private async getAnneeActiveId(): Promise<string> {
     const annee = await this.anneeModel.findOne({ statut: 'active' }).exec();
-    return annee?.label || '';
+    return annee ? (annee as any)._id.toString() : '';
   }
 
   // ===== AVERTISSEMENTS =====
-  findAvertissements(eleveId: string, annee_scolaire?: string) {
+  findAvertissements(eleveId: string, anneeId?: string) {
     const filter: any = { eleve_id: eleveId };
-    if (annee_scolaire) filter.annee_scolaire = annee_scolaire;
+    if (anneeId) filter.anneeScolaireId = anneeId;
     return this.avertModel.find(filter).sort({ date: -1 }).exec();
   }
 
   async createAvertissement(data: any) {
-    const annee_scolaire = data.annee_scolaire || await this.getAnneeActiveLabel();
-    const saved = await new this.avertModel({ ...data, annee_scolaire }).save();
-    const count = await this.avertModel.countDocuments({ eleve_id: data.eleve_id, annee_scolaire }).exec();
+    const anneeScolaireId = data.anneeScolaireId || await this.getAnneeActiveId();
+    const saved = await new this.avertModel({ ...data, anneeScolaireId }).save();
+    const count = await this.avertModel.countDocuments({ eleve_id: data.eleve_id, anneeScolaireId }).exec();
     return { avertissement: saved, count, escalade: count >= SEUIL_ESCALADE };
   }
 
   deleteAvertissement(id: string) { return this.avertModel.findByIdAndDelete(id).exec(); }
 
-  async countAvertissements(eleveId: string, annee_scolaire?: string) {
+  async countAvertissements(eleveId: string, anneeId?: string) {
     const filter: any = { eleve_id: eleveId };
-    if (annee_scolaire) filter.annee_scolaire = annee_scolaire;
+    if (anneeId) filter.anneeScolaireId = anneeId;
     return this.avertModel.countDocuments(filter).exec();
   }
 
   // ===== ABSENCES / RETARDS =====
-  findAbsences(eleveId: string, annee_scolaire?: string) {
+  findAbsences(eleveId: string, anneeId?: string) {
     const filter: any = { eleve_id: eleveId, type: 'absence' };
-    if (annee_scolaire) filter.annee_scolaire = annee_scolaire;
+    if (anneeId) filter.anneeScolaireId = anneeId;
     return this.absenceModel.find(filter).sort({ date: -1 }).exec();
   }
-  findRetards(eleveId: string, annee_scolaire?: string) {
+  findRetards(eleveId: string, anneeId?: string) {
     const filter: any = { eleve_id: eleveId, type: 'retard' };
-    if (annee_scolaire) filter.annee_scolaire = annee_scolaire;
+    if (anneeId) filter.anneeScolaireId = anneeId;
     return this.absenceModel.find(filter).sort({ date: -1 }).exec();
   }
   async createAbsence(data: any) {
-    const annee_scolaire = data.annee_scolaire || await this.getAnneeActiveLabel();
-    return new this.absenceModel({ ...data, annee_scolaire }).save();
+    const anneeScolaireId = data.anneeScolaireId || await this.getAnneeActiveId();
+    return new this.absenceModel({ ...data, anneeScolaireId }).save();
   }
   deleteAbsence(id: string) { return this.absenceModel.findByIdAndDelete(id).exec(); }
 
   // ===== CONVOCATIONS PARENTS =====
-  findConvocations(eleveId: string, annee_scolaire?: string) {
+  findConvocations(eleveId: string, anneeId?: string) {
     const filter: any = { eleve_id: eleveId };
-    if (annee_scolaire) filter.annee_scolaire = annee_scolaire;
+    if (anneeId) filter.anneeScolaireId = anneeId;
     return this.convocationModel.find(filter).sort({ date: -1 }).exec();
   }
 
   async createConvocation(eleveId: string, data: any) {
-    const annee_scolaire = data.annee_scolaire || await this.getAnneeActiveLabel();
-    const nb = await this.countAvertissements(eleveId, annee_scolaire);
-    return new this.convocationModel({ ...data, eleve_id: eleveId, nb_avertissements: nb, annee_scolaire }).save();
+    const anneeScolaireId = data.anneeScolaireId || await this.getAnneeActiveId();
+    const nb = await this.countAvertissements(eleveId, anneeScolaireId);
+    return new this.convocationModel({ ...data, eleve_id: eleveId, nb_avertissements: nb, anneeScolaireId }).save();
   }
 
   async updateConvocation(id: string, data: any) {

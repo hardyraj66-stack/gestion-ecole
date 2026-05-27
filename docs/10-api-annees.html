@@ -61,7 +61,7 @@
 <p><code>GET /annees/:id/snapshot</code> retourne :</p>
 <pre><code>{
   annee:    AnneeScolaire,
-  classes:  Classe[]       // filtrées par annee_scolaire === label
+  classes:  Classe[]       // filtrées par anneeScolaireId (avec fallback sur annee_scolaire pour données non migrées)
   eleves:   Eleve[]        // filtrés par classe_id ∈ classes
   notes:    Note[]          // filtrées par eleve_id ∈ eleves
   creneaux: Creneau[]      // filtrés par classe_id ∈ classes

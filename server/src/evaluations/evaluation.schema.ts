@@ -28,8 +28,13 @@ export class Evaluation extends Document {
   @Prop({ required: true, enum: [1, 2, 3] })
   trimestre: number;
 
-  @Prop({ required: true })
+  /** @deprecated Utiliser anneeScolaireId — conservé pour doublon temporaire */
+  @Prop({ required: false, default: '' })
   annee_scolaire: string;
+
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ required: false, default: '' })
+  anneeScolaireId: string;
 
   @Prop({ required: true })
   date: string;

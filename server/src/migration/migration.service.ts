@@ -23,6 +23,7 @@ export class MigrationService implements OnModuleInit {
     await this.migrateAbsences();
     await this.migrateConvocations();
     await this.migrateHistoriqueClasses();
+    await this.migrateAnneeScolaireIds();
   }
 
   // Déduit l'année scolaire depuis une date ISO "YYYY-MM-DD"
@@ -84,6 +85,7 @@ export class MigrationService implements OnModuleInit {
       if (!classeActuelle) continue;
 
       const anneeClasse = (classeActuelle as any).annee_scolaire as string | undefined;
+      const anneeClasseId = (classeActuelle as any).anneeScolaireId as string | undefined;
       if (!anneeClasse) continue;
 
       // Vérifier si l'entrée pour cette année existe déjà
@@ -95,6 +97,7 @@ export class MigrationService implements OnModuleInit {
             $push: {
               historique_classes: {
                 annee_scolaire: anneeClasse,
+                anneeScolaireId: anneeClasseId || '',
                 classe_id: eleve.classe_id,
                 classe_nom: (classeActuelle as any).nom || '',
                 niveau: (classeActuelle as any).niveau || '',
@@ -108,5 +111,56 @@ export class MigrationService implements OnModuleInit {
     }
 
     this.logger.log(`Migration historique_classes : ${updated} élèves mis à jour`);
+  }
+
+  /**
+   * Migration automatique au démarrage : remplit anneeScolaireId dans les collections
+   * qui n'ont pas encore été migrées (fallback si le script one-shot n'a pas tourné).
+   */
+  private async migrateAnneeScolaireIds() {
+    const annees = await this.anneeModel.find().lean().exec();
+    if (annees.length === 0) return;
+
+    const labelToId = new Map<string, string>(
+      annees.map((a: any) => [a.label as string, a._id.toString()] as [string, string])
+    );
+
+    // Migrer les classes sans anneeScolaireId
+    const classesSans = await this.classeModel.find({ anneeScolaireId: { $in: ['', null, undefined] } }).lean().exec();
+    if (classesSans.length > 0) {
+      this.logger.log(`Migration anneeScolaireId : ${classesSans.length} classe(s) à migrer`);
+      const ops = classesSans
+        .filter((c: any) => labelToId.has((c as any).annee_scolaire))
+        .map((c: any) => ({
+          updateOne: {
+            filter: { _id: c._id },
+            update: { $set: { anneeScolaireId: labelToId.get((c as any).annee_scolaire) } },
+          },
+        }));
+      if (ops.length > 0) await this.classeModel.bulkWrite(ops as any);
+    }
+
+    // Migrer les entrées historique_classes des élèves
+    const elevesAvecHistoriqueSans = await this.eleveModel.find({
+      historique_classes: { $elemMatch: { anneeScolaireId: { $in: ['', null, undefined] } } },
+    }).lean().exec();
+
+    if (elevesAvecHistoriqueSans.length > 0) {
+      this.logger.log(`Migration anneeScolaireId : ${elevesAvecHistoriqueSans.length} élève(s) avec historique à migrer`);
+      for (const eleve of elevesAvecHistoriqueSans) {
+        const historique: any[] = (eleve as any).historique_classes || [];
+        const newHistorique = historique.map((h: any) => {
+          if (h.anneeScolaireId) return h;
+          const anneeId = labelToId.get(h.annee_scolaire);
+          return anneeId ? { ...h, anneeScolaireId: anneeId } : h;
+        });
+        await this.eleveModel.updateOne(
+          { _id: eleve._id },
+          { $set: { historique_classes: newHistorique } },
+        );
+      }
+    }
+
+    this.logger.log('Migration anneeScolaireId : terminée');
   }
 }

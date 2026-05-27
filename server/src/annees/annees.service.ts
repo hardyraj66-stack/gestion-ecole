@@ -107,16 +107,23 @@ export class AnneesService {
     });
 
     await annee.save();
-    await this.periodesService.initForAnnee(annee.label, annee.debut);
+    const anneeId = (annee as any)._id.toString();
+    await this.periodesService.initForAnnee(anneeId, annee.debut);
 
     // Snapshot des élèves actifs dans historique_classes pour l'année qui démarre
-    await this.snapshotElevesHistorique(annee.label);
+    await this.snapshotElevesHistorique(anneeId, annee.label);
 
     return annee;
   }
 
-  private async snapshotElevesHistorique(anneeLabel: string) {
-    const classes = await this.classeModel.find({ annee_scolaire: anneeLabel }).lean().exec();
+  private async snapshotElevesHistorique(anneeId: string, anneeLabel: string) {
+    // Filtrer par anneeScolaireId (ID normalisé) avec fallback sur annee_scolaire
+    const classes = await this.classeModel.find({
+      $or: [
+        { anneeScolaireId: anneeId },
+        { annee_scolaire: anneeLabel },
+      ],
+    }).lean().exec();
     const classeIds = classes.map(c => c._id.toString());
     const classeMap = new Map(classes.map(c => [c._id.toString(), c]));
 
@@ -125,7 +132,9 @@ export class AnneesService {
     const ops = [];
     for (const e of eleves) {
       const historique = (e as any).historique_classes as any[] || [];
-      const dejaPourAnnee = historique.some((h: any) => h.annee_scolaire === anneeLabel);
+      const dejaPourAnnee = historique.some(
+        (h: any) => h.anneeScolaireId === anneeId || h.annee_scolaire === anneeLabel,
+      );
       if (!dejaPourAnnee) {
         const cl = classeMap.get(e.classe_id);
         ops.push({
@@ -134,7 +143,8 @@ export class AnneesService {
             update: {
               $push: {
                 historique_classes: {
-                  annee_scolaire: anneeLabel,
+                  annee_scolaire: anneeLabel,   // conservé pour affichage
+                  anneeScolaireId: anneeId,      // nouvelle référence normalisée
                   classe_id: e.classe_id,
                   classe_nom: (cl as any)?.nom || '',
                   niveau: (cl as any)?.niveau || '',
@@ -195,8 +205,14 @@ export class AnneesService {
     const annee = await this.model.findById(id).exec();
     if (!annee) return null;
 
-    // Classes de cette année
-    const classes = await this.classeModel.find({ annee_scolaire: annee.label }).exec();
+    const anneeId = (annee as any)._id.toString();
+    // Classes de cette année — par ID (normalisé) avec fallback sur le label
+    const classes = await this.classeModel.find({
+      $or: [
+        { anneeScolaireId: anneeId },
+        { annee_scolaire: annee.label },
+      ],
+    }).exec();
     const classeIds = classes.map(c => (c as any)._id.toString());
 
     // Élèves dans ces classes

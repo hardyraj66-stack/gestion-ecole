@@ -10,14 +10,14 @@ export class PeriodesController {
   ) {}
 
   @Get()
-  getAll(@Query('annee_scolaire') annee_scolaire: string) {
-    return this.service.findAll(annee_scolaire);
+  getAll(@Query('anneeScolaireId') anneeScolaireId: string) {
+    return this.service.findAll(anneeScolaireId);
   }
 
   @Post('init')
-  async init(@Body() body: { annee_scolaire: string }) {
-    await this.service.initForAnnee(body.annee_scolaire);
-    const periodes = await this.service.findAll(body.annee_scolaire);
+  async init(@Body() body: { anneeScolaireId: string }) {
+    await this.service.initForAnnee(body.anneeScolaireId);
+    const periodes = await this.service.findAll(body.anneeScolaireId);
     this.events.emit('periode:updated', {});
     return periodes;
   }

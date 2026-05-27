@@ -18,8 +18,9 @@ export class PeriodesService {
     return 'terminee';
   }
 
-  async findAll(annee_scolaire: string) {
-    const periodes = await this.periodeModel.find({ annee_scolaire }).sort({ trimestre: 1, type: 1 }).exec();
+  /** @param anneeScolaireId ID de l'AnneeScolaire (nouvelle API normalisée) */
+  async findAll(anneeScolaireId: string) {
+    const periodes = await this.periodeModel.find({ anneeScolaireId }).sort({ trimestre: 1, type: 1 }).exec();
     return periodes.map(p => ({ ...(p.toJSON() as any), statut: this.computeStatut(p) }));
   }
 
@@ -42,9 +43,10 @@ export class PeriodesService {
 
   /**
    * Initialise les 6 périodes d'une année scolaire si elles n'existent pas encore.
+   * @param anneeScolaireId ID de l'AnneeScolaire (nouvelle API normalisée)
    */
-  async initForAnnee(annee_scolaire: string, startDate?: string) {
-    const existing = await this.periodeModel.countDocuments({ annee_scolaire }).exec();
+  async initForAnnee(anneeScolaireId: string, startDate?: string) {
+    const existing = await this.periodeModel.countDocuments({ anneeScolaireId }).exec();
     if (existing >= 6) return;
     const today = startDate ?? new Date().toISOString().slice(0, 10);
     const periodes = [
@@ -57,8 +59,8 @@ export class PeriodesService {
     ];
     for (const p of periodes) {
       await this.periodeModel.updateOne(
-        { trimestre: p.trimestre, type: p.type, annee_scolaire },
-        { $setOnInsert: { trimestre: p.trimestre, type: p.type, annee_scolaire, date_debut: p.date_debut, date_fin: p.date_fin } },
+        { trimestre: p.trimestre, type: p.type, anneeScolaireId },
+        { $setOnInsert: { trimestre: p.trimestre, type: p.type, anneeScolaireId, date_debut: p.date_debut, date_fin: p.date_fin } },
         { upsert: true },
       ).exec();
     }
@@ -76,7 +78,7 @@ export class PeriodesService {
       const ds = await this.periodeModel.findOne({
         trimestre: periode.trimestre,
         type: 'ds',
-        annee_scolaire: periode.annee_scolaire,
+        anneeScolaireId: (periode as any).anneeScolaireId,
       }).exec();
       if (ds?.date_fin && !ds.terminee && date_debut <= ds.date_fin) {
         throw new BadRequestException(

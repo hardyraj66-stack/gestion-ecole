@@ -15,13 +15,13 @@ interface Props {
   eleveId: string;
   nomComplet: string;
   statut: EleveStatut;
-  anneeActive: string | null;
+  anneeActiveId: string | null;
   nbAvertissements: number;
   readOnly: boolean;
   onStatutChange: (statut: EleveStatut) => void;
 }
 
-export function FicheStatut({ eleveId, nomComplet, statut, anneeActive, nbAvertissements, readOnly, onStatutChange }: Props) {
+export function FicheStatut({ eleveId, nomComplet, statut, anneeActiveId, nbAvertissements, readOnly, onStatutChange }: Props) {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const [mode, setMode] = useState<'idle' | 'exclure' | 'depart'>('idle');
@@ -49,7 +49,7 @@ export function FicheStatut({ eleveId, nomComplet, statut, anneeActive, nbAverti
     setSubmitting(true);
     const res = await fetch(`${API_BASE_URL}/exclusions/eleve/${eleveId}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...excluForm, annee_scolaire: anneeActive || '', nb_avertissements: nbAvertissements }),
+      body: JSON.stringify({ ...excluForm, anneeScolaireId: anneeActiveId || '', nb_avertissements: nbAvertissements }),
     });
     if (res.ok) { onStatutChange('exclu'); setMode('idle'); }
     setSubmitting(false);
@@ -67,7 +67,7 @@ export function FicheStatut({ eleveId, nomComplet, statut, anneeActive, nbAverti
     setSubmitting(true);
     const res = await fetch(`${API_BASE_URL}/departs/eleve/${eleveId}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...departForm, annee_scolaire: anneeActive || '' }),
+      body: JSON.stringify({ ...departForm, anneeScolaireId: anneeActiveId || '' }),
     });
     if (res.ok) { onStatutChange('parti'); setMode('idle'); }
     setSubmitting(false);

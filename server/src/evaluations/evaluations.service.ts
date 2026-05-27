@@ -18,7 +18,8 @@ export class EvaluationsService {
     classe_id: string;
     matiere_id: string;
     trimestre: 1 | 2 | 3;
-    annee_scolaire: string;
+    /** Référence ID vers la collection AnneeScolaire (nouveau champ normalisé) */
+    anneeScolaireId: string;
     date: string;
   }) {
     if (data.type === 'evaluation') {

@@ -14,9 +14,13 @@ export class Convocation extends Document {
   @Prop({ default: false }) effectuee: boolean;
   // avertissements liés au moment de la convocation (snapshot du count)
   @Prop({ default: 0 }) nb_avertissements: number;
+  /** @deprecated Utiliser anneeScolaireId — conservé pour doublon temporaire */
   @Prop({ default: '' }) annee_scolaire: string;
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ default: '' }) anneeScolaireId: string;
 }
 
 export const ConvocationSchema = SchemaFactory.createForClass(Convocation);
 ConvocationSchema.index({ eleve_id: 1 });
 ConvocationSchema.index({ eleve_id: 1, annee_scolaire: 1 });
+ConvocationSchema.index({ eleve_id: 1, anneeScolaireId: 1 });

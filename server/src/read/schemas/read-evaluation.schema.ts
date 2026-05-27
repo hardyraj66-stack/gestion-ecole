@@ -18,7 +18,10 @@ export class ReadEvaluation extends Document {
   @Prop({ default: '' }) matiere_nom: string;
   @Prop({ default: '' }) matiere_code: string;
   @Prop({ default: 1 }) trimestre: number;
+  /** Label de l'année pour l'affichage (ex: "2024-2025") */
   @Prop({ default: '' }) annee_scolaire: string;
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ default: '' }) anneeScolaireId: string;
   @Prop({ default: '' }) date: string;
   @Prop({ default: 'brouillon' }) statut: string;
   @Prop({ type: [Object], default: [] })

@@ -7,8 +7,8 @@ export class SuiviController {
 
   // ===== AVERTISSEMENTS =====
   @Get(':eleveId/avertissements')
-  getAvertissements(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
-    return this.service.findAvertissements(id, anneeLabel || undefined);
+  getAvertissements(@Param('eleveId') id: string, @Query('anneeId') anneeId?: string) {
+    return this.service.findAvertissements(id, anneeId || undefined);
   }
 
   @Post(':eleveId/avertissements')
@@ -25,8 +25,8 @@ export class SuiviController {
 
   // ===== ABSENCES =====
   @Get(':eleveId/absences')
-  getAbsences(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
-    return this.service.findAbsences(id, anneeLabel || undefined);
+  getAbsences(@Param('eleveId') id: string, @Query('anneeId') anneeId?: string) {
+    return this.service.findAbsences(id, anneeId || undefined);
   }
 
   @Post(':eleveId/absences')
@@ -36,8 +36,8 @@ export class SuiviController {
 
   // ===== RETARDS =====
   @Get(':eleveId/retards')
-  getRetards(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
-    return this.service.findRetards(id, anneeLabel || undefined);
+  getRetards(@Param('eleveId') id: string, @Query('anneeId') anneeId?: string) {
+    return this.service.findRetards(id, anneeId || undefined);
   }
 
   @Post(':eleveId/retards')
@@ -54,8 +54,8 @@ export class SuiviController {
 
   // ===== CONVOCATIONS PARENTS =====
   @Get(':eleveId/convocations')
-  getConvocations(@Param('eleveId') id: string, @Query('anneeLabel') anneeLabel?: string) {
-    return this.service.findConvocations(id, anneeLabel || undefined);
+  getConvocations(@Param('eleveId') id: string, @Query('anneeId') anneeId?: string) {
+    return this.service.findConvocations(id, anneeId || undefined);
   }
 
   @Post(':eleveId/convocations')

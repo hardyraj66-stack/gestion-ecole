@@ -21,7 +21,10 @@ export class ReadNote extends Document {
   @Prop({ default: '' }) eleve_prenom: string;
   @Prop({ default: '' }) matiere_nom: string;
   @Prop({ default: '' }) matiere_code: string;
+  /** Label de l'année pour l'affichage (ex: "2024-2025") */
   @Prop({ default: '' }) annee_scolaire: string;
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ default: '' }) anneeScolaireId: string;
 }
 
 export const ReadNoteSchema = SchemaFactory.createForClass(ReadNote);
@@ -29,3 +32,4 @@ ReadNoteSchema.index({ source_id: 1 }, { unique: true });
 ReadNoteSchema.index({ eleve_id: 1, trimestre: 1 });
 ReadNoteSchema.index({ matiere_id: 1, trimestre: 1 });
 ReadNoteSchema.index({ annee_scolaire: 1 });
+ReadNoteSchema.index({ anneeScolaireId: 1 });

@@ -18,9 +18,13 @@ export class EleveQuitte extends Document {
   @Prop({ default: '' }) commentaire: string;
   @Prop({ required: true, enum: ['changement_ecole', 'demenagement', 'raison_familiale', 'autre'] })
   motif: string;
-  @Prop({ required: true }) annee_scolaire: string;
+  /** @deprecated Utiliser anneeScolaireId — conservé pour doublon temporaire */
+  @Prop({ required: false, default: '' }) annee_scolaire: string;
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ required: false, default: '' }) anneeScolaireId: string;
 }
 
 export const EleveQuitteSchema = SchemaFactory.createForClass(EleveQuitte);
 EleveQuitteSchema.index({ eleve_id: 1 });
 EleveQuitteSchema.index({ eleve_id: 1, annee_scolaire: 1 });
+EleveQuitteSchema.index({ eleve_id: 1, anneeScolaireId: 1 });

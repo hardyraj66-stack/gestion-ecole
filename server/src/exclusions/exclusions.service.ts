@@ -21,7 +21,7 @@ export class ExclusionsService {
     return this.excluModel.findOne({ eleve_id: eleveId }).exec();
   }
 
-  async exclureEleve(eleveId: string, data: { raison: string; commentaire?: string; annee_scolaire: string; nb_avertissements?: number }) {
+  async exclureEleve(eleveId: string, data: { raison: string; commentaire?: string; anneeScolaireId: string; nb_avertissements?: number }) {
     const eleve = await this.eleveModel.findById(eleveId).exec();
     if (!eleve) throw new BadRequestException('Élève introuvable');
     const statutActuel = eleve.statut ?? 'actif';
@@ -41,7 +41,7 @@ export class ExclusionsService {
       raison: data.raison,
       commentaire: data.commentaire || '',
       nb_avertissements_au_moment: data.nb_avertissements || 0,
-      annee_scolaire: data.annee_scolaire,
+      anneeScolaireId: data.anneeScolaireId,
     }).save();
 
     await this.eleveModel.findByIdAndUpdate(eleveId, { statut: 'exclu' }).exec();

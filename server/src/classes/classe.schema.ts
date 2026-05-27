@@ -16,8 +16,13 @@ export class Classe extends Document {
   @Prop({ required: true })
   niveau: string;
 
-  @Prop({ required: true })
+  /** @deprecated Utiliser anneeScolaireId — conservé pour doublon temporaire et affichage */
+  @Prop({ required: false, default: '' })
   annee_scolaire: string;
+
+  /** Référence ID vers la collection AnneeScolaire */
+  @Prop({ required: false, default: '' })
+  anneeScolaireId: string;
 
   @Prop({ required: true, default: 30 })
   capacite: number;
@@ -35,5 +40,7 @@ export class Classe extends Document {
 export const ClasseSchema = SchemaFactory.createForClass(Classe);
 ClasseSchema.index({ annee_scolaire: 1 });
 ClasseSchema.index({ annee_scolaire: 1, actif: 1 });
+ClasseSchema.index({ anneeScolaireId: 1 });
+ClasseSchema.index({ anneeScolaireId: 1, actif: 1 });
 ClasseSchema.index({ salle: 1, salle_type: 1, actif: 1 });
 ClasseSchema.index({ niveau: 1, actif: 1 });

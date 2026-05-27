@@ -50,11 +50,20 @@ export class Eleve extends Document {
 
   // Historique des classes par année scolaire — alimenté lors de chaque demarrer()
   @Prop({
-    type: [{ annee_scolaire: String, classe_id: String, classe_nom: String, niveau: String, statut: String }],
+    type: [{
+      annee_scolaire: String,
+      anneeScolaireId: String,
+      classe_id: String,
+      classe_nom: String,
+      niveau: String,
+      statut: String,
+    }],
     default: [],
   })
   historique_classes: Array<{
     annee_scolaire: string;
+    /** Référence ID vers la collection AnneeScolaire */
+    anneeScolaireId?: string;
     classe_id: string;
     classe_nom: string;
     niveau: string;
@@ -65,3 +74,4 @@ export class Eleve extends Document {
 export const EleveSchema = SchemaFactory.createForClass(Eleve);
 EleveSchema.index({ classe_id: 1 });
 EleveSchema.index({ 'historique_classes.annee_scolaire': 1 });
+EleveSchema.index({ 'historique_classes.anneeScolaireId': 1 });

@@ -14,17 +14,17 @@ function qs(params: Record<string, string | number | undefined>): string {
 }
 
 export const readApi = {
-  dashboard: (classesPage?: number, classesLimit?: number, anneeLabel?: string) =>
-    get<any>(`/dashboard${qs({ classesPage, classesLimit, anneeLabel })}`),
+  dashboard: (classesPage?: number, classesLimit?: number, anneeId?: string) =>
+    get<any>(`/dashboard${qs({ classesPage, classesLimit, anneeId })}`),
 
-  classesList: (page?: number, limit?: number, search?: string, niveau?: string, anneeLabel?: string) =>
-    get<any>(`/classes${qs({ page, limit, search, niveau, anneeLabel })}`),
+  classesList: (page?: number, limit?: number, search?: string, niveau?: string, anneeId?: string) =>
+    get<any>(`/classes${qs({ page, limit, search, niveau, anneeId })}`),
 
-  classeEleves: (id: string, page?: number, limit?: number, search?: string, eleveId?: string, anneeLabel?: string) =>
-    get<any>(`/classes/${id}/eleves${qs({ page, limit, search, eleveId, anneeLabel })}`),
+  classeEleves: (id: string, page?: number, limit?: number, search?: string, eleveId?: string, anneeId?: string) =>
+    get<any>(`/classes/${id}/eleves${qs({ page, limit, search, eleveId, anneeId })}`),
 
-  elevesList: (page?: number, limit?: number, search?: string, classeId?: string, eleveId?: string, anneeLabel?: string) =>
-    get<any>(`/eleves${qs({ page, limit, search, classeId, eleveId, anneeLabel })}`),
+  elevesList: (page?: number, limit?: number, search?: string, classeId?: string, eleveId?: string, anneeId?: string) =>
+    get<any>(`/eleves${qs({ page, limit, search, classeId, eleveId, anneeId })}`),
 
   matieresList: (page?: number, limit?: number, niveau?: string) =>
     get<any>(`/matieres${qs({ page, limit, niveau: niveau || undefined })}`),
@@ -34,42 +34,42 @@ export const readApi = {
 
   salleDetail: (id: string) => get<any>(`/salles/${id}`),
 
-  planningClasses: (anneeLabel?: string) =>
-    get<any>(`/planning/classes${qs({ anneeLabel })}`),
+  planningClasses: (anneeId?: string) =>
+    get<any>(`/planning/classes${qs({ anneeId })}`),
   planningClasse: (id: string) => get<any>(`/planning/classe/${id}`),
 
   notesPage: () => get<any>('/notes'),
-  notesFilters: (anneeLabel?: string) =>
-    get<any>(`/notes/filters${qs({ anneeLabel })}`),
-  notesEleves: (classeId: string, matiereId: string, trimestre: number, anneeLabel?: string) =>
-    get<any>(`/notes/eleves${qs({ classeId, matiereId, trimestre, anneeLabel })}`),
+  notesFilters: (anneeId?: string) =>
+    get<any>(`/notes/filters${qs({ anneeId })}`),
+  notesEleves: (classeId: string, matiereId: string, trimestre: number, anneeId?: string) =>
+    get<any>(`/notes/eleves${qs({ classeId, matiereId, trimestre, anneeId })}`),
 
-  bulletin: (eleveId: string, trimestre: number, anneeLabel?: string) =>
-    get<any>(`/bulletin/${eleveId}${qs({ trimestre, anneeLabel })}`),
+  bulletin: (eleveId: string, trimestre: number, anneeId?: string) =>
+    get<any>(`/bulletin/${eleveId}${qs({ trimestre, anneeId })}`),
 
   anneeSnapshot: (id: string) => get<any>(`/annees/${id}/snapshot`),
-  eleveFiche: (id: string, anneeLabel?: string) =>
-    get<any>(`/eleves/${id}/fiche${qs({ anneeLabel })}`),
+  eleveFiche: (id: string, anneeId?: string) =>
+    get<any>(`/eleves/${id}/fiche${qs({ anneeId })}`),
   createClasseData: () => get<any>('/create-classe'),
   createEleveData: () => get<any>('/create-eleve'),
 
-  niveaux: (anneeLabel?: string) =>
-    get<any>(`/niveaux${qs({ anneeLabel })}`),
-  classesParNiveau: (niveau: string, dateNaissance?: string, anneeLabel?: string) =>
-    get<any>(`/niveaux/${encodeURIComponent(niveau)}/classes${qs({ dateNaissance, anneeLabel })}`),
+  niveaux: (anneeId?: string) =>
+    get<any>(`/niveaux${qs({ anneeId })}`),
+  classesParNiveau: (niveau: string, dateNaissance?: string, anneeId?: string) =>
+    get<any>(`/niveaux/${encodeURIComponent(niveau)}/classes${qs({ dateNaissance, anneeId })}`),
 
   professeurs: (page = 1, limit = 20, search = '') =>
     get<any>(`/professeurs${qs({ page, limit, search: search || undefined })}`),
   professeursActifs: () => get<any>('/professeurs/actifs'),
   professeur: (id: string) => get<any>(`/professeurs/${id}`),
 
-  periodes: (annee_scolaire: string) =>
-    get<any>(`/periodes${qs({ annee_scolaire })}`),
+  periodes: (anneeScolaireId: string) =>
+    get<any>(`/periodes${qs({ anneeScolaireId })}`),
 
   activePeriode: () => get<any>('/periodes/active'),
 
-  evaluationsList: (classeId?: string, matiereId?: string, trimestre?: number, statut?: string, page = 1, anneeLabel?: string) =>
-    get<any>(`/evaluations${qs({ classeId, matiereId, trimestre, statut, page, anneeLabel })}`),
+  evaluationsList: (classeId?: string, matiereId?: string, trimestre?: number, statut?: string, page = 1, anneeId?: string) =>
+    get<any>(`/evaluations${qs({ classeId, matiereId, trimestre, statut, page, anneeId })}`),
 
   evaluationDetail: (id: string) => get<any>(`/evaluations/${id}`),
 };

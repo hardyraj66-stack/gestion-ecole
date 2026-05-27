@@ -59,7 +59,6 @@ export function Bulletin() {
             <EmptyState
               icon={<Icon path={Icons.document} size={28} />}
               message={t('bulletin.aucuneEval', { trimestre })}
-              action={!readOnly ? <Button as="link" to="/evaluations/nouvelle" variant="primary">{t('bulletin.creerEval')}</Button> : undefined}
             />
           ) : (
             <GradesTable bulletinMatieres={bulletin} moyenneGenerale={moyenneGenerale} />

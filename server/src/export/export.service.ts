@@ -83,6 +83,11 @@ export class ExportService {
     return a?.label ?? null;
   }
 
+  private async anneeActiveId(): Promise<string | null> {
+    const a = await this.anneeModel.findOne({ statut: 'active' }).exec();
+    return a ? (a as any)._id.toString() : null;
+  }
+
   // ─── ÉLÈVES ───────────────────────────────────────────────────────────────
 
   async elevesData(classeId?: string, search?: string) {
@@ -135,8 +140,8 @@ export class ExportService {
   // ─── CLASSES ──────────────────────────────────────────────────────────────
 
   async classesData(niveau?: string) {
-    const anneeLabel = await this.anneeLabel();
-    const filter: any = anneeLabel ? { annee_scolaire: anneeLabel } : {};
+    const anneeId = await this.anneeActiveId();
+    const filter: any = anneeId ? { anneeScolaireId: anneeId } : {};
     if (niveau) filter.niveau = niveau;
     const items = await this.classeModel.find(filter).sort({ nom: 1 }).exec();
     return items.map(c => {

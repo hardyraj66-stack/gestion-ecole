@@ -23,7 +23,7 @@ export function NiveauClassePopover({
   onChange,
   showCapacite = true,
 }: NiveauClassePopoverProps) {
-  const { viewingLabel } = useViewing();
+  const { viewingId } = useViewing();
   const [niveaux, setNiveaux] = useState<NiveauItem[]>([]);
   const [classes, setClasses] = useState<ClasseItem[]>([]);
   const [loadingNiveaux, setLoadingNiveaux] = useState(false);
@@ -31,18 +31,18 @@ export function NiveauClassePopover({
   const [popoverNiveau, setPopoverNiveau] = useState(false);
   const [popoverClasses, setPopoverClasses] = useState(false);
   const fetchedNiveaux = useRef(false);
-  const fetchedForLabel = useRef<string | null>(undefined as any);
+  const fetchedForId = useRef<string | null>(undefined as any);
   const internalNiveau = useRef(selectedNiveau);
 
   const openNiveauPopover = async () => {
     setPopoverNiveau(true);
-    // Re-fetch si l'anneeLabel a changé (bascule archive ↔ live)
-    const currentLabel = viewingLabel ?? null;
-    if (fetchedNiveaux.current && fetchedForLabel.current === currentLabel) return;
+    // Re-fetch si l'anneeId a changé (bascule archive ↔ live)
+    const currentId = viewingId ?? null;
+    if (fetchedNiveaux.current && fetchedForId.current === currentId) return;
     fetchedNiveaux.current = true;
-    fetchedForLabel.current = currentLabel;
+    fetchedForId.current = currentId;
     setLoadingNiveaux(true);
-    const data = await readApi.niveaux(viewingLabel ?? undefined);
+    const data = await readApi.niveaux(viewingId ?? undefined);
     if (Array.isArray(data)) setNiveaux(data);
     setLoadingNiveaux(false);
   };
@@ -52,7 +52,7 @@ export function NiveauClassePopover({
     setPopoverNiveau(false);
     setLoadingClasses(true);
     setPopoverClasses(true);
-    const data = await readApi.classesParNiveau(niveau, undefined, viewingLabel ?? undefined);
+    const data = await readApi.classesParNiveau(niveau, undefined, viewingId ?? undefined);
     if (data?.classes) setClasses(data.classes);
     setLoadingClasses(false);
   };
