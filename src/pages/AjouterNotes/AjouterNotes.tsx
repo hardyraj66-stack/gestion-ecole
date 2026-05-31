@@ -13,14 +13,15 @@ import { NotesFilters } from './NotesFilters';
 import { NotesStatsBar } from './NotesStatsBar';
 import { NotesTable, NoteRow } from './NotesTable';
 import { useViewing } from '../../contexts/ViewingContext';
-
-const TYPE_LABELS: Record<string, string> = { ds: 'DS', evaluation: 'Évaluation' };
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 
 export function AjouterNotes() {
   const { t } = useTranslation();
   const { data, loading } = useNotesFiltersData();
   const { data: activePeriode, loading: loadingPeriode } = useActivePeriodeData();
-  const { isViewingArchive: readOnly, viewingId } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
+  const { isTerminee } = useAnneeScolaireStatus();
+  const readOnly = isViewingArchive || isTerminee;
   const { create: createNote, update: updateNote } = useNotes();
 
   const [selectedClasseId, setSelectedClasseId] = useState('');
@@ -149,12 +150,15 @@ export function AjouterNotes() {
     ? t('notes.subtitleFull', { classeNom: selectedClasseNom, matiereName: selectedMatiereName })
     : t('notes.subtitleDefault');
 
-  // Mode archive : lecture seule
+  // Mode archive / année terminée : lecture seule
   if (readOnly) {
     return (
       <div>
         <PageHeader title={t('notes.titre')} subtitle={t('notes.titreArchive')} />
-        <Alert variant="warning" icon={false}>{t('notes.anneeArchivee')}</Alert>
+        {isViewingArchive
+          ? <Alert variant="warning" icon={false}>{t('notes.anneeArchivee')}</Alert>
+          : <Alert variant="info" icon={false}>{t('layout.aucuneAnneeActive')} {t('layout.aucuneAnneeActiveMsg')}</Alert>
+        }
         <NotesFilters
           matieres={matieres}
           selectedClasseId={selectedClasseId}

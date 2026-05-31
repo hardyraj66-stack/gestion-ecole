@@ -116,13 +116,21 @@ export class ReadService {
       elevesCount = elevesCnt;
       notesCount = notesCnt;
     } else {
+      // En mode live, on filtre sur l'année active (si elle existe)
+      const activeAnneeId = anneeActive?.id?.toString() ?? anneeActive?._id?.toString() ?? null;
+      const liveEleveFilter = activeAnneeId ? { anneeScolaireId: activeAnneeId } : {};
+      const liveEleveIds = activeAnneeId
+        ? (await this.readEleveModel.find(liveEleveFilter, { source_id: 1 }).lean().exec()).map((e: any) => e.source_id)
+        : null;
       [elevesCount, notesCount] = await Promise.all([
-        this.readEleveModel.countDocuments().exec(),
-        this.readNoteModel.countDocuments().exec(),
+        this.readEleveModel.countDocuments(liveEleveFilter).exec(),
+        liveEleveIds !== null
+          ? this.readNoteModel.countDocuments({ eleve_id: { $in: liveEleveIds } }).exec()
+          : this.readNoteModel.countDocuments().exec(),
       ]);
     }
 
-    const eleveFilter = resolvedId ? { anneeScolaireId: resolvedId } : {};
+    const eleveFilter = resolvedId ? { anneeScolaireId: resolvedId } : (anneeActive ? { anneeScolaireId: anneeActive.id?.toString() ?? anneeActive._id?.toString() } : {});
     const [classesTotal, matieresCount, recentEleves] = await Promise.all([
       this.readClasseModel.countDocuments(classeFilter).exec(),
       this.readMatiereModel.countDocuments().exec(),

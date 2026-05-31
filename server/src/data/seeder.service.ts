@@ -237,8 +237,11 @@ export class SeederService implements OnModuleInit {
     const now = new Date().toISOString();
     await this.anneeModel.create({
       label: '2024-2025',
-      debut: '2024-09-02',
-      fin: '2025-07-05',
+      debut_planifie: '2024-09-02',
+      fin_planifie:   '2025-07-05',
+      debut_reel:     '2024-09-02',
+      fin_reel:       null,
+      migration_effectuee: false,
       statut: 'active',
       historique: [
         { action: 'creation', date: now, details: 'Année scolaire 2024-2025 créée par le seeder' },

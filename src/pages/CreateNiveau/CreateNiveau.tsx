@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useNiveaux as useNiveauxCtx } from '../../contexts/NiveauContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/shared/Card';
@@ -15,6 +16,7 @@ import { MatierePills } from '../../components/shared/MatierePills';
 export function CreateNiveau() {
   const { t } = useTranslation();
   const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const navigate = useNavigate();
   const { create } = useNiveauxCtx();
 
@@ -38,7 +40,7 @@ export function CreateNiveau() {
     });
   }, []);
 
-  if (isViewingArchive) return <Navigate to="/niveaux" replace />;
+  if (readOnly) return <Navigate to="/niveaux" replace />;
 
   const toggleMatiere = (id: string) => {
     setMatiereIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);

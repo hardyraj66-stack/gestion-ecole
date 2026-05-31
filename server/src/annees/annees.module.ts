@@ -7,6 +7,7 @@ import { Matiere, MatiereSchema } from '../matieres/matiere.schema';
 import { Note, NoteSchema } from '../notes/note.schema';
 import { Creneau, CreneauSchema } from '../planning/creneau.schema';
 import { PeriodesModule } from '../periodes/periodes.module';
+import { ReadModule } from '../read/read.module';
 import { AnneesController } from './annees.controller';
 import { AnneesService } from './annees.service';
 
@@ -21,6 +22,7 @@ import { AnneesService } from './annees.service';
       { name: Creneau.name, schema: CreneauSchema },
     ]),
     PeriodesModule,
+    ReadModule,
   ],
   controllers: [AnneesController],
   providers: [AnneesService],

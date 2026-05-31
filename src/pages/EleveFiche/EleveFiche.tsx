@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { EleveStatut } from '../../types';
 import { useEleveFicheData } from '../../hooks/usePageData';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { Button } from '../../components/shared/Button';
@@ -20,7 +21,9 @@ export function EleveFiche() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { viewingId } = useViewing();
-  const { data, loading, error, readOnly } = useEleveFicheData(id || '');
+  const { isTerminee } = useAnneeScolaireStatus();
+  const { data, loading, error, readOnly: readOnlyArchive } = useEleveFicheData(id || '');
+  const readOnly = readOnlyArchive || isTerminee;
   const [statut, setStatut] = useState<EleveStatut | null>(null);
   const [nbAvertissements, setNbAvertissements] = useState(0);
   // anneeId passé aux sous-composants pour isoler les données de suivi par année
@@ -52,6 +55,12 @@ export function EleveFiche() {
           {t('fiche.carteScolaire')}
         </Button>
       </PageHeader>
+
+      {isTerminee && !readOnlyArchive && (
+        <Alert variant="info" icon={false}>
+          {t('layout.aucuneAnneeActive')} {t('layout.aucuneAnneeActiveMsg')}
+        </Alert>
+      )}
 
       <div className="fiche-layout">
         <div className="fiche-col-left">

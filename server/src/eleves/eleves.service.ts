@@ -20,4 +20,20 @@ export class ElevesService {
     const result = await this.model.findByIdAndUpdate(id, { statut }, { new: true }).exec();
     return !!result;
   }
+
+  async inscrire(eleveId: string, anneeId: string) {
+    return this.model.findByIdAndUpdate(
+      eleveId,
+      { inscrit_annee_id: anneeId, statut_inscription: 'inscrit' },
+      { new: true },
+    ).exec();
+  }
+
+  async desinscrire(eleveId: string) {
+    return this.model.findByIdAndUpdate(
+      eleveId,
+      { inscrit_annee_id: null, statut_inscription: 'non_inscrit' },
+      { new: true },
+    ).exec();
+  }
 }

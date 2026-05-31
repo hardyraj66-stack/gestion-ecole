@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useSalles } from '../../contexts/SalleContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { TypeSalle, TYPES_SALLE, Equipement, EQUIPEMENTS_SALLE } from '../../types';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/shared/Card';
@@ -18,7 +19,8 @@ export function CreateSalle() {
   const navigate = useNavigate();
   const { create } = useSalles();
   const { isViewingArchive } = useViewing();
-  if (isViewingArchive) return <Navigate to="/salles" replace />;
+  const readOnly = useReadOnly();
+  if (readOnly) return <Navigate to="/salles" replace />;
 
   const TYPE_OPTIONS: SelectOption[] = TYPES_SALLE.map(typ => ({ value: typ.value, label: typ.label }));
 

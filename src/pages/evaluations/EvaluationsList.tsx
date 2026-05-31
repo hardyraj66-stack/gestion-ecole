@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useEvaluations } from '../../contexts/EvaluationContext';
 import { useEvaluationsListData } from '../../hooks/useEvaluationData';
 import { readApi } from '../../services/readApi';
@@ -20,7 +21,8 @@ import { Icon, Icons } from '../../components/shared/Icon';
 export function EvaluationsList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const { deleteEvaluation } = useEvaluations();
   const confirm = useConfirm();
 
@@ -61,7 +63,7 @@ export function EvaluationsList() {
   if (loading || !data) return <PageLoader />;
   if (error) return <Alert variant="error">{t('evaluations.erreur')}</Alert>;
 
-  const { items, total, totalPages } = data;
+  const { items, total } = data;
 
   const classesOptions: SelectOption[] = [
     { value: '', label: t('evaluations.toutesClasses') },

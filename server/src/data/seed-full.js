@@ -163,8 +163,11 @@ const anneesData = [
   {
     _id: oid(),
     label: '2023-2024',
-    debut: '2023-09-04',
-    fin: '2024-07-05',
+    debut_planifie: '2023-09-04',
+    fin_planifie: '2024-07-05',
+    debut_reel: '2023-09-04',
+    fin_reel: '2024-07-05',
+    migration_effectuee: false,
     statut: 'terminee',
     historique: [
       { action: 'creation',  date: '2023-06-15T10:00:00.000Z', details: 'Année 2023-2024 préparée en juin' },
@@ -175,8 +178,11 @@ const anneesData = [
   {
     _id: oid(),
     label: '2024-2025',
-    debut: '2024-09-02',
-    fin: '2025-07-04',
+    debut_planifie: '2024-09-02',
+    fin_planifie: new Date(Date.now() - 86400000).toISOString().slice(0,10),
+    debut_reel: '2024-09-02',
+    fin_reel: null,
+    migration_effectuee: false,
     statut: 'active',
     historique: [
       { action: 'creation',  date: '2024-06-20T10:00:00.000Z', details: 'Année 2024-2025 préparée' },
@@ -186,34 +192,37 @@ const anneesData = [
 ];
 
 // ─── CLASSES ─────────────────────────────────────────────────
+const id2324 = anneesData[0]._id.toString();
+const id2425 = anneesData[1]._id.toString();
+
 const classes2324 = [
-  { _id: oid(), nom: '6ème A',      niveau: '6ème',      annee_scolaire: '2023-2024', capacite: 30, salle: 'Salle 101', salle_type: 'fixe' },
-  { _id: oid(), nom: '6ème B',      niveau: '6ème',      annee_scolaire: '2023-2024', capacite: 30, salle: 'Salle 102', salle_type: 'fixe' },
-  { _id: oid(), nom: '5ème A',      niveau: '5ème',      annee_scolaire: '2023-2024', capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
-  { _id: oid(), nom: '5ème B',      niveau: '5ème',      annee_scolaire: '2023-2024', capacite: 30, salle: 'Salle 202', salle_type: 'fixe' },
-  { _id: oid(), nom: '4ème A',      niveau: '4ème',      annee_scolaire: '2023-2024', capacite: 32, salle: 'Salle 203', salle_type: 'variable' },
-  { _id: oid(), nom: '3ème A',      niveau: '3ème',      annee_scolaire: '2023-2024', capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
-  { _id: oid(), nom: '2nde 1',      niveau: '2nde',      annee_scolaire: '2023-2024', capacite: 35, salle: 'Salle 202', salle_type: 'variable' },
-  { _id: oid(), nom: '1ère S',      niveau: '1ère',      annee_scolaire: '2023-2024', capacite: 32, salle: 'Salle 203', salle_type: 'variable' },
-  { _id: oid(), nom: 'Terminale S', niveau: 'Terminale', annee_scolaire: '2023-2024', capacite: 30, salle: 'Salle 103', salle_type: 'variable' },
+  { _id: oid(), nom: '6ème A',      niveau: '6ème',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 30, salle: 'Salle 101', salle_type: 'fixe' },
+  { _id: oid(), nom: '6ème B',      niveau: '6ème',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 30, salle: 'Salle 102', salle_type: 'fixe' },
+  { _id: oid(), nom: '5ème A',      niveau: '5ème',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
+  { _id: oid(), nom: '5ème B',      niveau: '5ème',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 30, salle: 'Salle 202', salle_type: 'fixe' },
+  { _id: oid(), nom: '4ème A',      niveau: '4ème',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 32, salle: 'Salle 203', salle_type: 'variable' },
+  { _id: oid(), nom: '3ème A',      niveau: '3ème',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
+  { _id: oid(), nom: '2nde 1',      niveau: '2nde',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 35, salle: 'Salle 202', salle_type: 'variable' },
+  { _id: oid(), nom: '1ère S',      niveau: '1ère',      annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 32, salle: 'Salle 203', salle_type: 'variable' },
+  { _id: oid(), nom: 'Terminale S', niveau: 'Terminale', annee_scolaire: '2023-2024', anneeScolaireId: id2324, capacite: 30, salle: 'Salle 103', salle_type: 'variable' },
 ];
 
 const classes2425 = [
-  { _id: oid(), nom: '6ème A',       niveau: '6ème',      annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 101', salle_type: 'fixe' },
-  { _id: oid(), nom: '6ème B',       niveau: '6ème',      annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 102', salle_type: 'fixe' },
-  { _id: oid(), nom: '6ème C',       niveau: '6ème',      annee_scolaire: '2024-2025', capacite: 28, salle: 'Salle 103', salle_type: 'variable' },
-  { _id: oid(), nom: '5ème A',       niveau: '5ème',      annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
-  { _id: oid(), nom: '5ème B',       niveau: '5ème',      annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 202', salle_type: 'fixe' },
-  { _id: oid(), nom: '4ème A',       niveau: '4ème',      annee_scolaire: '2024-2025', capacite: 32, salle: 'Salle 203', salle_type: 'variable' },
-  { _id: oid(), nom: '4ème B',       niveau: '4ème',      annee_scolaire: '2024-2025', capacite: 32, salle: 'Salle 101', salle_type: 'variable' },
-  { _id: oid(), nom: '3ème A',       niveau: '3ème',      annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
-  { _id: oid(), nom: '3ème B',       niveau: '3ème',      annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 202', salle_type: 'fixe' },
-  { _id: oid(), nom: '2nde 1',       niveau: '2nde',      annee_scolaire: '2024-2025', capacite: 35, salle: 'Salle 201', salle_type: 'variable' },
-  { _id: oid(), nom: '2nde 2',       niveau: '2nde',      annee_scolaire: '2024-2025', capacite: 35, salle: 'Salle 202', salle_type: 'variable' },
-  { _id: oid(), nom: '1ère S',       niveau: '1ère',      annee_scolaire: '2024-2025', capacite: 32, salle: 'Salle 101', salle_type: 'variable' },
-  { _id: oid(), nom: '1ère ES',      niveau: '1ère',      annee_scolaire: '2024-2025', capacite: 32, salle: 'Salle 102', salle_type: 'variable' },
-  { _id: oid(), nom: 'Terminale S',  niveau: 'Terminale', annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 103', salle_type: 'variable' },
-  { _id: oid(), nom: 'Terminale ES', niveau: 'Terminale', annee_scolaire: '2024-2025', capacite: 30, salle: 'Salle 203', salle_type: 'variable' },
+  { _id: oid(), nom: '6ème A',       niveau: '6ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 101', salle_type: 'fixe' },
+  { _id: oid(), nom: '6ème B',       niveau: '6ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 102', salle_type: 'fixe' },
+  { _id: oid(), nom: '6ème C',       niveau: '6ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 28, salle: 'Salle 103', salle_type: 'variable' },
+  { _id: oid(), nom: '5ème A',       niveau: '5ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
+  { _id: oid(), nom: '5ème B',       niveau: '5ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 202', salle_type: 'fixe' },
+  { _id: oid(), nom: '4ème A',       niveau: '4ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 32, salle: 'Salle 203', salle_type: 'variable' },
+  { _id: oid(), nom: '4ème B',       niveau: '4ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 32, salle: 'Salle 101', salle_type: 'variable' },
+  { _id: oid(), nom: '3ème A',       niveau: '3ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 201', salle_type: 'fixe' },
+  { _id: oid(), nom: '3ème B',       niveau: '3ème',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 202', salle_type: 'fixe' },
+  { _id: oid(), nom: '2nde 1',       niveau: '2nde',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 35, salle: 'Salle 201', salle_type: 'variable' },
+  { _id: oid(), nom: '2nde 2',       niveau: '2nde',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 35, salle: 'Salle 202', salle_type: 'variable' },
+  { _id: oid(), nom: '1ère S',       niveau: '1ère',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 32, salle: 'Salle 101', salle_type: 'variable' },
+  { _id: oid(), nom: '1ère ES',      niveau: '1ère',      annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 32, salle: 'Salle 102', salle_type: 'variable' },
+  { _id: oid(), nom: 'Terminale S',  niveau: 'Terminale', annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 103', salle_type: 'variable' },
+  { _id: oid(), nom: 'Terminale ES', niveau: 'Terminale', annee_scolaire: '2024-2025', anneeScolaireId: id2425, capacite: 30, salle: 'Salle 203', salle_type: 'variable' },
 ];
 
 const allClasses = [...classes2324, ...classes2425];
@@ -240,6 +249,8 @@ allClasses.forEach(c => {
       date_naissance: dateStr(y, randInt(1,12), randInt(1,28)),
       genre: g,
       classe_id: c._id.toString(),
+      inscrit_annee_id: c.anneeScolaireId,
+      statut_inscription: 'inscrit',
       email: `${prenomNorm}${randInt(10,99)}.${nom.toLowerCase()}@eleve.ecole.fr`,
       telephone: `06 ${pad(randInt(10,99))} ${pad(randInt(10,99))} ${pad(randInt(10,99))} ${pad(randInt(10,99))}`,
       statut: 'actif',
@@ -356,17 +367,19 @@ classes2425.forEach(c => {
 // ─── PÉRIODES D'ÉVALUATION ───────────────────────────────────
 const periodesData = [
   // 2023-2024 : toutes terminées
-  { _id: oid(), trimestre: 1, type: 'ds',         annee_scolaire: '2023-2024', date_debut: '2023-10-02', date_fin: '2023-10-20', terminee: true },
-  { _id: oid(), trimestre: 1, type: 'evaluation', annee_scolaire: '2023-2024', date_debut: '2023-09-18', date_fin: '2023-10-27', terminee: true },
-  { _id: oid(), trimestre: 2, type: 'ds',         annee_scolaire: '2023-2024', date_debut: '2024-01-08', date_fin: '2024-01-26', terminee: true },
-  { _id: oid(), trimestre: 2, type: 'evaluation', annee_scolaire: '2023-2024', date_debut: '2023-12-04', date_fin: '2024-02-02', terminee: true },
-  { _id: oid(), trimestre: 3, type: 'ds',         annee_scolaire: '2023-2024', date_debut: '2024-04-22', date_fin: '2024-05-10', terminee: true },
-  { _id: oid(), trimestre: 3, type: 'evaluation', annee_scolaire: '2023-2024', date_debut: '2024-04-08', date_fin: '2024-05-31', terminee: true },
-  // 2024-2025 : T1 terminé, T2 en cours
-  { _id: oid(), trimestre: 1, type: 'ds',         annee_scolaire: '2024-2025', date_debut: '2024-10-07', date_fin: '2024-10-25', terminee: true },
-  { _id: oid(), trimestre: 1, type: 'evaluation', annee_scolaire: '2024-2025', date_debut: '2024-09-16', date_fin: '2024-11-08', terminee: true },
-  { _id: oid(), trimestre: 2, type: 'ds',         annee_scolaire: '2024-2025', date_debut: '2025-01-06', date_fin: '2025-01-24', terminee: false },
-  { _id: oid(), trimestre: 2, type: 'evaluation', annee_scolaire: '2024-2025', date_debut: '2024-12-02', date_fin: '2025-02-07', terminee: false },
+  { _id: oid(), trimestre: 1, type: 'ds',         annee_scolaire: '2023-2024', anneeScolaireId: id2324, date_debut: '2023-10-02', date_fin: '2023-10-20', terminee: true },
+  { _id: oid(), trimestre: 1, type: 'evaluation', annee_scolaire: '2023-2024', anneeScolaireId: id2324, date_debut: '2023-09-18', date_fin: '2023-10-27', terminee: true },
+  { _id: oid(), trimestre: 2, type: 'ds',         annee_scolaire: '2023-2024', anneeScolaireId: id2324, date_debut: '2024-01-08', date_fin: '2024-01-26', terminee: true },
+  { _id: oid(), trimestre: 2, type: 'evaluation', annee_scolaire: '2023-2024', anneeScolaireId: id2324, date_debut: '2023-12-04', date_fin: '2024-02-02', terminee: true },
+  { _id: oid(), trimestre: 3, type: 'ds',         annee_scolaire: '2023-2024', anneeScolaireId: id2324, date_debut: '2024-04-22', date_fin: '2024-05-10', terminee: true },
+  { _id: oid(), trimestre: 3, type: 'evaluation', annee_scolaire: '2023-2024', anneeScolaireId: id2324, date_debut: '2024-04-08', date_fin: '2024-05-31', terminee: true },
+  // 2024-2025 : tous les trimestres terminés
+  { _id: oid(), trimestre: 1, type: 'ds',         annee_scolaire: '2024-2025', anneeScolaireId: id2425, date_debut: '2024-10-07', date_fin: '2024-10-25', terminee: true },
+  { _id: oid(), trimestre: 1, type: 'evaluation', annee_scolaire: '2024-2025', anneeScolaireId: id2425, date_debut: '2024-09-16', date_fin: '2024-11-08', terminee: true },
+  { _id: oid(), trimestre: 2, type: 'ds',         annee_scolaire: '2024-2025', anneeScolaireId: id2425, date_debut: '2025-01-06', date_fin: '2025-01-24', terminee: true },
+  { _id: oid(), trimestre: 2, type: 'evaluation', annee_scolaire: '2024-2025', anneeScolaireId: id2425, date_debut: '2024-12-02', date_fin: '2025-02-07', terminee: true },
+  { _id: oid(), trimestre: 3, type: 'ds',         annee_scolaire: '2024-2025', anneeScolaireId: id2425, date_debut: '2025-04-07', date_fin: '2025-04-25', terminee: true },
+  { _id: oid(), trimestre: 3, type: 'evaluation', annee_scolaire: '2024-2025', anneeScolaireId: id2425, date_debut: '2025-04-01', date_fin: '2025-05-16', terminee: true },
 ];
 
 // ─── TEACHER ASSIGNMENTS (2024-2025 uniquement) ───────────────
@@ -401,7 +414,7 @@ print(`✓ ${sallesData.length} salles`);
 db.matieres.insertMany(matieresData);
 print(`✓ ${matieresData.length} matières`);
 
-db.niveaux.insertMany(niveauxData);
+db.niveaus.insertMany(niveauxData);
 print(`✓ ${niveauxData.length} niveaux`);
 
 const profDocs = professeursData.map(p => {
@@ -412,7 +425,7 @@ const profDocs = professeursData.map(p => {
 db.professeurs.insertMany(profDocs);
 print(`✓ ${profDocs.length} professeurs`);
 
-db.annees.insertMany(anneesData);
+db.anneescolaires.insertMany(anneesData);
 print(`✓ ${anneesData.length} années (2023-2024 terminée + 2024-2025 active)`);
 
 db.classes.insertMany(allClasses);
@@ -424,10 +437,10 @@ print(`✓ ${elevesArr.length} élèves`);
 db.notes.insertMany(notesArr);
 print(`✓ ${notesArr.length} notes`);
 
-db.creneaux.insertMany(creneauxArr);
+db.creneaus.insertMany(creneauxArr);
 print(`✓ ${creneauxArr.length} créneaux`);
 
-db.periodesevaluations.insertMany(periodesData);
+db.periodeevaluations.insertMany(periodesData);
 print(`✓ ${periodesData.length} périodes d'évaluation`);
 
 db.teacherassignments.insertMany(assignmentsArr);

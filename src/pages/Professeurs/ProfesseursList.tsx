@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
 import { useProfesseursListData } from '../../hooks/usePageData';
 import { Professeur } from '../../types';
@@ -34,7 +35,8 @@ function getInitialsProf(p: Professeur) {
 export function ProfesseursList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const { create, update } = useProfesseurs();
 
   const GENRE_OPTIONS = [

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useMatieresListData } from '../../hooks/usePageData';
 import { readApi } from '../../services/readApi';
 import { Matiere } from '../../types';
@@ -18,7 +19,8 @@ import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function MatieresList() {
   const { t } = useTranslation();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const [page, setPage] = useState(1);
   const [niveau, setNiveau] = useState('');
   const [niveaux, setNiveaux] = useState<string[]>([]);

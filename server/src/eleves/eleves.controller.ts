@@ -27,4 +27,22 @@ export class ElevesController {
     await this.viewBuilder.onEleveWrite(id);
     return item;
   }
+
+  @Post(':id/inscrire')
+  async inscrire(@Param('id') id: string, @Body() body: { anneeId: string }) {
+    const item = await this.service.inscrire(id, body.anneeId);
+    if (!item) throw new NotFoundException();
+    this.events.emit('eleve:updated', item);
+    await this.viewBuilder.onEleveWrite(id);
+    return item;
+  }
+
+  @Post(':id/desinscrire')
+  async desinscrire(@Param('id') id: string) {
+    const item = await this.service.desinscrire(id);
+    if (!item) throw new NotFoundException();
+    this.events.emit('eleve:updated', item);
+    await this.viewBuilder.onEleveWrite(id);
+    return item;
+  }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Salle, SalleStats, TypeSalle, EQUIPEMENTS_SALLE, JourSemaine } from '../../types';
+import { Salle, SalleStats, TypeSalle, EQUIPEMENTS_SALLE } from '../../types';
 import { JOURS } from '../Planning/planning.helpers';
 import { API_BASE_URL } from '../../config/api';
 import { Button } from '../../components/shared/Button';

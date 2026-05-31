@@ -4,6 +4,8 @@ import { useAnnees } from '../../contexts/AnneeContext';
 import { API_BASE_URL } from '../../config/api';
 import { usePeriodes } from '../../contexts/PeriodeContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
+
 import { usePeriodesData } from '../../hooks/usePeriodesData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
@@ -201,6 +203,7 @@ export function PeriodesList() {
   const { active, preparation, loading: anneeLoading } = useAnnees();
   const { updatePeriode, terminerPeriode } = usePeriodes();
   const { viewing, isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const annee = isViewingArchive ? viewing : (active || preparation);
   const anneeId = annee?.id || '';
   const annee_scolaire = annee?.label || '';
@@ -347,7 +350,7 @@ export function PeriodesList() {
                       <PeriodeCard
                         key={p.id}
                         periode={p}
-                        locked={isViewingArchive || locked}
+                        locked={readOnly || locked}
                         onEdit={() => { setEditing({ id: p.id, date_debut: p.date_debut || '', date_fin: p.date_fin || '' }); setSaveError(''); }}
                         isEditing={editing?.id === p.id}
                         editState={editing?.id === p.id ? editing : null}

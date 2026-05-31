@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useElevesListData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
@@ -15,7 +16,8 @@ import { ExportMenu } from '../../components/shared/ExportMenu';
 
 export function ElevesList() {
   const { t } = useTranslation();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');

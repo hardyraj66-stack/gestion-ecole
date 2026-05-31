@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { useDashboardData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { StatCard } from '../../components/ui/StatCard';
@@ -19,6 +21,8 @@ export function Dashboard() {
   const { t } = useTranslation();
   const { active, preparation } = useAnnees();
   const { viewing, isViewingArchive: readOnly } = useViewing();
+  const { peutCommencer } = useAnneeScolaireStatus();
+  const navigate = useNavigate();
   const [classesPage, setClassesPage] = useState(1);
 
   const { data, loading, error } = useDashboardData(classesPage);
@@ -47,13 +51,42 @@ export function Dashboard() {
         )}
       </PageHeader>
 
-      {!readOnly && !active && preparation && (
+      {/* ── Alerte : l'année peut commencer ─────────────────────────────── */}
+      {!readOnly && peutCommencer && preparation && (
+        <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <p style={{ fontWeight: 600, marginBottom: '0.25rem', color: 'var(--success)' }}>
+              🟢 {t('dashboard.anneePreteCommencer', { label: preparation.label })}
+            </p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              {t('dashboard.anneePreteMsg', { date: preparation.debut_planifie })}
+            </p>
+          </div>
+          <Button variant="primary" size="sm" onClick={() => navigate('/annee-scolaire')}>
+            {t('dashboard.gererCycleScolaire')}
+          </Button>
+        </Card>
+      )}
+
+      {/* ── Alerte : aucune année active (mais une en préparation) ─────── */}
+      {!readOnly && !active && preparation && !peutCommencer && (
         <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>⚠️ {t('dashboard.aucuneAnneeActive')}</p>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('dashboard.demarrerAnnee', { label: preparation.label })}</p>
           </div>
           <Button as="link" to="/annee-scolaire" variant="primary">{t('dashboard.gererCycle')}</Button>
+        </Card>
+      )}
+
+      {/* ── Alerte : aucune année configurée du tout ─────────────────────── */}
+      {!readOnly && !active && !preparation && (
+        <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>⚠️ {t('dashboard.aucuneAnneeConfig')}</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('dashboard.aucuneAnneeConfigMsg')}</p>
+          </div>
+          <Button as="link" to="/annee-scolaire" variant="primary">{t('dashboard.creerAnnee')}</Button>
         </Card>
       )}
 

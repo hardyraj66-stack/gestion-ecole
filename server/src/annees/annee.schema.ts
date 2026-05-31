@@ -15,11 +15,16 @@ export class AnneeScolaire extends Document {
   @Prop({ required: true, unique: true })
   label: string;
 
-  @Prop({ required: true })
-  debut: string;
+  // Dates planifiées (modifiables selon statut)
+  @Prop({ default: null }) debut_planifie: string | null;
+  @Prop({ default: null }) fin_planifie: string | null;
 
-  @Prop({ required: true })
-  fin: string;
+  // Dates réelles (renseignées par demarrer() et terminer())
+  @Prop({ default: null }) debut_reel: string | null;
+  @Prop({ default: null }) fin_reel: string | null;
+
+  // Garde-fou irréversibilité de la migration
+  @Prop({ default: false }) migration_effectuee: boolean;
 
   @Prop({ required: true, enum: ['active', 'terminee', 'preparation'], default: 'preparation' })
   statut: AnneeStatut;
@@ -30,3 +35,13 @@ export class AnneeScolaire extends Document {
 
 export const AnneeScolaireSchema = SchemaFactory.createForClass(AnneeScolaire);
 AnneeScolaireSchema.index({ statut: 1 });
+AnneeScolaireSchema.index({ debut_planifie: 1 });
+AnneeScolaireSchema.index({ fin_planifie: 1 });
+
+// Virtuels de rétrocompatibilité : debut = debut_planifie, fin = fin_planifie
+AnneeScolaireSchema.virtual('debut').get(function () {
+  return (this as any).debut_planifie;
+});
+AnneeScolaireSchema.virtual('fin').get(function () {
+  return (this as any).fin_planifie;
+});

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useSalles } from '../../contexts/SalleContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useSallesListData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
@@ -32,7 +33,8 @@ const typeColors: Record<TypeSalle, string> = {
 export function SallesList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const { delete: deleteSalle } = useSalles();
   const confirm = useConfirm();
 

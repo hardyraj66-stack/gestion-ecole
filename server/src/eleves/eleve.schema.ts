@@ -48,6 +48,16 @@ export class Eleve extends Document {
   @Prop({ required: true, enum: ['actif', 'exclu', 'parti'], default: 'actif' })
   statut: 'actif' | 'exclu' | 'parti';
 
+  // Inscription officielle dans une année scolaire
+  @Prop({ default: null })
+  inscrit_annee_id: string | null;
+
+  @Prop({
+    enum: ['inscrit', 'non_inscrit', 'en_attente', null],
+    default: null,
+  })
+  statut_inscription: 'inscrit' | 'non_inscrit' | 'en_attente' | null;
+
   // Historique des classes par année scolaire — alimenté lors de chaque demarrer()
   @Prop({
     type: [{
@@ -75,3 +85,5 @@ export const EleveSchema = SchemaFactory.createForClass(Eleve);
 EleveSchema.index({ classe_id: 1 });
 EleveSchema.index({ 'historique_classes.annee_scolaire': 1 });
 EleveSchema.index({ 'historique_classes.anneeScolaireId': 1 });
+EleveSchema.index({ inscrit_annee_id: 1 });
+EleveSchema.index({ inscrit_annee_id: 1, statut_inscription: 1 });

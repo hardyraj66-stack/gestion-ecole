@@ -17,7 +17,7 @@ export function Bulletin() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [trimestre, setTrimestre] = useState<Trimestre>(1);
-  const { data, loading, readOnly } = useBulletinData(id || '', trimestre);
+  const { data, loading } = useBulletinData(id || '', trimestre);
 
   if (loading || !data) return <PageLoader />;
 

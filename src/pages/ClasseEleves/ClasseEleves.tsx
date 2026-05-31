@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { useClasseElevesData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
@@ -17,7 +18,9 @@ import { ExportMenu } from '../../components/shared/ExportMenu';
 export function ClasseEleves() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const { isTerminee } = useAnneeScolaireStatus();
+  const readOnly = isViewingArchive || isTerminee;
   const [page, setPage] = useState(1);
   const [inputValue, setInputValue] = useState('');
   const [search, setSearch] = useState('');
@@ -65,6 +68,7 @@ export function ClasseEleves() {
   return (
     <div>
       <PageHeader title={t('classeEleves.titre', { nom: classe.nom })} subtitle={`${classe.niveau} · ${t('classeEleves.annee', { annee: classe.annee_scolaire })}`}>
+
         <Button as="link" to="/classes" variant="secondary">{t('classeEleves.retourClasses')}</Button>
         <Button as="link" to={`/classes/${id}/planning`} variant="outline">{t('classes.actions.planning')}</Button>
         <ExportMenu
@@ -73,6 +77,12 @@ export function ClasseEleves() {
         />
         {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">{t('eleves.nouvelEleve')}</Button>}
       </PageHeader>
+
+      {isTerminee && !isViewingArchive && (
+        <Alert variant="info" icon={false}>
+          {t('layout.aucuneAnneeActive')} {t('layout.aucuneAnneeActiveMsg')}
+        </Alert>
+      )}
 
       <ClasseInfoBar
         classe={classe}

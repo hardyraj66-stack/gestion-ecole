@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useClasses } from '../../contexts/ClasseContext';
 import { useSalles } from '../../contexts/SalleContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { useClassesListData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -26,7 +27,8 @@ export function ClassesList() {
   const { desactiver: desactiverClasse, update: updateClasse } = useClasses();
   const [deleteError, setDeleteError] = useState('');
   const { salles, getAll: fetchSalles } = useSalles();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const confirm = useConfirm();
   const [page, setPage] = useState(1);
   const [filterNiveau, setFilterNiveau] = useState('');
