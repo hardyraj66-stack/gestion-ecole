@@ -39,6 +39,11 @@ export class Salle extends Document {
 
   @Prop({ default: true })
   actif: boolean;
+
+  /** Référence ID vers la collection AnneeScolaire — isole les salles par année */
+  @Prop({ default: '' })
+  anneeScolaireId: string;
 }
 
 export const SalleSchema = SchemaFactory.createForClass(Salle);
+SalleSchema.index({ anneeScolaireId: 1 });

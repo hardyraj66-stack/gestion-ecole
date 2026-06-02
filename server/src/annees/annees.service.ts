@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AnneeScolaire, AnneeStatut } from './annee.schema';
@@ -7,7 +7,11 @@ import { Eleve } from '../eleves/eleve.schema';
 import { Matiere } from '../matieres/matiere.schema';
 import { Note } from '../notes/note.schema';
 import { Creneau } from '../planning/creneau.schema';
+import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
+import { Niveau } from '../niveaux/niveau.schema';
+import { Salle } from '../salles/salle.schema';
 import { PeriodesService } from '../periodes/periodes.service';
+import { ViewBuilderService } from '../read/view-builder.service';
 
 @Injectable()
 export class AnneesService {
@@ -18,7 +22,11 @@ export class AnneesService {
     @InjectModel(Matiere.name) private matiereModel: Model<Matiere>,
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
+    @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
+    @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
+    @InjectModel(Salle.name) private salleModel: Model<Salle>,
     private readonly periodesService: PeriodesService,
+    private readonly viewBuilder: ViewBuilderService,
   ) {}
 
   findAll() {
@@ -46,7 +54,6 @@ export class AnneesService {
       throw new BadRequestException(`L'année scolaire "${label}" existe déjà`);
     }
 
-    // Rétrocompatibilité : accepte aussi debut/fin (ancien format)
     const debutPlanifie = data.debut_planifie ?? data.debut ?? null;
     const finPlanifie   = data.fin_planifie   ?? data.fin   ?? null;
 
@@ -84,7 +91,6 @@ export class AnneesService {
       throw new BadRequestException("Impossible de modifier la date de début d'une année scolaire active");
     }
 
-    // Valider cohérence des dates si les deux sont présentes
     const newDebut = data.debut_planifie !== undefined ? data.debut_planifie : annee.debut_planifie;
     const newFin   = data.fin_planifie   !== undefined ? data.fin_planifie   : annee.fin_planifie;
     if (newDebut && newFin && newDebut >= newFin) {
@@ -136,55 +142,6 @@ export class AnneesService {
     });
 
     await annee.save();
-    const anneeId = (annee as any)._id.toString();
-
-    // Cloner classes + planning depuis l'année terminée si pas encore fait
-    const classesExistantes = await this.classeModel.countDocuments({
-      $or: [{ anneeScolaireId: anneeId }, { annee_scolaire: annee.label }],
-    });
-    if (classesExistantes === 0) {
-      const anneeTerminees = await this.model.find({ statut: 'terminee' }).sort({ fin_reel: -1 }).exec();
-      if (anneeTerminees.length > 0) {
-        const anneePrec = anneeTerminees[0];
-        const anneeIdPrec = (anneePrec as any)._id.toString();
-        const classesAnc = await this.classeModel.find({
-          $or: [{ anneeScolaireId: anneeIdPrec }, { annee_scolaire: anneePrec.label }],
-        }).lean().exec();
-
-        const classeMap = new Map<string, string>();
-        for (const cl of classesAnc) {
-          const ancId = (cl as any)._id.toString();
-          const newClasse = await this.classeModel.create({
-            nom: (cl as any).nom, niveau: (cl as any).niveau,
-            capacite: (cl as any).capacite, salle: (cl as any).salle,
-            salle_type: (cl as any).salle_type,
-            annee_scolaire: annee.label, anneeScolaireId: anneeId,
-          });
-          classeMap.set(ancId, (newClasse as any)._id.toString());
-        }
-
-        // Cloner le planning
-        const creneauxAnc = await this.creneauModel.find({
-          classe_id: { $in: Array.from(classeMap.keys()) },
-        }).lean().exec();
-        if (creneauxAnc.length > 0) {
-          await this.creneauModel.insertMany(creneauxAnc.map((cr: any) => ({
-            classe_id: classeMap.get(cr.classe_id.toString()) ?? cr.classe_id,
-            matiere_id: cr.matiere_id, matiere_nom: cr.matiere_nom,
-            matiere_couleur: cr.matiere_couleur, jour: cr.jour,
-            heure_debut: cr.heure_debut, heure_fin: cr.heure_fin, salle: cr.salle,
-          })));
-        }
-
-        // Marquer migration effectuée pour ne pas re-cloner via le bouton manuel
-        annee.migration_effectuee = true;
-        await annee.save();
-      }
-    }
-
-    // initForAnnee prend startDate optionnel
-    await this.periodesService.initForAnnee(anneeId, annee.debut_planifie ?? undefined);
-
     return annee;
   }
 
@@ -198,22 +155,194 @@ export class AnneesService {
       );
     }
 
+    const anneeId = (annee as any)._id.toString();
     const today = new Date().toISOString().slice(0, 10);
     const anticipee = annee.fin_planifie != null && today < annee.fin_planifie;
+    const now = new Date().toISOString();
 
+    // Action 1 — Clôturer
     annee.fin_reel = today;
     annee.statut = 'terminee';
     annee.historique.push({
       action: anticipee ? 'cloture_anticipee' : 'cloture',
-      date: new Date().toISOString(),
+      date: now,
       details: `Clôture réelle : ${today} (planifiée : ${annee.fin_planifie ?? 'non définie'})`,
     });
     await annee.save();
 
+    // Action 2 — Créer la nouvelle année
+    const parts = annee.label.split('-').map((s: string) => s.trim());
+    const startYear = parseInt(parts[parts.length - 1], 10) || new Date().getFullYear();
+    const newLabel = `${startYear + 1}-${startYear + 2}`;
+    let nouvelleAnnee = await this.model.findOne({ label: newLabel }).exec();
+    if (!nouvelleAnnee) {
+      nouvelleAnnee = await this.model.create({
+        label: newLabel,
+        statut: 'preparation',
+        debut_planifie: null,
+        fin_planifie: null,
+        debut_reel: null,
+        fin_reel: null,
+        migration_effectuee: false,
+        historique: [{ action: 'creation', date: now, details: `Créée automatiquement à la clôture de ${annee.label}` }],
+      });
+    }
+    const nouvelleId = (nouvelleAnnee as any)._id.toString();
+
+    // Action 2bis — Copier Matières, puis Niveaux (avec remapping matiere_ids), puis Salles
+    // Matières d'abord car Niveau.matiere_ids les référence par ID
+    const matiereIdMap = new Map<string, string>(); // ancienId -> nouveauId
+    if (await this.matiereModel.countDocuments({ anneeScolaireId: nouvelleId }).exec() === 0) {
+      const matieresAnc = await this.matiereModel.find({ anneeScolaireId: anneeId, actif: { $ne: false } }).lean().exec();
+      for (const m of matieresAnc) {
+        const nouvelle = await this.matiereModel.create({
+          nom: (m as any).nom, code: (m as any).code,
+          coefficient: (m as any).coefficient ?? 1,
+          coefficients: (m as any).coefficients || [],
+          description: (m as any).description || '',
+          couleur: (m as any).couleur || '',
+          actif: true,
+          anneeScolaireId: nouvelleId,
+        });
+        matiereIdMap.set((m as any)._id.toString(), (nouvelle as any)._id.toString());
+      }
+    }
+
+    // Niveaux : remapper matiere_ids vers les nouveaux IDs de matières
+    if (await this.niveauModel.countDocuments({ anneeScolaireId: nouvelleId }).exec() === 0) {
+      const niveauxAnc = await this.niveauModel.find({ anneeScolaireId: anneeId }).lean().exec();
+      for (const n of niveauxAnc) {
+        const ancMatiereIds: string[] = (n as any).matiere_ids || [];
+        const newMatiereIds = ancMatiereIds
+          .map(id => matiereIdMap.get(id))
+          .filter((id): id is string => !!id);
+        await this.niveauModel.create({
+          nom: (n as any).nom, ordre: (n as any).ordre,
+          description: (n as any).description || '',
+          matiere_ids: newMatiereIds,
+          anneeScolaireId: nouvelleId,
+        });
+      }
+    }
+
+    // Salles
+    if (await this.salleModel.countDocuments({ anneeScolaireId: nouvelleId }).exec() === 0) {
+      const sallesAnc = await this.salleModel.find({ anneeScolaireId: anneeId, actif: { $ne: false } }).lean().exec();
+      for (const s of sallesAnc) {
+        await this.salleModel.create({
+          nom: (s as any).nom, capacite: (s as any).capacite,
+          description: (s as any).description || '',
+          type: (s as any).type,
+          equipements: (s as any).equipements || [],
+          accessible_pmr: (s as any).accessible_pmr || false,
+          batiment: (s as any).batiment || '',
+          etage: (s as any).etage || '',
+          actif: true,
+          anneeScolaireId: nouvelleId,
+        });
+      }
+    }
+
+    // Action 3 — Copier les classes
+    const classesAnc = await this.classeModel.find({ anneeScolaireId: anneeId, actif: { $ne: false } }).lean().exec();
+    const mapping = new Map<string, string>();
+
+    for (const cl of classesAnc) {
+      const ancId = (cl as any)._id.toString();
+      const existe = await this.classeModel.findOne({ anneeScolaireId: nouvelleId, nom: (cl as any).nom }).lean().exec();
+      if (!existe) {
+        const nouvelleClasse = await this.classeModel.create({
+          nom: (cl as any).nom,
+          niveau: (cl as any).niveau,
+          capacite: (cl as any).capacite,
+          salle: (cl as any).salle,
+          salle_type: (cl as any).salle_type,
+          annee_scolaire: newLabel,
+          anneeScolaireId: nouvelleId,
+        });
+        mapping.set(ancId, (nouvelleClasse as any)._id.toString());
+      } else {
+        mapping.set(ancId, (existe as any)._id.toString());
+      }
+    }
+
+    // Action 4 — Migrer les teacher-assignments
+    const assignments = await this.assignmentModel.find({
+      classe_id: { $in: Array.from(mapping.keys()) },
+    }).lean().exec();
+
+    const assignOps: any[] = [];
+    for (const a of assignments) {
+      const nouveauClasseId = mapping.get((a as any).classe_id);
+      if (!nouveauClasseId) continue;
+      const existe = await this.assignmentModel.findOne({
+        classe_id: nouveauClasseId,
+        matiere_id: (a as any).matiere_id,
+      }).lean().exec();
+      if (!existe) {
+        assignOps.push({
+          insertOne: {
+            document: {
+              professeur_id: (a as any).professeur_id,
+              classe_id: nouveauClasseId,
+              matiere_id: (a as any).matiere_id,
+            },
+          },
+        });
+      }
+    }
+    if (assignOps.length > 0) await this.assignmentModel.bulkWrite(assignOps);
+
+    // Action 5 — Migrer le planning
+    const creneaux = await this.creneauModel.find({
+      classe_id: { $in: Array.from(mapping.keys()) },
+    }).lean().exec();
+
+    const creneauOps: any[] = [];
+    for (const cr of creneaux) {
+      const nouveauClasseId = mapping.get((cr as any).classe_id);
+      if (!nouveauClasseId) continue;
+      creneauOps.push({
+        insertOne: {
+          document: {
+            classe_id: nouveauClasseId,
+            matiere_id: (cr as any).matiere_id,
+            matiere_nom: (cr as any).matiere_nom,
+            matiere_couleur: (cr as any).matiere_couleur,
+            jour: (cr as any).jour,
+            heure_debut: (cr as any).heure_debut,
+            heure_fin: (cr as any).heure_fin,
+            salle: (cr as any).salle,
+          },
+        },
+      });
+    }
+    if (creneauOps.length > 0) await this.creneauModel.bulkWrite(creneauOps);
+
+    // Action 6 — Passer toutes les inscriptions active → inactive
+    await this.eleveModel.updateMany(
+      { 'inscriptions.status': 'active' },
+      { $set: { 'inscriptions.$[elem].status': 'inactive' } },
+      { arrayFilters: [{ 'elem.status': 'active' }] } as any,
+    );
+
+    // Action 7 — Initialiser les périodes
+    await this.periodesService.initForAnnee(nouvelleId, (nouvelleAnnee as any).debut_planifie ?? undefined);
+
+    annee.historique.push({
+      action: 'migration',
+      date: now,
+      details: `Nouvelle année "${newLabel}" créée — ${classesAnc.length} classes copiées, planning migré, inscriptions archivées`,
+    });
+    await annee.save();
+
+    // Action 8 — Reconstruire tous les read models (classes, élèves, créneaux, etc.)
+    await this.viewBuilder.rebuildAll();
+
     return annee;
   }
 
-  // ── MIGRATION DES ÉLÈVES ──────────────────────────────────────────────────
+  // ── MIGRATION DES ÉLÈVES (ancienne méthode maintenue) ──────────────────────────────────────────────────
 
   async migrerEleves(id: string): Promise<{ classes: number; eleves: number }> {
     const annee = await this.model.findById(id).exec();
@@ -225,7 +354,6 @@ export class AnneesService {
 
     const anneeId = (annee as any)._id.toString();
 
-    // Trouver l'année terminée la plus récente
     const anneeTerminees = await this.model.find({ statut: 'terminee' }).sort({ fin_reel: -1 }).exec();
     if (anneeTerminees.length === 0) {
       throw new BadRequestException('Aucune année précédente à migrer');
@@ -233,7 +361,6 @@ export class AnneesService {
     const anneePrec = anneeTerminees[0];
     const anneeIdPrec = (anneePrec as any)._id.toString();
 
-    // Classes de la nouvelle année
     const classesNouv = await this.classeModel.find({
       $or: [{ anneeScolaireId: anneeId }, { annee_scolaire: annee.label }],
     }).lean().exec();
@@ -242,55 +369,54 @@ export class AnneesService {
       throw new BadRequestException("Aucune classe trouvée dans la nouvelle année. Démarrez d'abord l'année.");
     }
 
-    // Classes de l'ancienne année
     const classesPrec = await this.classeModel.find({
       $or: [{ anneeScolaireId: anneeIdPrec }, { annee_scolaire: anneePrec.label }],
     }).lean().exec();
 
     const classesPrecIds = classesPrec.map((c: any) => c._id.toString());
-
-    // Mapping ancienne classe → nouvelle classe par nom (même nom = même classe restructurée)
     const nouvParNom = new Map(classesNouv.map((c: any) => [c.nom as string, c]));
 
-    // Tous les élèves actifs de l'ancienne année
+    // Élèves avec inscription active dans l'ancienne année
     const eleves = await this.eleveModel.find({
-      classe_id: { $in: classesPrecIds },
+      inscriptions: { $elemMatch: { anneeScolaireId: anneeIdPrec, status: 'active' } },
       statut: 'actif',
     }).lean().exec();
 
     const ops: any[] = [];
     for (const e of eleves) {
-      const classePrec = classesPrec.find((c: any) => c._id.toString() === (e as any).classe_id);
-      const nouvelleClasse = classePrec ? nouvParNom.get((classePrec as any).nom) : undefined;
+      const inscriptions: any[] = (e as any).inscriptions || [];
+      const inscriptionActive = inscriptions.find((i: any) => i.status === 'active' && i.anneeScolaireId === anneeIdPrec);
+      if (!inscriptionActive) continue;
 
-      if (!nouvelleClasse) continue; // classe supprimée entre les deux années → skip
+      const classePrec = classesPrec.find((c: any) => c._id.toString() === inscriptionActive.classeId);
+      const nouvelleClasse = classePrec ? nouvParNom.get((classePrec as any).nom) : undefined;
+      if (!nouvelleClasse) continue;
 
       const nouveauClasseId = (nouvelleClasse as any)._id.toString();
-      const historique = (e as any).historique_classes as any[] || [];
-      const dejaPourAnnee = historique.some((h: any) => h.anneeScolaireId === anneeId);
+      const dejaInscritNouvelleAnnee = inscriptions.some((i: any) => i.anneeScolaireId === anneeId);
 
       ops.push({
         updateOne: {
           filter: { _id: (e as any)._id },
-          update: {
-            $set: {
-              classe_id: nouveauClasseId,
-              inscrit_annee_id: anneeId,
-              statut_inscription: 'inscrit',
-            },
-            ...(dejaPourAnnee ? {} : {
-              $push: {
-                historique_classes: {
-                  annee_scolaire: annee.label,
-                  anneeScolaireId: anneeId,
+          update: dejaInscritNouvelleAnnee
+            ? { $set: { classe_id: nouveauClasseId } }
+            : {
+                $set: {
                   classe_id: nouveauClasseId,
-                  classe_nom: (nouvelleClasse as any).nom || '',
-                  niveau: (nouvelleClasse as any).niveau || '',
-                  statut: 'inscrit',
+                  inscrit_annee_id: anneeId,
+                  statut_inscription: 'inscrit',
+                  'inscriptions.$[elem].status': 'inactive',
+                },
+                $push: {
+                  inscriptions: {
+                    classeId: nouveauClasseId,
+                    status: 'active',
+                    anneeScolaireId: anneeId,
+                    ordre: inscriptions.length + 1,
+                  },
                 },
               },
-            }),
-          },
+          ...(dejaInscritNouvelleAnnee ? {} : { arrayFilters: [{ 'elem.anneeScolaireId': anneeIdPrec }] }),
         },
       });
     }
@@ -322,7 +448,10 @@ export class AnneesService {
     }).exec();
     const classeIds = classes.map(c => (c as any)._id.toString());
 
-    const eleves = await this.eleveModel.find({ classe_id: { $in: classeIds } }).exec();
+    // Utiliser les inscriptions pour trouver les élèves de cette année
+    const eleves = await this.eleveModel.find({
+      inscriptions: { $elemMatch: { anneeScolaireId: anneeId } },
+    }).exec();
     const eleveIds = eleves.map(e => (e as any)._id.toString());
 
     const notes    = await this.noteModel.find({ eleve_id: { $in: eleveIds } }).exec();

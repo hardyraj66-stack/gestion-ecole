@@ -6,7 +6,7 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "dev": "nodemon",
-    "seed": "ts-node src/data/seeder.ts"
+    "reset": "ts-node src/data/reset.cli.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

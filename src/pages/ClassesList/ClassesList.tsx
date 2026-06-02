@@ -21,13 +21,14 @@ import { getTypeLabel } from '../../utils/helpers';
 import { Modal } from '../../components/shared/Modal';
 import { ClasseCard } from './ClasseCard';
 import { ExportMenu } from '../../components/shared/ExportMenu';
+import { exportQs } from '../../utils/helpers';
 
 export function ClassesList() {
   const { t } = useTranslation();
   const { desactiver: desactiverClasse, update: updateClasse } = useClasses();
   const [deleteError, setDeleteError] = useState('');
   const { salles, getAll: fetchSalles } = useSalles();
-  const { isViewingArchive } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
   const readOnly = useReadOnly();
   const confirm = useConfirm();
   const [page, setPage] = useState(1);
@@ -128,8 +129,8 @@ export function ClassesList() {
     <div>
       <PageHeader title={t('classes.titre')} subtitle={t('classes.nbClasses', { count: total })}>
         <ExportMenu
-          csvUrl={`/export/classes/csv${filterNiveau ? `?niveau=${encodeURIComponent(filterNiveau)}` : ''}`}
-          xlsxUrl={`/export/classes/xlsx${filterNiveau ? `?niveau=${encodeURIComponent(filterNiveau)}` : ''}`}
+          csvUrl={`/export/classes/csv${exportQs({ niveau: filterNiveau, anneeId: viewingId })}`}
+          xlsxUrl={`/export/classes/xlsx${exportQs({ niveau: filterNiveau, anneeId: viewingId })}`}
         />
         {!readOnly && <Button as="link" to="/classes/nouvelle" variant="primary">{t('classes.nouvelleClasse')}</Button>}
       </PageHeader>

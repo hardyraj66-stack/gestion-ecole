@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { EleveStatut } from '../../types';
+import { EleveStatut, getClasseActive } from '../../types';
 import { useEleveFicheData } from '../../hooks/usePageData';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
@@ -16,6 +16,7 @@ import { FicheShortcuts } from './FicheShortcuts';
 import { FicheAvertissements } from './FicheAvertissements';
 import { FicheAssiduité } from './FicheAssiduité';
 import { FicheStatut } from './FicheStatut';
+import { FicheParcours } from './FicheParcours';
 
 export function EleveFiche() {
   const { t } = useTranslation();
@@ -49,7 +50,7 @@ export function EleveFiche() {
         )}
         <Button
           variant="outline"
-          onClick={() => window.open(`${API_BASE_URL}/export/carte/${id}`, '_blank')}
+          onClick={() => window.open(`${API_BASE_URL}/export/carte/${id}${viewingId ? `?anneeId=${viewingId}` : ''}`, '_blank')}
           title={t('fiche.carteScolaireTitle')}
         >
           {t('fiche.carteScolaire')}
@@ -75,10 +76,11 @@ export function EleveFiche() {
             readOnly={readOnly}
             onStatutChange={setStatut}
           />
+          <FicheParcours inscriptions={eleve.inscriptions ?? []} readOnly={readOnly} />
         </div>
 
         <div className="fiche-col-right">
-          <FicheShortcuts eleveId={id!} classeId={eleve.classe_id} />
+          <FicheShortcuts eleveId={id!} classeId={getClasseActive(eleve)?.classeId ?? eleve.classe_id ?? ''} />
           <FicheAvertissements
             eleveId={id!}
             anneeActiveId={anneeActiveId ?? anneeActive ?? null}

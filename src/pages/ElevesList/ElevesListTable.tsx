@@ -10,9 +10,12 @@ import { getInitials } from '../../utils/helpers';
 
 interface ElevesListTableProps {
   eleves: Eleve[];
+  sansClasse?: boolean;
+  showReinscription?: boolean;
+  onReinscire?: (eleveId: string) => void;
 }
 
-export function ElevesListTable({ eleves }: ElevesListTableProps) {
+export function ElevesListTable({ eleves, sansClasse, showReinscription, onReinscire }: ElevesListTableProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -31,13 +34,32 @@ export function ElevesListTable({ eleves }: ElevesListTableProps) {
         <TableBody>
           {eleves.map((e: any) => (
             <TableRow key={e.id} onClick={() => navigate(`/eleves/${e.id}`)}>
-              <TableCell><div className="eleve-info"><Avatar initiales={getInitials(e)} genre={e.genre} /><span className="eleve-name eleve-name-link">{e.prenom} {e.nom}</span></div></TableCell>
-              <TableCell><Badge label={e.genre === 'M' ? t('eleves.genres.masculin') : t('eleves.genres.feminin')} variant={e.genre === 'M' ? 'info' : 'warning'} /></TableCell>
-              <TableCell><Link to={`/classes/${e.classe_id}/eleves`} className="link-primary">{e.classe_nom || '—'}</Link></TableCell>
+              <TableCell>
+                <div className="eleve-info">
+                  <Avatar initiales={getInitials(e)} genre={e.genre} />
+                  <span className="eleve-name eleve-name-link">{e.prenom} {e.nom}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge label={e.genre === 'M' ? t('eleves.genres.masculin') : t('eleves.genres.feminin')} variant={e.genre === 'M' ? 'info' : 'warning'} />
+              </TableCell>
+              <TableCell>
+                {sansClasse ? (
+                  <Badge label="Sans classe" variant="default" />
+                ) : (
+                  <Link to={`/classes/${e.classe_id}/eleves`} className="link-primary">{e.classe_nom || '—'}</Link>
+                )}
+              </TableCell>
               <TableCell>{e.email || '—'}</TableCell>
               <TableCell>
                 <div style={{ display: 'flex', gap: '0.5rem' }} onClick={ev => ev.stopPropagation()}>
-                  <Button as="link" to={`/eleves/${e.id}/bulletin`} variant="outline" size="sm">{t('dashboard.bulletin')}</Button>
+                  {(sansClasse || (showReinscription && !e.estInscritNouvelleAnnee)) ? (
+                    <Button variant="primary" size="sm" onClick={() => onReinscire?.(e.id)}>
+                      Réinscrire
+                    </Button>
+                  ) : (
+                    <Button as="link" to={`/eleves/${e.id}/bulletin`} variant="outline" size="sm">{t('dashboard.bulletin')}</Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

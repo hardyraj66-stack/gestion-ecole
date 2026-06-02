@@ -12,10 +12,12 @@ import { TrimestreTabs } from './TrimestreTabs';
 import { GradesTable } from './GradesTable';
 import { BulletinMatiere, Trimestre } from '../../types';
 import { API_BASE_URL } from '../../config/api';
+import { useViewing } from '../../contexts/ViewingContext';
 
 export function Bulletin() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
+  const { viewingId } = useViewing();
   const [trimestre, setTrimestre] = useState<Trimestre>(1);
   const { data, loading } = useBulletinData(id || '', trimestre);
 
@@ -44,7 +46,7 @@ export function Bulletin() {
         <Button as="link" to="/eleves" variant="outline">{t('bulletin.tousEleves')}</Button>
         <Button
           variant="outline"
-          onClick={() => window.open(`${API_BASE_URL}/export/bulletin/${id}?trimestre=${trimestre}`, '_blank')}
+          onClick={() => window.open(`${API_BASE_URL}/export/bulletin/${id}?trimestre=${trimestre}${viewingId ? `&anneeId=${viewingId}` : ''}`, '_blank')}
         >
           <Icon path="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" size={16} />
           {t('bulletin.imprimer')}

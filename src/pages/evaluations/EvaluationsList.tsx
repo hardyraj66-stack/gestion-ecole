@@ -16,12 +16,13 @@ import { Select, SelectOption } from '../../components/shared/Select';
 import { Pagination } from '../../components/shared/Pagination';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { ExportMenu } from '../../components/shared/ExportMenu';
+import { exportQs } from '../../utils/helpers';
 import { Icon, Icons } from '../../components/shared/Icon';
 
 export function EvaluationsList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isViewingArchive } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
   const readOnly = useReadOnly();
   const { deleteEvaluation } = useEvaluations();
   const confirm = useConfirm();
@@ -89,8 +90,8 @@ export function EvaluationsList() {
     <div>
       <PageHeader title={t('evaluations.titre')} subtitle={t('evaluations.nbEvaluations', { count: total })}>
         <ExportMenu
-          csvUrl={`/export/evaluations/csv?${[classeId && `classeId=${classeId}`, matiereId && `matiereId=${matiereId}`, trimestre && `trimestre=${trimestre}`].filter(Boolean).join('&')}`}
-          xlsxUrl={`/export/evaluations/xlsx?${[classeId && `classeId=${classeId}`, matiereId && `matiereId=${matiereId}`, trimestre && `trimestre=${trimestre}`].filter(Boolean).join('&')}`}
+          csvUrl={`/export/evaluations/csv${exportQs({ classeId, matiereId, trimestre, anneeId: viewingId })}`}
+          xlsxUrl={`/export/evaluations/xlsx${exportQs({ classeId, matiereId, trimestre, anneeId: viewingId })}`}
         />
         {!readOnly && (
           <Button variant="primary" onClick={() => navigate('/evaluations/nouvelle')}>

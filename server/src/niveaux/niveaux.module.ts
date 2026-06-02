@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Niveau, NiveauSchema } from './niveau.schema';
 import { Classe, ClasseSchema } from '../classes/classe.schema';
 import { Matiere, MatiereSchema } from '../matieres/matiere.schema';
+import { AnneeScolaire, AnneeScolaireSchema } from '../annees/annee.schema';
 import { NiveauxController } from './niveaux.controller';
 import { NiveauxService } from './niveaux.service';
 
@@ -12,6 +13,7 @@ import { NiveauxService } from './niveaux.service';
       { name: Niveau.name, schema: NiveauSchema },
       { name: Classe.name, schema: ClasseSchema },
       { name: Matiere.name, schema: MatiereSchema },
+      { name: AnneeScolaire.name, schema: AnneeScolaireSchema },
     ]),
   ],
   controllers: [NiveauxController],

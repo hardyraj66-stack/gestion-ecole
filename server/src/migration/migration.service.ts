@@ -6,6 +6,9 @@ import { Classe } from '../classes/classe.schema';
 import { Absence } from '../suivi/absence.schema';
 import { Convocation } from '../suivi/convocation.schema';
 import { AnneeScolaire } from '../annees/annee.schema';
+import { Niveau } from '../niveaux/niveau.schema';
+import { Salle } from '../salles/salle.schema';
+import { Matiere } from '../matieres/matiere.schema';
 
 @Injectable()
 export class MigrationService implements OnModuleInit {
@@ -17,13 +20,151 @@ export class MigrationService implements OnModuleInit {
     @InjectModel(Absence.name) private absenceModel: Model<Absence>,
     @InjectModel(Convocation.name) private convocationModel: Model<Convocation>,
     @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
+    @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
+    @InjectModel(Salle.name) private salleModel: Model<Salle>,
+    @InjectModel(Matiere.name) private matiereModel: Model<Matiere>,
   ) {}
 
   async onModuleInit() {
+    await this.migrateVersInscriptions();
     await this.migrateAbsences();
     await this.migrateConvocations();
     await this.migrateHistoriqueClasses();
     await this.migrateAnneeScolaireIds();
+    await this.migrateEntitesGlobalesVersAnnee();
+  }
+
+  /**
+   * Backfill : associe Niveaux/Salles/Matières sans anneeScolaireId à l'année active.
+   * Crée aussi les Niveaux manquants (dérivés des classes) si aucun n'existe pour l'année.
+   */
+  private async migrateEntitesGlobalesVersAnnee() {
+    const active = await this.anneeModel.findOne({ statut: 'active' }).exec()
+      ?? await this.anneeModel.findOne({ statut: 'preparation' }).exec();
+    if (!active) return;
+    const anneeId = (active as any)._id.toString();
+
+    let touched = 0;
+    for (const [model, label] of [
+      [this.salleModel, 'salles'],
+      [this.matiereModel, 'matières'],
+      [this.niveauModel, 'niveaux'],
+    ] as const) {
+      const res = await (model as any).updateMany(
+        { $or: [{ anneeScolaireId: { $exists: false } }, { anneeScolaireId: '' }, { anneeScolaireId: null }] },
+        { $set: { anneeScolaireId: anneeId } },
+      ).exec();
+      if (res.modifiedCount > 0) {
+        touched += res.modifiedCount;
+        this.logger.log(`Migration ${label} → année active : ${res.modifiedCount} mis à jour`);
+      }
+    }
+
+    // Créer les niveaux manquants pour l'année active (dérivés des classes + matières)
+    const niveauxExistants = await this.niveauModel.countDocuments({ anneeScolaireId: anneeId }).exec();
+    if (niveauxExistants === 0) {
+      const classes = await this.classeModel.find({ anneeScolaireId: anneeId }).lean().exec();
+      const matieres = await this.matiereModel.find({ anneeScolaireId: anneeId }).lean().exec();
+      const ordre = ['CP','CE1','CE2','CM1','CM2','6ème','5ème','4ème','3ème','2nde','1ère','Terminale'];
+      const nomsNiveaux = [...new Set(classes.map((c: any) => c.niveau).filter(Boolean))]
+        .sort((a, b) => ordre.indexOf(a) - ordre.indexOf(b));
+      const docs = nomsNiveaux.map((nom, idx) => {
+        const matiereIds = matieres
+          .filter((m: any) => (m.coefficients || []).some((c: any) => c.niveau === nom))
+          .map((m: any) => m._id.toString());
+        return { nom, ordre: idx, description: '', matiere_ids: matiereIds, anneeScolaireId: anneeId };
+      });
+      if (docs.length > 0) {
+        await this.niveauModel.insertMany(docs);
+        this.logger.log(`Migration niveaux : ${docs.length} niveaux créés pour l'année active`);
+      }
+    }
+
+    if (touched === 0 && niveauxExistants > 0) {
+      this.logger.log('Migration entités globales → année : rien à migrer');
+    }
+  }
+
+  private async migrateVersInscriptions() {
+    const eleves = await this.eleveModel.find({
+      $or: [
+        { inscriptions: { $exists: false } },
+        { inscriptions: { $size: 0 } },
+      ],
+      classe_id: { $exists: true, $nin: ['', null] },
+    }).lean().exec();
+
+    if (eleves.length === 0) {
+      this.logger.log('Migration inscriptions : déjà migrés ou aucun élève à migrer');
+      return;
+    }
+
+    this.logger.log(`Migration inscriptions : ${eleves.length} élèves à migrer`);
+    const classes = await this.classeModel.find().lean().exec();
+    const classeMap = new Map(classes.map(c => [c._id.toString(), c]));
+
+    const ops: any[] = [];
+
+    for (const eleve of eleves) {
+      const historique: any[] = (eleve as any).historique_classes || [];
+      const inscriptions: any[] = [];
+
+      if (historique.length === 0) {
+        // Pas d'historique : créer une entrée active depuis classe_id
+        const classe = classeMap.get((eleve as any).classe_id);
+        const anneeScolaireId = classe ? (classe as any).anneeScolaireId || '' : '';
+        inscriptions.push({
+          classeId: (eleve as any).classe_id,
+          status: 'active',
+          anneeScolaireId,
+          ordre: 1,
+        });
+      } else {
+        // Trier l'historique par annee_scolaire croissant
+        const sorted = [...historique].sort((a, b) =>
+          (a.annee_scolaire || '').localeCompare(b.annee_scolaire || '')
+        );
+
+        let ordre = 1;
+        for (const h of sorted) {
+          inscriptions.push({
+            classeId: h.classe_id,
+            status: 'inactive',
+            anneeScolaireId: h.anneeScolaireId || '',
+            ordre: ordre++,
+          });
+        }
+
+        // Vérifier si la dernière entrée correspond au classe_id actuel
+        const lastH = sorted[sorted.length - 1];
+        const classeIdActuel = (eleve as any).classe_id;
+
+        if (lastH.classe_id === classeIdActuel) {
+          // Passer la dernière en active
+          inscriptions[inscriptions.length - 1].status = 'active';
+        } else {
+          // Ajouter une nouvelle entrée active
+          const classe = classeMap.get(classeIdActuel);
+          const anneeScolaireId = classe ? (classe as any).anneeScolaireId || '' : '';
+          inscriptions.push({
+            classeId: classeIdActuel,
+            status: 'active',
+            anneeScolaireId,
+            ordre: ordre,
+          });
+        }
+      }
+
+      ops.push({
+        updateOne: {
+          filter: { _id: (eleve as any)._id },
+          update: { $set: { inscriptions } },
+        },
+      });
+    }
+
+    if (ops.length > 0) await this.eleveModel.bulkWrite(ops);
+    this.logger.log(`Migration inscriptions : ${ops.length} élèves migrés`);
   }
 
   // Déduit l'année scolaire depuis une date ISO "YYYY-MM-DD"

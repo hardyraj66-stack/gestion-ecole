@@ -395,29 +395,6 @@ export function AnneeScolairePage() {
                 <StatItem label={t('anneeScolaire.colonnes.notes')} value={activeNotes} />
               </div>
 
-              {!isViewingArchive && (
-                <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                  <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                    {t('anneeScolaire.migrationElevesTitre')}
-                  </p>
-                  <div style={{ background: 'var(--info-bg, rgba(59,130,246,0.08))', border: '1px solid var(--info, #3b82f6)', borderRadius: 8, padding: '1rem' }}>
-                    <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>ℹ️ {t('anneeScolaire.migrationElevesDescription')}</p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--danger)', marginBottom: '0.75rem' }}>⛔ {t('anneeScolaire.migrationIrreversible')}</p>
-                    {showMigrationInput ? (
-                      <div>
-                        <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t('anneeScolaire.migrationSaisirConfirmer')}</p>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <Input label="" value={migrationConfirmText} onChange={e => setMigrationConfirmText(e.target.value)} placeholder={t('anneeScolaire.migrationConfirmerPlaceholder')} />
-                          <Button variant="primary" size="sm" disabled={migrationConfirmText !== 'CONFIRMER'} loading={migrating} onClick={handleMigrationValiderActive}>{t('anneeScolaire.migrationValider')}</Button>
-                          <Button size="sm" variant="secondary" onClick={() => { setShowMigrationInput(false); setMigrationConfirmText(''); }}>{t('common.annuler')}</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <Button variant="primary" size="sm" loading={migrating} onClick={handleMigrationActive}>{t('anneeScolaire.migrationElevesLancer')}</Button>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
             {!isViewingArchive && (
@@ -480,52 +457,6 @@ export function AnneeScolairePage() {
                 )}
               </div>
 
-              {/* ── Migration ── */}
-              {!isViewingArchive && (
-                <div style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                  <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                    {t('anneeScolaire.migrationTitre')}
-                  </p>
-                  {preparation.migration_effectuee ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)' }}>
-                      <Icon path="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" size={18} />
-                      <span style={{ fontWeight: 600 }}>{t('anneeScolaire.migrationEffectuee')}</span>
-                    </div>
-                  ) : (
-                    <div style={{ background: 'var(--warning-bg, rgba(251,191,36,0.1))', border: '1px solid var(--warning)', borderRadius: 8, padding: '1rem' }}>
-                      <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>⚠️ {t('anneeScolaire.migrationDescription')}</p>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--danger)', marginBottom: '0.75rem' }}>⛔ {t('anneeScolaire.migrationIrreversible')}</p>
-                      {showMigrationInput ? (
-                        <div>
-                          <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t('anneeScolaire.migrationSaisirConfirmer')}</p>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <Input
-                              label=""
-                              value={migrationConfirmText}
-                              onChange={e => setMigrationConfirmText(e.target.value)}
-                              placeholder={t('anneeScolaire.migrationConfirmerPlaceholder')}
-                            />
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              disabled={migrationConfirmText !== 'CONFIRMER'}
-                              loading={migrating}
-                              onClick={handleMigrationValider}
-                            >
-                              {t('anneeScolaire.migrationValider')}
-                            </Button>
-                            <Button size="sm" variant="secondary" onClick={() => { setShowMigrationInput(false); setMigrationConfirmText(''); }}>{t('common.annuler')}</Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <Button variant="danger" size="sm" loading={migrating} onClick={handleMigration}>
-                          {t('anneeScolaire.migrationLancer')}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* ── Démarrage ── */}
               {!isViewingArchive && (
@@ -545,6 +476,23 @@ export function AnneeScolairePage() {
                 </div>
               )}
             </div>
+          </div>
+        </Card>
+      )}
+
+      {/* ── Section : Réinscriptions ─────────────────────────────────────── */}
+      {!isViewingArchive && preparation && (
+        <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--warning)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ marginBottom: '0.25rem' }}>Réinscriptions — {preparation.label}</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Gérez les réinscriptions des élèves pour la nouvelle année scolaire.
+              </p>
+            </div>
+            <Button as="link" to="/eleves" variant="outline">
+              Gérer les réinscriptions
+            </Button>
           </div>
         </Card>
       )}

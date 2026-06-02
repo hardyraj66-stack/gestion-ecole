@@ -4,6 +4,7 @@ import { Matiere, MatiereSchema } from './matiere.schema';
 import { Note, NoteSchema } from '../notes/note.schema';
 import { Creneau, CreneauSchema } from '../planning/creneau.schema';
 import { Niveau, NiveauSchema } from '../niveaux/niveau.schema';
+import { AnneeScolaire, AnneeScolaireSchema } from '../annees/annee.schema';
 import { MatieresController } from './matieres.controller';
 import { MatieresService } from './matieres.service';
 
@@ -13,6 +14,7 @@ import { MatieresService } from './matieres.service';
     { name: Note.name, schema: NoteSchema },
     { name: Creneau.name, schema: CreneauSchema },
     { name: Niveau.name, schema: NiveauSchema },
+    { name: AnneeScolaire.name, schema: AnneeScolaireSchema },
   ])],
   controllers: [MatieresController],
   providers: [MatieresService],

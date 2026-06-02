@@ -35,7 +35,7 @@ function getInitialsProf(p: Professeur) {
 export function ProfesseursList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isViewingArchive } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
   const readOnly = useReadOnly();
   const { create, update } = useProfesseurs();
 
@@ -54,14 +54,14 @@ export function ProfesseursList() {
   const [localItems, setLocalItems] = useState<Professeur[] | null>(null);
 
   const fetchSuggestions = useCallback(async (query: string): Promise<Suggestion[]> => {
-    const data = await readApi.professeurs(1, 8, query);
+    const data = await readApi.professeurs(1, 8, query, viewingId ?? undefined);
     if (!data?.items) return [];
     return (data.items as any[]).map((p: any) => ({
       id: p.id,
       label: `${p.prenom} ${p.nom}`,
       sublabel: p.statut === 'actif' ? t('professeurs.statuts.actif') : t('professeurs.statuts.inactif'),
     }));
-  }, [t]);
+  }, [t, viewingId]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

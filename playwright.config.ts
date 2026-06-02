@@ -9,6 +9,10 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     headless: false,
+    viewport: { width: 1920, height: 1080 },
+    launchOptions: {
+      args: ['--window-size=1920,1080', '--window-position=0,0', '--start-maximized'],
+    },
   },
   webServer: [
     {
