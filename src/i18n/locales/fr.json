@@ -29,7 +29,9 @@
       "admin": "Administrateur",
       "professeur": "Professeur",
       "secretaire": "Secrétaire"
-    }
+    },
+    "logoutConfirmTitle": "Déconnexion",
+    "logoutConfirmMessage": "Voulez-vous vraiment vous déconnecter ?"
   },
   "common": {
     "nouveau": "Nouveau",

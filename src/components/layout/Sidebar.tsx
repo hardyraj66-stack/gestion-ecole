@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useConfirm } from '../shared/ConfirmDialog';
 import { Badge } from '../ui/Badge';
 import { BrandIcon } from '../brand/BrandIcon';
 import { BrandWordmark } from '../brand/BrandWordmark';
@@ -48,6 +49,17 @@ export function Sidebar() {
   const { active, preparation, getAll: fetchAnnees } = useAnnees();
   const { viewing, isViewingArchive, exitView } = useViewing();
   const { user, logout, hasRole } = useAuth();
+  const confirm = useConfirm();
+
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: t('sidebar.logoutConfirmTitle'),
+      message: t('sidebar.logoutConfirmMessage'),
+      confirmText: t('sidebar.logout'),
+      variant: 'warning',
+    });
+    if (ok) logout();
+  };
   const [expanded, setExpanded] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -184,7 +196,7 @@ export function Sidebar() {
           <button
             type="button"
             className="sidebar-logout"
-            onClick={logout}
+            onClick={handleLogout}
             title={t('sidebar.logout')}
             aria-label={t('sidebar.logout')}
           >

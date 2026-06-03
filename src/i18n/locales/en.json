@@ -29,7 +29,9 @@
       "admin": "Administrator",
       "professeur": "Teacher",
       "secretaire": "Secretary"
-    }
+    },
+    "logoutConfirmTitle": "Sign out",
+    "logoutConfirmMessage": "Do you really want to sign out?"
   },
   "common": {
     "nouveau": "New",

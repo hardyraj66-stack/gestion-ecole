@@ -29,7 +29,9 @@
       "admin": "Mpitantana",
       "professeur": "Mpampianatra",
       "secretaire": "Sekretera"
-    }
+    },
+    "logoutConfirmTitle": "Hivoaka",
+    "logoutConfirmMessage": "Tianao tokoa ve ny hivoaka?"
   },
   "common": {
     "nouveau": "Vaovao",
