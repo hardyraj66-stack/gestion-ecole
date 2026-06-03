@@ -98,6 +98,7 @@ function generateEleves(): Eleve[] {
         date_naissance: `${anneeNaissance}-${mois}-${jour}`,
         genre,
         classe_id: classe.id,
+        statut: 'actif' as const,
         email: `${prenom.toLowerCase()}.${nom.toLowerCase()}@ecole.fr`,
         telephone: `06 ${String(Math.floor(Math.random() * 100)).padStart(2, '0')} ${String(Math.floor(Math.random() * 100)).padStart(2, '0')} ${String(Math.floor(Math.random() * 100)).padStart(2, '0')} ${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`,
       });
@@ -291,6 +292,11 @@ export const mockAnnees: AnneeScolaire[] = [
     label: '2024-2025',
     debut: '2024-09-02',
     fin: '2025-07-05',
+    debut_planifie: '2024-09-02',
+    fin_planifie: '2025-07-05',
+    debut_reel: '2024-09-02',
+    fin_reel: null,
+    migration_effectuee: false,
     statut: 'active',
     historique: [
       { action: 'creation', date: '2024-07-01T10:00:00.000Z', details: 'Année scolaire 2024-2025 créée' },
@@ -302,6 +308,11 @@ export const mockAnnees: AnneeScolaire[] = [
     label: '2023-2024',
     debut: '2023-09-04',
     fin: '2024-07-06',
+    debut_planifie: '2023-09-04',
+    fin_planifie: '2024-07-06',
+    debut_reel: '2023-09-04',
+    fin_reel: '2024-07-06',
+    migration_effectuee: true,
     statut: 'terminee',
     historique: [
       { action: 'creation', date: '2023-07-01T10:00:00.000Z', details: 'Année scolaire 2023-2024 créée' },

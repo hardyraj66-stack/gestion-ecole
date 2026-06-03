@@ -6,7 +6,11 @@ import { Eleve, EleveSchema } from '../eleves/eleve.schema';
 import { Matiere, MatiereSchema } from '../matieres/matiere.schema';
 import { Note, NoteSchema } from '../notes/note.schema';
 import { Creneau, CreneauSchema } from '../planning/creneau.schema';
+import { TeacherAssignment, TeacherAssignmentSchema } from '../teacher-assignments/teacher-assignment.schema';
+import { Niveau, NiveauSchema } from '../niveaux/niveau.schema';
+import { Salle, SalleSchema } from '../salles/salle.schema';
 import { PeriodesModule } from '../periodes/periodes.module';
+import { ReadModule } from '../read/read.module';
 import { AnneesController } from './annees.controller';
 import { AnneesService } from './annees.service';
 
@@ -19,8 +23,12 @@ import { AnneesService } from './annees.service';
       { name: Matiere.name, schema: MatiereSchema },
       { name: Note.name, schema: NoteSchema },
       { name: Creneau.name, schema: CreneauSchema },
+      { name: TeacherAssignment.name, schema: TeacherAssignmentSchema },
+      { name: Niveau.name, schema: NiveauSchema },
+      { name: Salle.name, schema: SalleSchema },
     ]),
     PeriodesModule,
+    ReadModule,
   ],
   controllers: [AnneesController],
   providers: [AnneesService],

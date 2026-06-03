@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { EleveStatut } from '../../types';
+import { EleveStatut, getClasseActive } from '../../types';
 import { useEleveFicheData } from '../../hooks/usePageData';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { Button } from '../../components/shared/Button';
@@ -15,12 +16,15 @@ import { FicheShortcuts } from './FicheShortcuts';
 import { FicheAvertissements } from './FicheAvertissements';
 import { FicheAssiduité } from './FicheAssiduité';
 import { FicheStatut } from './FicheStatut';
+import { FicheParcours } from './FicheParcours';
 
 export function EleveFiche() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { viewingId } = useViewing();
-  const { data, loading, error, readOnly } = useEleveFicheData(id || '');
+  const { isTerminee } = useAnneeScolaireStatus();
+  const { data, loading, error, readOnly: readOnlyArchive } = useEleveFicheData(id || '');
+  const readOnly = readOnlyArchive || isTerminee;
   const [statut, setStatut] = useState<EleveStatut | null>(null);
   const [nbAvertissements, setNbAvertissements] = useState(0);
   // anneeId passé aux sous-composants pour isoler les données de suivi par année
@@ -46,12 +50,18 @@ export function EleveFiche() {
         )}
         <Button
           variant="outline"
-          onClick={() => window.open(`${API_BASE_URL}/export/carte/${id}`, '_blank')}
+          onClick={() => window.open(`${API_BASE_URL}/export/carte/${id}${viewingId ? `?anneeId=${viewingId}` : ''}`, '_blank')}
           title={t('fiche.carteScolaireTitle')}
         >
           {t('fiche.carteScolaire')}
         </Button>
       </PageHeader>
+
+      {isTerminee && !readOnlyArchive && (
+        <Alert variant="info" icon={false}>
+          {t('layout.aucuneAnneeActive')} {t('layout.aucuneAnneeActiveMsg')}
+        </Alert>
+      )}
 
       <div className="fiche-layout">
         <div className="fiche-col-left">
@@ -66,10 +76,11 @@ export function EleveFiche() {
             readOnly={readOnly}
             onStatutChange={setStatut}
           />
+          <FicheParcours inscriptions={eleve.inscriptions ?? []} readOnly={readOnly} />
         </div>
 
         <div className="fiche-col-right">
-          <FicheShortcuts eleveId={id!} classeId={eleve.classe_id} />
+          <FicheShortcuts eleveId={id!} classeId={getClasseActive(eleve)?.classeId ?? eleve.classe_id ?? ''} />
           <FicheAvertissements
             eleveId={id!}
             anneeActiveId={anneeActiveId ?? anneeActive ?? null}

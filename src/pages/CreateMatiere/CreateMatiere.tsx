@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useMatieres } from '../../contexts/MatiereContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { readApi } from '../../services/readApi';
 import { CoefficientNiveau } from '../../types';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -19,6 +20,7 @@ import { MatierePreview } from './MatierePreview';
 export function CreateMatiere() {
   const { t } = useTranslation();
   const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const navigate = useNavigate();
   const { create } = useMatieres();
 
@@ -54,7 +56,7 @@ export function CreateMatiere() {
     }).catch(() => {});
   }, []);
 
-  if (isViewingArchive) return <Navigate to="/matieres" replace />;
+  if (readOnly) return <Navigate to="/matieres" replace />;
 
   const setCoeffForNiveau = (niveau: string, val: number) => {
     setCoefficients(prev => prev.map(c => c.niveau === niveau ? { ...c, coefficient: val } : c));

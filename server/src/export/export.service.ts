@@ -88,10 +88,20 @@ export class ExportService {
     return a ? (a as any)._id.toString() : null;
   }
 
+  /** Résout l'année cible : ID fourni (mode archive) sinon active, sinon préparation. */
+  private async resolveAnneeId(anneeId?: string): Promise<string | null> {
+    if (anneeId) return anneeId;
+    let a = await this.anneeModel.findOne({ statut: 'active' }).exec();
+    if (!a) a = await this.anneeModel.findOne({ statut: 'preparation' }).exec();
+    return a ? (a as any)._id.toString() : null;
+  }
+
   // ─── ÉLÈVES ───────────────────────────────────────────────────────────────
 
-  async elevesData(classeId?: string, search?: string) {
+  async elevesData(classeId?: string, search?: string, anneeId?: string) {
     const filter: any = {};
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    if (resolvedId) filter.anneeScolaireId = resolvedId;
     if (classeId) filter.classe_id = classeId;
     if (search) {
       const tokens = search.trim().split(/\s+/);
@@ -123,15 +133,15 @@ export class ExportService {
     });
   }
 
-  async elevesCsv(classeId?: string, search?: string): Promise<string> {
-    const rows = await this.elevesData(classeId, search);
+  async elevesCsv(classeId?: string, search?: string, anneeId?: string): Promise<string> {
+    const rows = await this.elevesData(classeId, search, anneeId);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async elevesXlsx(classeId?: string, search?: string): Promise<Buffer> {
-    const rows = await this.elevesData(classeId, search);
+  async elevesXlsx(classeId?: string, search?: string, anneeId?: string): Promise<Buffer> {
+    const rows = await this.elevesData(classeId, search, anneeId);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Élèves');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Élèves');
@@ -139,9 +149,9 @@ export class ExportService {
 
   // ─── CLASSES ──────────────────────────────────────────────────────────────
 
-  async classesData(niveau?: string) {
-    const anneeId = await this.anneeActiveId();
-    const filter: any = anneeId ? { anneeScolaireId: anneeId } : {};
+  async classesData(niveau?: string, anneeId?: string) {
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    const filter: any = resolvedId ? { anneeScolaireId: resolvedId } : {};
     if (niveau) filter.niveau = niveau;
     const items = await this.classeModel.find(filter).sort({ nom: 1 }).exec();
     return items.map(c => {
@@ -158,15 +168,15 @@ export class ExportService {
     });
   }
 
-  async classesCsv(niveau?: string): Promise<string> {
-    const rows = await this.classesData(niveau);
+  async classesCsv(niveau?: string, anneeId?: string): Promise<string> {
+    const rows = await this.classesData(niveau, anneeId);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async classesXlsx(niveau?: string): Promise<Buffer> {
-    const rows = await this.classesData(niveau);
+  async classesXlsx(niveau?: string, anneeId?: string): Promise<Buffer> {
+    const rows = await this.classesData(niveau, anneeId);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Classes');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Classes');
@@ -174,8 +184,10 @@ export class ExportService {
 
   // ─── MATIÈRES ─────────────────────────────────────────────────────────────
 
-  async matieresData(niveau?: string) {
+  async matieresData(niveau?: string, anneeId?: string) {
     const filter: any = {};
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    if (resolvedId) filter.anneeScolaireId = resolvedId;
     if (niveau) filter['coefficients.niveau'] = niveau;
     const items = await this.matiereModel.find(filter).sort({ nom: 1 }).exec();
     return items.map(m => {
@@ -189,15 +201,15 @@ export class ExportService {
     });
   }
 
-  async matieresCsv(niveau?: string): Promise<string> {
-    const rows = await this.matieresData(niveau);
+  async matieresCsv(niveau?: string, anneeId?: string): Promise<string> {
+    const rows = await this.matieresData(niveau, anneeId);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async matieresXlsx(niveau?: string): Promise<Buffer> {
-    const rows = await this.matieresData(niveau);
+  async matieresXlsx(niveau?: string, anneeId?: string): Promise<Buffer> {
+    const rows = await this.matieresData(niveau, anneeId);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Matières');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Matières');
@@ -205,8 +217,10 @@ export class ExportService {
 
   // ─── SALLES ───────────────────────────────────────────────────────────────
 
-  async sallesData(type?: string) {
+  async sallesData(type?: string, anneeId?: string) {
     const filter: any = {};
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    if (resolvedId) filter.anneeScolaireId = resolvedId;
     if (type) filter.type = type;
     const items = await this.salleModel.find(filter).sort({ nom: 1 }).exec();
     return items.map(s => {
@@ -220,15 +234,15 @@ export class ExportService {
     });
   }
 
-  async sallesCsv(type?: string): Promise<string> {
-    const rows = await this.sallesData(type);
+  async sallesCsv(type?: string, anneeId?: string): Promise<string> {
+    const rows = await this.sallesData(type, anneeId);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async sallesXlsx(type?: string): Promise<Buffer> {
-    const rows = await this.sallesData(type);
+  async sallesXlsx(type?: string, anneeId?: string): Promise<Buffer> {
+    const rows = await this.sallesData(type, anneeId);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Salles');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Salles');
@@ -275,8 +289,10 @@ export class ExportService {
 
   // ─── ÉVALUATIONS ──────────────────────────────────────────────────────────
 
-  async evaluationsData(classeId?: string, matiereId?: string, trimestre?: number) {
+  async evaluationsData(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string) {
     const filter: any = {};
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    if (resolvedId) filter.anneeScolaireId = resolvedId;
     if (classeId) filter.classe_id = classeId;
     if (matiereId) filter.matiere_id = matiereId;
     if (trimestre) filter.trimestre = trimestre;
@@ -297,15 +313,15 @@ export class ExportService {
     });
   }
 
-  async evaluationsCsv(classeId?: string, matiereId?: string, trimestre?: number): Promise<string> {
-    const rows = await this.evaluationsData(classeId, matiereId, trimestre);
+  async evaluationsCsv(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string): Promise<string> {
+    const rows = await this.evaluationsData(classeId, matiereId, trimestre, anneeId);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async evaluationsXlsx(classeId?: string, matiereId?: string, trimestre?: number): Promise<Buffer> {
-    const rows = await this.evaluationsData(classeId, matiereId, trimestre);
+  async evaluationsXlsx(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string): Promise<Buffer> {
+    const rows = await this.evaluationsData(classeId, matiereId, trimestre, anneeId);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Évaluations');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Évaluations');
@@ -313,8 +329,10 @@ export class ExportService {
 
   // ─── ÉLÈVES D'UNE CLASSE ──────────────────────────────────────────────────
 
-  async classeElevesData(classeId: string, search?: string) {
+  async classeElevesData(classeId: string, search?: string, anneeId?: string) {
     const filter: any = { classe_id: classeId };
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    if (resolvedId) filter.anneeScolaireId = resolvedId;
     if (search) {
       const tokens = search.trim().split(/\s+/);
       if (tokens.length >= 2) {
@@ -345,15 +363,15 @@ export class ExportService {
     };
   }
 
-  async classeElevesCsv(classeId: string, search?: string): Promise<string> {
-    const { rows } = await this.classeElevesData(classeId, search);
+  async classeElevesCsv(classeId: string, search?: string, anneeId?: string): Promise<string> {
+    const { rows } = await this.classeElevesData(classeId, search, anneeId);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async classeElevesXlsx(classeId: string, search?: string): Promise<Buffer> {
-    const { classeNom, rows } = await this.classeElevesData(classeId, search);
+  async classeElevesXlsx(classeId: string, search?: string, anneeId?: string): Promise<Buffer> {
+    const { classeNom, rows } = await this.classeElevesData(classeId, search, anneeId);
     if (!rows.length) return toXlsx([['Aucun résultat']], classeNom);
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], classeNom);
@@ -361,15 +379,21 @@ export class ExportService {
 
   // ─── BULLETIN PDF (HTML imprimable) ───────────────────────────────────────
 
-  async bulletinHtml(eleveId: string, trimestre: number): Promise<string | null> {
-    const eleve = await this.eleveModel.findOne({ source_id: eleveId }).exec();
+  async bulletinHtml(eleveId: string, trimestre: number, anneeId?: string): Promise<string | null> {
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    const eleveFilter: any = { source_id: eleveId };
+    if (resolvedId) eleveFilter.anneeScolaireId = resolvedId;
+    let eleve = await this.eleveModel.findOne(eleveFilter).exec();
+    if (!eleve) eleve = await this.eleveModel.findOne({ source_id: eleveId }).exec();
     if (!eleve) return null;
     const ej = eleve.toJSON() as any;
 
     const classe = await this.classeModel.findOne({ source_id: ej.classe_id }).exec();
     const cj = classe?.toJSON() as any;
 
-    const notes = await this.noteModel.find({ eleve_id: eleveId, trimestre }).exec();
+    const noteFilter: any = { eleve_id: eleveId, trimestre };
+    if (resolvedId) noteFilter.anneeScolaireId = resolvedId;
+    const notes = await this.noteModel.find(noteFilter).exec();
     const matieres = await this.matiereModel.find().exec();
     const matiereMap = new Map(matieres.map(m => [m.source_id, m.toJSON() as any]));
 
@@ -573,8 +597,12 @@ export class ExportService {
 
   // ─── CARTE D'IDENTITÉ SCOLAIRE (HTML imprimable) ──────────────────────────
 
-  async carteEleveHtml(eleveId: string): Promise<string | null> {
-    const eleve = await this.eleveModel.findOne({ source_id: eleveId }).exec();
+  async carteEleveHtml(eleveId: string, anneeId?: string): Promise<string | null> {
+    const resolvedId = await this.resolveAnneeId(anneeId);
+    const eleveFilter: any = { source_id: eleveId };
+    if (resolvedId) eleveFilter.anneeScolaireId = resolvedId;
+    let eleve = await this.eleveModel.findOne(eleveFilter).exec();
+    if (!eleve) eleve = await this.eleveModel.findOne({ source_id: eleveId }).exec();
     if (!eleve) return null;
     const ej = eleve.toJSON() as any;
 

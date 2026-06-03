@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { useDashboardData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { StatCard } from '../../components/ui/StatCard';
@@ -19,6 +21,8 @@ export function Dashboard() {
   const { t } = useTranslation();
   const { active, preparation } = useAnnees();
   const { viewing, isViewingArchive: readOnly } = useViewing();
+  const { peutCommencer } = useAnneeScolaireStatus();
+  const navigate = useNavigate();
   const [classesPage, setClassesPage] = useState(1);
 
   const { data, loading, error } = useDashboardData(classesPage);
@@ -47,7 +51,25 @@ export function Dashboard() {
         )}
       </PageHeader>
 
-      {!readOnly && !active && preparation && (
+      {/* ── Alerte : l'année peut commencer ─────────────────────────────── */}
+      {!readOnly && peutCommencer && preparation && (
+        <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <p style={{ fontWeight: 600, marginBottom: '0.25rem', color: 'var(--success)' }}>
+              🟢 {t('dashboard.anneePreteCommencer', { label: preparation.label })}
+            </p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              {t('dashboard.anneePreteMsg', { date: preparation.debut_planifie })}
+            </p>
+          </div>
+          <Button variant="primary" size="sm" onClick={() => navigate('/annee-scolaire')}>
+            {t('dashboard.gererCycleScolaire')}
+          </Button>
+        </Card>
+      )}
+
+      {/* ── Alerte : aucune année active (mais une en préparation) ─────── */}
+      {!readOnly && !active && preparation && !peutCommencer && (
         <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>⚠️ {t('dashboard.aucuneAnneeActive')}</p>
@@ -57,11 +79,29 @@ export function Dashboard() {
         </Card>
       )}
 
+      {/* ── Alerte : aucune année configurée du tout ─────────────────────── */}
+      {!readOnly && !active && !preparation && (
+        <Card style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>⚠️ {t('dashboard.aucuneAnneeConfig')}</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('dashboard.aucuneAnneeConfigMsg')}</p>
+          </div>
+          <Button as="link" to="/annee-scolaire" variant="primary">{t('dashboard.creerAnnee')}</Button>
+        </Card>
+      )}
+
       <div className="stats-grid">
-        <StatCard title={t('nav.classes')} value={stats.classes} subtitle={t('dashboard.stats.toutesNiveaux')} color="blue" icon="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-        <StatCard title={t('nav.eleves')} value={stats.eleves} subtitle={readOnly ? t('sidebar.statut.archive') : t('dashboard.stats.actifs')} color="purple" icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <StatCard title={t('nav.matieres')} value={stats.matieres} subtitle={t('dashboard.stats.auProgramme')} color="green" icon="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <StatCard title={t('nav.notes')} value={stats.notes} subtitle={readOnly ? t('sidebar.statut.archive') : t('dashboard.stats.total')} color="orange" icon="M12 20h9" />
+        <StatCard title={t('nav.classes')} value={stats.classes} subtitle={t('dashboard.stats.toutesNiveaux')} color="blue" icon="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" href="/classes" />
+        <StatCard
+          title={t('nav.eleves')}
+          value={`${stats.elevesInscrits ?? stats.eleves} / ${stats.elevesTotal ?? stats.eleves}`}
+          subtitle={t('dashboard.stats.elevesInscrits')}
+          color="purple"
+          icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+          href="/eleves"
+        />
+        <StatCard title={t('nav.matieres')} value={stats.matieres} subtitle={t('dashboard.stats.auProgramme')} color="green" icon="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" href="/matieres" />
+        <StatCard title={t('nav.notes')} value={stats.notes} subtitle={t('dashboard.stats.total')} color="orange" icon="M12 20h9" href="/notes" />
       </div>
 
       <div className="dashboard-grid">

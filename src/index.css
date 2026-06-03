@@ -1281,6 +1281,18 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+}
+
+.stat-card-link {
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.stat-card-link:hover {
+  box-shadow: var(--card-shadow), 0 4px 16px rgba(0,0,0,0.10);
+  transform: translateY(-1px);
 }
 
 .stat-content {
@@ -3943,6 +3955,7 @@ a {
 }
 
 /* ========== FILTER RESET BUTTON ========== */
+
 .filter-reset-btn {
   display: inline-flex;
   align-items: center;

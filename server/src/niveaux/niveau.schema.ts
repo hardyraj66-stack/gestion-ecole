@@ -10,7 +10,7 @@ const toJsonTransform = (_: any, ret: Record<string, any>) => {
 
 @Schema({ timestamps: true, toJSON: { virtuals: true, transform: toJsonTransform } })
 export class Niveau extends Document {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   nom: string;
 
   @Prop({ required: true, default: 0 })
@@ -21,7 +21,14 @@ export class Niveau extends Document {
 
   @Prop({ type: [String], default: [] })
   matiere_ids: string[];
+
+  /** Référence ID vers la collection AnneeScolaire — isole les niveaux par année */
+  @Prop({ default: '' })
+  anneeScolaireId: string;
 }
 
 export const NiveauSchema = SchemaFactory.createForClass(Niveau);
 NiveauSchema.index({ ordre: 1, nom: 1 });
+NiveauSchema.index({ anneeScolaireId: 1 });
+// Unicité du nom scopée par année
+NiveauSchema.index({ anneeScolaireId: 1, nom: 1 }, { unique: true });

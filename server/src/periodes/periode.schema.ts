@@ -36,7 +36,5 @@ export class PeriodeEvaluation extends Document {
 
 export const PeriodeEvaluationSchema = SchemaFactory.createForClass(PeriodeEvaluation);
 
-// 1 seule période par (trimestre, type, annee_scolaire) — conservé pendant la migration
-PeriodeEvaluationSchema.index({ trimestre: 1, type: 1, annee_scolaire: 1 }, { unique: true, sparse: true });
-// 1 seule période par (trimestre, type, anneeScolaireId) — nouvel index normalisé
-PeriodeEvaluationSchema.index({ trimestre: 1, type: 1, anneeScolaireId: 1 }, { unique: true, sparse: true });
+// Index unique normalisé
+PeriodeEvaluationSchema.index({ trimestre: 1, type: 1, anneeScolaireId: 1 }, { unique: true });

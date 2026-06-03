@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useClasses } from '../../contexts/ClasseContext';
 import { useSalles } from '../../contexts/SalleContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/shared/Card';
@@ -20,6 +21,7 @@ export function CreateClasse() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isViewingArchive } = useViewing();
+  const { isTerminee } = useAnneeScolaireStatus();
   const { create } = useClasses();
   const { salles, loading: sallesLoading, getAll: fetchSalles } = useSalles();
   const confirm = useConfirm();
@@ -81,7 +83,8 @@ export function CreateClasse() {
     }
   }, [salles, salleId, sallesOccupees]);
 
-  if (isViewingArchive) return <Navigate to="/classes" replace />;
+  const readOnly = isViewingArchive || isTerminee;
+  if (readOnly) return <Navigate to="/classes" replace />;
 
   const isFixe = salleType === 'fixe';
   const selectedSalle = salles.find(s => s.id === salleId);

@@ -1,10 +1,15 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
 import { AnneesService } from './annees.service';
 import { EventsGateway } from '../events/events.gateway';
+import { ViewBuilderService } from '../read/view-builder.service';
 
 @Controller('annees')
 export class AnneesController {
-  constructor(private readonly service: AnneesService, private readonly events: EventsGateway) {}
+  constructor(
+    private readonly service: AnneesService,
+    private readonly events: EventsGateway,
+    private readonly viewBuilder: ViewBuilderService,
+  ) {}
 
   @Get()
   findAll() { return this.service.findAll(); }
@@ -54,15 +59,22 @@ export class AnneesController {
   @Post(':id/demarrer')
   async demarrer(@Param('id') id: string) {
     const annee = await this.service.demarrer(id);
+    await this.viewBuilder.rebuildAll();
     this.events.emit('annee:updated', annee);
     return annee;
   }
 
   @Post(':id/terminer')
   async terminer(@Param('id') id: string) {
-    const result = await this.service.terminer(id);
-    this.events.emit('annee:updated', result.terminee);
-    this.events.emit('annee:created', result.nouvelle);
+    const terminee = await this.service.terminer(id);
+    this.events.emit('annee:updated', terminee);
+    return terminee;
+  }
+
+  @Post(':id/migrer-eleves')
+  async migrerEleves(@Param('id') id: string) {
+    const result = await this.service.migrerEleves(id);
+    this.events.emit('annee:migration', { id, ...result });
     return result;
   }
 }

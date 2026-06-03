@@ -91,7 +91,8 @@ export class ViewBuilderService implements OnModuleInit {
     if (eleveId) {
       const eleve = await this.eleveModel.findById(eleveId).lean().exec();
       await this.rebuildSingleEleve(eleveId);
-      if (eleve?.classe_id) await this.rebuildSingleClasseCount(eleve.classe_id);
+      const inscriptionActive = (eleve as any)?.inscriptions?.find((i: any) => i.status === 'active');
+      if (inscriptionActive?.classeId) await this.rebuildSingleClasseCount(inscriptionActive.classeId);
     } else {
       await Promise.all([this.rebuildEleves(), this.rebuildClasses()]);
     }
@@ -182,9 +183,6 @@ export class ViewBuilderService implements OnModuleInit {
       await this.readEleveModel.deleteMany({ source_id: eleveId }).exec();
       return;
     }
-    const classe = eleve.classe_id
-      ? await this.classeModel.findById(eleve.classe_id).lean().exec()
-      : null;
 
     const base = {
       nom: eleve.nom, prenom: eleve.prenom,
@@ -196,34 +194,47 @@ export class ViewBuilderService implements OnModuleInit {
       statut: (eleve as any).statut || 'actif',
     };
 
+    const inscriptions: any[] = (eleve as any).inscriptions || [];
     const ops: any[] = [];
-    const historique = (eleve as any).historique_classes as any[] || [];
 
-    for (const h of historique) {
-      const hAnneeId = h.anneeScolaireId || '';
+    // Supprimer tous les ReadEleve existants pour cet élève, puis recréer
+    await this.readEleveModel.deleteMany({ source_id: eleveId }).exec();
+
+    if (inscriptions.length === 0) {
+      // Élève sans aucune inscription : créer une entrée "orpheline" pour que la fiche soit accessible
       ops.push({ updateOne: {
-        filter: { source_id: eleveId, annee_scolaire: h.annee_scolaire },
-        update: { $set: { source_id: eleveId, annee_scolaire: h.annee_scolaire,
-          anneeScolaireId: hAnneeId,
-          classe_id: h.classe_id, classe_nom: h.classe_nom || '', classe_niveau: h.niveau || '',
-          ...base }},
+        filter: { source_id: eleveId, anneeScolaireId: '' },
+        update: { $set: {
+          source_id: eleveId,
+          anneeScolaireId: '',
+          annee_scolaire: '',
+          classe_id: '',
+          classe_nom: '',
+          classe_niveau: '',
+          ...base,
+        }},
         upsert: true,
       }});
-    }
+    } else {
+      for (const inscription of inscriptions) {
+        const classe = inscription.classeId
+          ? await this.classeModel.findById(inscription.classeId).lean().exec()
+          : null;
 
-    const anneeActuelle = classe ? (classe as any).annee_scolaire || '' : '';
-    const anneeActuelleId = classe ? (classe as any).anneeScolaireId || '' : '';
-    const dejaDansHistorique = historique.some((h: any) => h.annee_scolaire === anneeActuelle);
-    if (!dejaDansHistorique) {
-      ops.push({ updateOne: {
-        filter: { source_id: eleveId, annee_scolaire: anneeActuelle },
-        update: { $set: { source_id: eleveId, annee_scolaire: anneeActuelle,
-          anneeScolaireId: anneeActuelleId,
-          classe_id: eleve.classe_id, classe_nom: classe?.nom || '',
-          classe_niveau: (classe as any)?.niveau || '',
-          ...base }},
-        upsert: true,
-      }});
+        ops.push({ updateOne: {
+          filter: { source_id: eleveId, anneeScolaireId: inscription.anneeScolaireId },
+          update: { $set: {
+            source_id: eleveId,
+            anneeScolaireId: inscription.anneeScolaireId,
+            annee_scolaire: classe ? (classe as any).annee_scolaire || '' : '',
+            classe_id: inscription.classeId,
+            classe_nom: classe?.nom || '',
+            classe_niveau: (classe as any)?.niveau || '',
+            ...base,
+          }},
+          upsert: true,
+        }});
+      }
     }
 
     if (ops.length > 0) await this.readEleveModel.bulkWrite(ops);
@@ -232,7 +243,9 @@ export class ViewBuilderService implements OnModuleInit {
   private async rebuildSingleClasseCount(classeId: string) {
     const [classe, nbEleves] = await Promise.all([
       this.classeModel.findById(classeId).lean().exec(),
-      this.eleveModel.countDocuments({ classe_id: classeId }).exec(),
+      this.eleveModel.countDocuments({
+        inscriptions: { $elemMatch: { classeId, status: 'active' } },
+      }).exec(),
     ]);
     if (!classe) return;
     await this.readClasseModel.updateOne(
@@ -363,7 +376,7 @@ export class ViewBuilderService implements OnModuleInit {
   }
 
   // ============ FULL REBUILD ============
-  async rebuildAll() {
+  public async rebuildAll() {
     const t = Date.now();
     await Promise.all([
       this.rebuildClasses(), this.rebuildEleves(), this.rebuildMatieres(),
@@ -376,13 +389,19 @@ export class ViewBuilderService implements OnModuleInit {
   // ============ PROJECTIONS INDIVIDUELLES ============
 
   private async rebuildClasses() {
-    const [classes, eleves] = await Promise.all([
-      this.classeModel.find({ actif: { $ne: false } }).lean().exec(),
-      this.eleveModel.find().lean().exec(),
-    ]);
+    const classes = await this.classeModel.find({ actif: { $ne: false } }).lean().exec();
+
+    // Compter les élèves par classe depuis read_eleves (fiable en mode live et archive)
+    const readElevesAll = await this.readEleveModel.find({}, { classe_id: 1, anneeScolaireId: 1 }).lean().exec();
+    const countByClasse = new Map<string, number>();
+    for (const re of readElevesAll as any[]) {
+      if (!re.classe_id) continue;
+      countByClasse.set(re.classe_id, (countByClasse.get(re.classe_id) || 0) + 1);
+    }
+
     const ops = classes.map(c => {
       const sid = c._id.toString();
-      const nb = eleves.filter(e => e.classe_id === sid).length;
+      const nb = countByClasse.get(sid) || 0;
       return { updateOne: { filter: { source_id: sid }, update: { $set: {
         source_id: sid, nom: c.nom, niveau: c.niveau, annee_scolaire: (c as any).annee_scolaire,
         anneeScolaireId: (c as any).anneeScolaireId || '',
@@ -413,38 +432,38 @@ export class ViewBuilderService implements OnModuleInit {
         statut: (e as any).statut || 'actif',
       };
 
-      // Entrée pour chaque année via historique_classes
-      const historique = (e as any).historique_classes as any[] || [];
-      for (const h of historique) {
-        const hAnneeId = h.anneeScolaireId || '';
+      const inscriptions: any[] = (e as any).inscriptions || [];
+      if (inscriptions.length === 0) {
         ops.push({ updateOne: {
-          filter: { source_id: sid, annee_scolaire: h.annee_scolaire },
+          filter: { source_id: sid, anneeScolaireId: '' },
           update: { $set: {
-            source_id: sid, annee_scolaire: h.annee_scolaire,
-            anneeScolaireId: hAnneeId,
-            classe_id: h.classe_id, classe_nom: h.classe_nom || '', classe_niveau: h.niveau || '',
+            source_id: sid,
+            anneeScolaireId: '',
+            annee_scolaire: '',
+            classe_id: '',
+            classe_nom: '',
+            classe_niveau: '',
             ...base,
           }},
           upsert: true,
         }});
-      }
-
-      // Entrée pour l'année courante (classe_id actuelle)
-      const cl = cm.get(e.classe_id);
-      const anneeActuelle = cl ? (cl as any).annee_scolaire || '' : '';
-      const anneeActuelleId = cl ? (cl as any).anneeScolaireId || '' : '';
-      const dejaDansHistorique = historique.some((h: any) => h.annee_scolaire === anneeActuelle);
-      if (!dejaDansHistorique) {
-        ops.push({ updateOne: {
-          filter: { source_id: sid, annee_scolaire: anneeActuelle },
-          update: { $set: {
-            source_id: sid, annee_scolaire: anneeActuelle,
-            anneeScolaireId: anneeActuelleId,
-            classe_id: e.classe_id, classe_nom: cl?.nom || '', classe_niveau: (cl as any)?.niveau || '',
-            ...base,
-          }},
-          upsert: true,
-        }});
+      } else {
+        for (const inscription of inscriptions) {
+          const cl = cm.get(inscription.classeId);
+          ops.push({ updateOne: {
+            filter: { source_id: sid, anneeScolaireId: inscription.anneeScolaireId },
+            update: { $set: {
+              source_id: sid,
+              anneeScolaireId: inscription.anneeScolaireId,
+              annee_scolaire: cl ? (cl as any).annee_scolaire || '' : '',
+              classe_id: inscription.classeId,
+              classe_nom: cl?.nom || '',
+              classe_niveau: (cl as any)?.niveau || '',
+              ...base,
+            }},
+            upsert: true,
+          }});
+        }
       }
     }
 
@@ -460,6 +479,7 @@ export class ViewBuilderService implements OnModuleInit {
       source_id: m._id.toString(), nom: m.nom, code: m.code, coefficient: (m as any).coefficient ?? 1,
       coefficients: (m as any).coefficients || [],
       description: (m as any).description || '', couleur: (m as any).couleur || '',
+      anneeScolaireId: (m as any).anneeScolaireId || '',
     }}, upsert: true }}));
     const ids = matieres.map(m => m._id.toString());
     await this.readMatiereModel.deleteMany({ source_id: { $nin: ids } }).exec();
@@ -544,6 +564,7 @@ export class ViewBuilderService implements OnModuleInit {
       accessible_pmr: (s as any).accessible_pmr || false,
       batiment: (s as any).batiment || '',
       etage: (s as any).etage || '',
+      anneeScolaireId: (s as any).anneeScolaireId || '',
     }}, upsert: true }}));
     const ids = salles.map(s => s._id.toString());
     await this.readSalleModel.deleteMany({ source_id: { $nin: ids } }).exec();

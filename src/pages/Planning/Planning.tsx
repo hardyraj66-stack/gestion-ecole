@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { usePlanningClasses, usePlanningClasse } from '../../hooks/usePageData';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
+import { useViewing } from '../../contexts/ViewingContext';
 import { useActivePeriodeData } from '../../hooks/usePeriodesData';
 import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -44,7 +46,10 @@ export function Planning() {
     });
   }, []);
 
-  const { data: classesData, loading: classesLoading, readOnly } = usePlanningClasses();
+  const { isViewingArchive } = useViewing();
+  const { isTerminee } = useAnneeScolaireStatus();
+  const { data: classesData, loading: classesLoading, readOnly: readOnlyArchive } = usePlanningClasses();
+  const readOnly = readOnlyArchive || isTerminee;
   const { data: classeData, loading: classeLoading, refreshing: classeRefreshing } = usePlanningClasse(selectedClasseId);
   const { data: activePeriode } = useActivePeriodeData();
 
@@ -108,6 +113,12 @@ export function Planning() {
       onClick={() => s.setContextMenu(null)}
     >
       <PageHeader title={t('planning.titre')} subtitle={selectedClasse ? selectedClasse.nom : t('planning.selectionnerClasse')} />
+
+      {isTerminee && !isViewingArchive && (
+        <Alert variant="info" icon={false}>
+          {t('layout.aucuneAnneeActive')} {t('layout.aucuneAnneeActiveMsg')}
+        </Alert>
+      )}
 
       {s.notification.msg && (
         <div className="planning-notification">

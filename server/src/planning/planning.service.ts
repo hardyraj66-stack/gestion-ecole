@@ -40,7 +40,7 @@ export class PlanningService {
     if (!classeId || !matiereId) return;
     const classe = await this.classeModel.findById(classeId).lean().exec() as any;
     if (!classe) return;
-    const autorisee = await this.niveauxService.isMatiereAutorisee(classe.niveau, matiereId);
+    const autorisee = await this.niveauxService.isMatiereAutorisee(classe.niveau, matiereId, classe.anneeScolaireId);
     if (!autorisee) {
       throw new BadRequestException(
         `Cette matière n'est pas autorisée pour le niveau ${classe.niveau}`,

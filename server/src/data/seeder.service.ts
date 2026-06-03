@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectModel, InjectConnection } from '@nestjs/mongoose';
+import { Model, Connection } from 'mongoose';
 import { Classe } from '../classes/classe.schema';
 import { Eleve } from '../eleves/eleve.schema';
 import { Matiere } from '../matieres/matiere.schema';
@@ -8,6 +8,10 @@ import { Note } from '../notes/note.schema';
 import { Creneau } from '../planning/creneau.schema';
 import { Salle } from '../salles/salle.schema';
 import { AnneeScolaire } from '../annees/annee.schema';
+import { Niveau } from '../niveaux/niveau.schema';
+import { Professeur } from '../professeurs/professeur.schema';
+import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
+import { PeriodeEvaluation } from '../periodes/periode.schema';
 
 // ============ HELPERS ============
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -112,7 +116,23 @@ export class SeederService implements OnModuleInit {
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
     @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
+    @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
+    @InjectModel(Professeur.name) private professeurModel: Model<Professeur>,
+    @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
+    @InjectModel(PeriodeEvaluation.name) private periodeModel: Model<PeriodeEvaluation>,
+    @InjectConnection() private connection: Connection,
   ) {}
+
+  /** Réinitialise complètement la base puis régénère un jeu de données complet (dev/E2E). */
+  async reset() {
+    const collections = await this.connection.db.collections();
+    for (const c of collections) {
+      await c.deleteMany({});
+    }
+    this.logger.log('Reset : toutes les collections vidées, re-seeding...');
+    await this.seed();
+    this.logger.log('Reset : seeding complet terminé');
+  }
 
   async onModuleInit() {
     const count = await this.salleModel.countDocuments();
@@ -126,19 +146,48 @@ export class SeederService implements OnModuleInit {
   }
 
   async seed() {
-    // 1. Salles
-    const salles = await this.salleModel.insertMany(sallesData);
+    // 1. Année scolaire (créée en premier pour associer toutes les entités)
+    const now = new Date().toISOString();
+    const annee = await this.anneeModel.create({
+      label: '2024-2025',
+      debut_planifie: '2024-09-02',
+      fin_planifie:   '2025-07-05',
+      debut_reel:     '2024-09-02',
+      fin_reel:       null,
+      migration_effectuee: false,
+      statut: 'active',
+      historique: [
+        { action: 'creation', date: now, details: 'Année scolaire 2024-2025 créée par le seeder' },
+        { action: 'demarrage', date: now, details: 'Année scolaire 2024-2025 démarrée automatiquement' },
+      ],
+    });
+    const anneeId = (annee as any)._id.toString();
+    this.logger.log('  1 année scolaire (2024-2025 active)');
+
+    // 2. Salles (avec anneeScolaireId)
+    const salles = await this.salleModel.insertMany(sallesData.map(s => ({ ...s, anneeScolaireId: anneeId })));
     this.logger.log(`  ${salles.length} salles`);
 
-    // 2. Matières
-    const matieres = await this.matiereModel.insertMany(matieresData);
+    // 3. Matières (avec anneeScolaireId)
+    const matieres = await this.matiereModel.insertMany(matieresData.map(m => ({ ...m, anneeScolaireId: anneeId })));
     this.logger.log(`  ${matieres.length} matières`);
 
-    // 3. Classes
-    const classes = await this.classeModel.insertMany(classesData);
+    // 4. Niveaux (avec anneeScolaireId + matiere_ids dérivés des coefficients)
+    const niveauxDocs = niveaux.map((nom, idx) => {
+      const matiereIds = matieres
+        .filter(m => ((m as any).coefficients || []).some((c: any) => c.niveau === nom))
+        .map(m => (m as any)._id.toString());
+      return { nom, ordre: idx, description: '', matiere_ids: matiereIds, anneeScolaireId: anneeId };
+    });
+    const niveauxCrees = await this.niveauModel.insertMany(niveauxDocs);
+    this.logger.log(`  ${niveauxCrees.length} niveaux`);
+
+    // 5. Classes (avec anneeScolaireId)
+    const classesWithAnnee = classesData.map(c => ({ ...c, anneeScolaireId: anneeId }));
+    const classes = await this.classeModel.insertMany(classesWithAnnee);
     this.logger.log(`  ${classes.length} classes`);
 
-    // 4. Élèves
+    // 5. Élèves avec inscriptions[]
     const elevesArr: any[] = [];
     for (const c of classes) {
       const nb = randInt(22, 28);
@@ -147,12 +196,14 @@ export class SeederService implements OnModuleInit {
         const prenom = g === 'M' ? pick(prenomM) : pick(prenomF);
         const nom = pick(noms);
         const y = birthYear(c.niveau);
+        const classeId = (c as any)._id.toString();
         elevesArr.push({
           nom, prenom,
           date_naissance: `${y}-${pad(randInt(1,12))}-${pad(randInt(1,28))}`,
           genre: g,
-          classe_id: (c as any)._id.toString(),
-          email: `${prenom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}.${nom.toLowerCase()}@ecole.fr`,
+          classe_id: classeId,
+          inscriptions: [{ classeId, status: 'active', anneeScolaireId: anneeId, ordre: 1 }],
+          email: `${prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}.${nom.toLowerCase()}@ecole.fr`,
           telephone: `06 ${pad(randInt(10,99))} ${pad(randInt(10,99))} ${pad(randInt(10,99))} ${pad(randInt(10,99))}`,
         });
       }
@@ -160,30 +211,52 @@ export class SeederService implements OnModuleInit {
     const eleves = await this.eleveModel.insertMany(elevesArr);
     this.logger.log(`  ${eleves.length} élèves`);
 
-    // 5. Notes
+    // 6. Notes — 3 trimestres complets (DS + évaluation par matière du niveau)
+    const niveauNoms = niveaux; // liste globale des niveaux
+    const matieresParNiveau = new Map<string, any[]>();
+    for (const n of niveauNoms) {
+      matieresParNiveau.set(n, matieres.filter(m => ((m as any).coefficients || []).some((c: any) => c.niveau === n)));
+    }
+    const classeNiveauMap = new Map(classes.map(c => [(c as any)._id.toString(), (c as any).niveau]));
+    const datesParTrim: Record<number, { ds: string; evaluation: string }> = {
+      1: { ds: '2024-10-25', evaluation: '2024-11-15' },
+      2: { ds: '2025-03-14', evaluation: '2025-03-28' },
+      3: { ds: '2025-06-20', evaluation: '2025-07-04' },
+    };
     const notesArr: any[] = [];
     for (const e of eleves) {
-      const mats = [...matieres].sort(() => Math.random()-0.5).slice(0, randInt(6,9));
-      for (const m of mats) {
-        const nb = randInt(2,4);
-        for (let i = 0; i < nb; i++) {
-          const base = 8 + Math.random()*10;
-          const v = Math.round(Math.min(20, Math.max(0, base + (Math.random()-0.5)*4)) * 2) / 2;
-          notesArr.push({
-            eleve_id: (e as any)._id.toString(),
-            matiere_id: (m as any)._id.toString(),
-            valeur: v,
-            trimestre: 1,
-            date: `2024-${pad(randInt(9,11))}-${pad(randInt(1,28))}`,
-            commentaire: Math.random()>0.7 ? pick(['Bon travail','Peut mieux faire','Excellent','En progrès','Efforts à fournir']) : undefined,
-          });
+      const niveau = classeNiveauMap.get((e as any).classe_id);
+      const matsNiveau = matieresParNiveau.get(niveau as string) || [];
+      const base = 8 + Math.random() * 9; // profil de l'élève
+      for (const m of matsNiveau) {
+        for (const trim of [1, 2, 3]) {
+          for (const type of ['ds', 'evaluation'] as const) {
+            const v = Math.round(Math.min(20, Math.max(0, base + (Math.random()-0.5)*5)) * 2) / 2;
+            notesArr.push({
+              eleve_id: (e as any)._id.toString(),
+              matiere_id: (m as any)._id.toString(),
+              valeur: v,
+              trimestre: trim,
+              type,
+              date: datesParTrim[trim][type],
+              annee_scolaire: annee.label,
+              anneeScolaireId: anneeId,
+              annulee: false,
+              commentaire: Math.random()>0.85 ? pick(['Bon travail','Peut mieux faire','Excellent','En progrès','Efforts à fournir']) : '',
+            });
+          }
         }
       }
     }
-    const notes = await this.noteModel.insertMany(notesArr);
-    this.logger.log(`  ${notes.length} notes`);
+    // Insertion par batch pour éviter les gros payloads
+    let nbNotes = 0;
+    for (let i = 0; i < notesArr.length; i += 2000) {
+      await this.noteModel.insertMany(notesArr.slice(i, i + 2000));
+      nbNotes += Math.min(2000, notesArr.length - i);
+    }
+    this.logger.log(`  ${nbNotes} notes (3 trimestres)`);
 
-    // 6. Créneaux
+    // 7. Créneaux
     const creneauxArr: any[] = [];
     const jours: JourSemaine[] = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
     const heuresDebut = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00'];
@@ -233,18 +306,45 @@ export class SeederService implements OnModuleInit {
     const creneaux = await this.creneauModel.insertMany(creneauxArr);
     this.logger.log(`  ${creneaux.length} créneaux`);
 
-    // 7. Année scolaire active
-    const now = new Date().toISOString();
-    await this.anneeModel.create({
-      label: '2024-2025',
-      debut: '2024-09-02',
-      fin: '2025-07-05',
-      statut: 'active',
-      historique: [
-        { action: 'creation', date: now, details: 'Année scolaire 2024-2025 créée par le seeder' },
-        { action: 'demarrage', date: now, details: 'Année scolaire 2024-2025 démarrée automatiquement' },
-      ],
+    // 8. Professeurs — un par matière
+    const profsArr = matieres.map((m: any, i: number) => {
+      const g = i % 2 === 0 ? 'M' : 'F';
+      const prenom = g === 'M' ? pick(prenomM) : pick(prenomF);
+      const nom = pick(noms);
+      return {
+        nom, prenom, genre: g, statut: 'actif',
+        email: `${prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}.${nom.toLowerCase()}.prof@ecole.fr`,
+        telephone: `06 ${pad(randInt(10,99))} ${pad(randInt(10,99))} ${pad(randInt(10,99))} ${pad(randInt(10,99))}`,
+      };
     });
-    this.logger.log('  1 année scolaire (2024-2025 active)');
+    const profs = await this.professeurModel.insertMany(profsArr);
+    const profParMatiere = new Map<string, string>();
+    matieres.forEach((m: any, i: number) => profParMatiere.set(m._id.toString(), (profs[i] as any)._id.toString()));
+    this.logger.log(`  ${profs.length} professeurs`);
+
+    // 9. Affectations — chaque (classe, matière) du planning reçoit le prof de la matière
+    const pairesVues = new Set<string>();
+    const assignArr: any[] = [];
+    for (const cr of creneaux) {
+      const key = `${(cr as any).classe_id}::${(cr as any).matiere_id}`;
+      if (pairesVues.has(key)) continue;
+      pairesVues.add(key);
+      const profId = profParMatiere.get((cr as any).matiere_id);
+      if (!profId) continue;
+      assignArr.push({ professeur_id: profId, classe_id: (cr as any).classe_id, matiere_id: (cr as any).matiere_id });
+    }
+    if (assignArr.length > 0) await this.assignmentModel.insertMany(assignArr);
+    this.logger.log(`  ${assignArr.length} affectations professeurs`);
+
+    // 10. Périodes d'évaluation — 6 périodes, toutes terminées (fin d'année)
+    await this.periodeModel.insertMany([
+      { trimestre: 1, type: 'ds',         anneeScolaireId: anneeId, date_debut: '2024-10-01', date_fin: '2024-10-25', terminee: true },
+      { trimestre: 1, type: 'evaluation', anneeScolaireId: anneeId, date_debut: '2024-11-04', date_fin: '2024-11-15', terminee: true },
+      { trimestre: 2, type: 'ds',         anneeScolaireId: anneeId, date_debut: '2025-03-03', date_fin: '2025-03-14', terminee: true },
+      { trimestre: 2, type: 'evaluation', anneeScolaireId: anneeId, date_debut: '2025-03-24', date_fin: '2025-03-28', terminee: true },
+      { trimestre: 3, type: 'ds',         anneeScolaireId: anneeId, date_debut: '2025-06-16', date_fin: '2025-06-20', terminee: true },
+      { trimestre: 3, type: 'evaluation', anneeScolaireId: anneeId, date_debut: '2025-06-30', date_fin: '2025-07-04', terminee: true },
+    ]);
+    this.logger.log('  6 périodes (toutes terminées)');
   }
 }

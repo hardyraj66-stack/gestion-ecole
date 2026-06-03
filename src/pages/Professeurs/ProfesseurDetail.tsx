@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
 import { useTeacherAssignments } from '../../contexts/TeacherAssignmentContext';
 import { useProfesseurDetailData } from '../../hooks/usePageData';
@@ -27,7 +28,8 @@ export function ProfesseurDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const { update: updateProfesseur, desactiver: desactiverProfesseur, activer: activerProfesseur } = useProfesseurs();
   const { create: createAssignment, delete: deleteAssignment } = useTeacherAssignments();
   const confirm = useConfirm();

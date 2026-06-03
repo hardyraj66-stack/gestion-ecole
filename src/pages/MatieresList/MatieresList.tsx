@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useMatieresListData } from '../../hooks/usePageData';
 import { readApi } from '../../services/readApi';
 import { Matiere } from '../../types';
@@ -15,10 +16,12 @@ import { Alert } from '../../components/shared/Alert';
 import { Select, SelectOption } from '../../components/shared/Select';
 import { MatiereCard } from './MatiereCard';
 import { ExportMenu } from '../../components/shared/ExportMenu';
+import { exportQs } from '../../utils/helpers';
 
 export function MatieresList() {
   const { t } = useTranslation();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
+  const readOnly = useReadOnly();
   const [page, setPage] = useState(1);
   const [niveau, setNiveau] = useState('');
   const [niveaux, setNiveaux] = useState<string[]>([]);
@@ -74,8 +77,8 @@ export function MatieresList() {
             />
           </div>
           <ExportMenu
-            csvUrl={`/export/matieres/csv${niveau ? `?niveau=${encodeURIComponent(niveau)}` : ''}`}
-            xlsxUrl={`/export/matieres/xlsx${niveau ? `?niveau=${encodeURIComponent(niveau)}` : ''}`}
+            csvUrl={`/export/matieres/csv${exportQs({ niveau, anneeId: viewingId })}`}
+            xlsxUrl={`/export/matieres/xlsx${exportQs({ niveau, anneeId: viewingId })}`}
           />
           {!readOnly && <Button as="link" to="/matieres/nouvelle" variant="primary">{t('matieres.nouvelleMatieres')}</Button>}
         </div>

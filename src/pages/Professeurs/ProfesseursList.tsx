@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useProfesseurs } from '../../contexts/ProfesseurContext';
 import { useProfesseursListData } from '../../hooks/usePageData';
 import { Professeur } from '../../types';
@@ -34,7 +35,8 @@ function getInitialsProf(p: Professeur) {
 export function ProfesseursList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
+  const readOnly = useReadOnly();
   const { create, update } = useProfesseurs();
 
   const GENRE_OPTIONS = [
@@ -52,14 +54,14 @@ export function ProfesseursList() {
   const [localItems, setLocalItems] = useState<Professeur[] | null>(null);
 
   const fetchSuggestions = useCallback(async (query: string): Promise<Suggestion[]> => {
-    const data = await readApi.professeurs(1, 8, query);
+    const data = await readApi.professeurs(1, 8, query, viewingId ?? undefined);
     if (!data?.items) return [];
     return (data.items as any[]).map((p: any) => ({
       id: p.id,
       label: `${p.prenom} ${p.nom}`,
       sublabel: p.statut === 'actif' ? t('professeurs.statuts.actif') : t('professeurs.statuts.inactif'),
     }));
-  }, [t]);
+  }, [t, viewingId]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

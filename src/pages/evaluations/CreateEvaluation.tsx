@@ -46,7 +46,7 @@ export function CreateEvaluation() {
       setDsManquant(false);
       return;
     }
-    readApi.evaluationsList(classeId, matiereId, parseInt(trimestre), 'publie', 1, 1).then((res: any) => {
+    readApi.evaluationsList(classeId, matiereId, parseInt(trimestre), 'publie', 1).then((res: any) => {
       const items = res?.items || [];
       const dsPublie = items.some((ev: any) => ev.type === 'ds');
       setDsManquant(!dsPublie);

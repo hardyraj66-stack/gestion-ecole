@@ -7,11 +7,13 @@ interface AnneeContextType {
   annees: AnneeScolaire[]; loading: boolean;
   active: AnneeScolaire | null; preparation: AnneeScolaire | null;
   getAll: () => Promise<void>;
-  create: (data: { label: string; debut: string; fin: string }, onSuccess?: () => void, onError?: (e: string) => void) => Promise<void>;
+  create: (data: { label?: string; debut_planifie?: string | null; fin_planifie?: string | null }, onSuccess?: () => void, onError?: (e: string) => void) => Promise<void>;
   update: (id: string, data: Partial<AnneeScolaire>, onSuccess?: () => void, onError?: (e: string) => void) => Promise<void>;
+  updateDates: (id: string, data: { debut_planifie?: string | null; fin_planifie?: string | null }, onSuccess?: () => void, onError?: (e: string) => void) => Promise<void>;
   delete: (id: string, onError?: (e: string) => void) => Promise<void>;
   demarrer: (id: string, onSuccess?: () => void, onError?: (e: string) => void) => Promise<void>;
-  terminer: (id: string, onSuccess?: (n: AnneeScolaire) => void, onError?: (e: string) => void) => Promise<void>;
+  terminer: (id: string, onSuccess?: () => void, onError?: (e: string) => void) => Promise<void>;
+  migrerEleves: (id: string, onSuccess?: (result: { classes: number; eleves: number }) => void, onError?: (e: string) => void) => Promise<void>;
 }
 
 const Ctx = createContext<AnneeContextType | undefined>(undefined);
@@ -25,14 +27,34 @@ export function AnneeProvider({ children }: { children: ReactNode }) {
     catch { setAnnees([]); } finally { setLoading(false); }
   }, []);
 
-  const create = useCallback(async (data: { label: string; debut: string; fin: string }, onSuccess?: () => void, onError?: (e: string) => void) => {
-    try { const r = await fetch(`${API_BASE_URL}/annees`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) { const i = await r.json(); setAnnees(p => [i, ...p]); onSuccess?.(); } else { const e = await r.json(); onError?.(e.message || 'Erreur'); } }
-    catch { onError?.('Erreur de connexion'); }
+  const create = useCallback(async (
+    data: { label?: string; debut_planifie?: string | null; fin_planifie?: string | null },
+    onSuccess?: () => void,
+    onError?: (e: string) => void,
+  ) => {
+    try {
+      const r = await fetch(`${API_BASE_URL}/annees`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (r.ok) { const i = await r.json(); setAnnees(p => [i, ...p]); onSuccess?.(); }
+      else { const e = await r.json(); onError?.(e.message || 'Erreur'); }
+    } catch { onError?.('Erreur de connexion'); }
   }, []);
 
   const update = useCallback(async (id: string, data: Partial<AnneeScolaire>, onSuccess?: () => void, onError?: (e: string) => void) => {
     try { const r = await fetch(`${API_BASE_URL}/annees/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) { const i = await r.json(); setAnnees(p => p.map(a => a.id === id ? i : a)); onSuccess?.(); } else { const e = await r.json(); onError?.(e.message || 'Erreur'); } }
     catch { onError?.('Erreur de connexion'); }
+  }, []);
+
+  const updateDates = useCallback(async (
+    id: string,
+    data: { debut_planifie?: string | null; fin_planifie?: string | null },
+    onSuccess?: () => void,
+    onError?: (e: string) => void,
+  ) => {
+    try {
+      const r = await fetch(`${API_BASE_URL}/annees/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (r.ok) { const i = await r.json(); setAnnees(p => p.map(a => a.id === id ? i : a)); onSuccess?.(); }
+      else { const e = await r.json(); onError?.(e.message || 'Erreur'); }
+    } catch { onError?.('Erreur de connexion'); }
   }, []);
 
   const del = useCallback(async (id: string, onError?: (e: string) => void) => {
@@ -45,22 +67,48 @@ export function AnneeProvider({ children }: { children: ReactNode }) {
     catch { onError?.('Erreur de connexion'); }
   }, []);
 
-  const terminer = useCallback(async (id: string, onSuccess?: (n: AnneeScolaire) => void, onError?: (e: string) => void) => {
-    try { const r = await fetch(`${API_BASE_URL}/annees/${id}/terminer`, { method: 'POST' }); if (r.ok) { const { terminee, nouvelle } = await r.json(); setAnnees(p => { let n = p.map(a => a.id === id ? terminee : a); if (!n.find(a => a.id === nouvelle.id)) n = [nouvelle, ...n]; return n; }); onSuccess?.(nouvelle); } else { const e = await r.json(); onError?.(e.message || 'Erreur'); } }
-    catch { onError?.('Erreur de connexion'); }
+  const terminer = useCallback(async (id: string, onSuccess?: () => void, onError?: (e: string) => void) => {
+    try {
+      const r = await fetch(`${API_BASE_URL}/annees/${id}/terminer`, { method: 'POST' });
+      if (r.ok) { const terminee = await r.json(); setAnnees(p => p.map(a => a.id === id ? terminee : a)); onSuccess?.(); }
+      else { const e = await r.json(); onError?.(e.message || 'Erreur'); }
+    } catch { onError?.('Erreur de connexion'); }
   }, []);
+
+  const migrerEleves = useCallback(async (
+    id: string,
+    onSuccess?: (result: { classes: number; eleves: number }) => void,
+    onError?: (e: string) => void,
+  ) => {
+    try {
+      const r = await fetch(`${API_BASE_URL}/annees/${id}/migrer-eleves`, { method: 'POST' });
+      if (r.ok) {
+        const result = await r.json();
+        await getAll();
+        onSuccess?.(result);
+      } else {
+        const e = await r.json();
+        onError?.(e.message || 'Erreur');
+      }
+    } catch { onError?.('Erreur de connexion'); }
+  }, [getAll]);
 
   useEffect(() => {
     const u1 = onEvent<AnneeScolaire>('annee:created', () => { notifyDataChange('annees'); getAll(); });
     const u2 = onEvent<AnneeScolaire>('annee:updated', () => { notifyDataChange('annees'); getAll(); });
     const u3 = onEvent<{ id: string }>('annee:deleted', () => { notifyDataChange('annees'); getAll(); });
-    return () => { u1(); u2(); u3(); };
+    const u4 = onEvent<any>('annee:migration', () => { notifyDataChange('annees'); getAll(); });
+    return () => { u1(); u2(); u3(); u4(); };
   }, [getAll]);
 
   const active = useMemo(() => annees.find(a => a.statut === 'active') || null, [annees]);
   const preparation = useMemo(() => annees.find(a => a.statut === 'preparation') || null, [annees]);
 
-  return <Ctx.Provider value={{ annees, loading, active, preparation, getAll, create, update, delete: del, demarrer, terminer }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ annees, loading, active, preparation, getAll, create, update, updateDates, delete: del, demarrer, terminer, migrerEleves }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useAnnees() { const c = useContext(Ctx); if (!c) throw new Error('useAnnees must be used within AnneeProvider'); return c; }

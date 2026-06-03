@@ -18,7 +18,9 @@ export class ReadSalle extends Document {
   @Prop({ default: false }) accessible_pmr: boolean;
   @Prop({ default: '' }) batiment: string;
   @Prop({ default: '' }) etage: string;
+  @Prop({ default: '' }) anneeScolaireId: string;
 }
 
 export const ReadSalleSchema = SchemaFactory.createForClass(ReadSalle);
 ReadSalleSchema.index({ source_id: 1 }, { unique: true });
+ReadSalleSchema.index({ anneeScolaireId: 1 });

@@ -31,7 +31,7 @@ export class TeacherAssignmentsService {
   async create(data: any) {
     const classe = await this.classeModel.findById(data.classe_id).lean().exec();
     if (classe?.niveau) {
-      const ok = await this.niveauxService.isMatiereAutorisee(classe.niveau, data.matiere_id);
+      const ok = await this.niveauxService.isMatiereAutorisee(classe.niveau, data.matiere_id, (classe as any).anneeScolaireId);
       if (!ok) throw new BadRequestException('Cette matière n\'est pas enseignée dans ce niveau.');
     }
     const existing = await this.model.findOne({ classe_id: data.classe_id, matiere_id: data.matiere_id }).exec();

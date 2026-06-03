@@ -5,6 +5,7 @@ import { Matiere } from './matiere.schema';
 import { Note } from '../notes/note.schema';
 import { Creneau } from '../planning/creneau.schema';
 import { Niveau } from '../niveaux/niveau.schema';
+import { AnneeScolaire } from '../annees/annee.schema';
 
 @Injectable()
 export class MatieresService {
@@ -13,17 +14,27 @@ export class MatieresService {
     @InjectModel(Note.name) private noteModel: Model<Note>,
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
     @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
+    @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
   ) {}
+
+  /** Résout l'année cible pour les écritures : active sinon préparation. */
+  private async resolveAnneeCible(): Promise<string> {
+    let annee = await this.anneeModel.findOne({ statut: 'active' }).exec();
+    if (!annee) annee = await this.anneeModel.findOne({ statut: 'preparation' }).exec();
+    if (!annee) throw new BadRequestException('Aucune année scolaire active ou en préparation');
+    return (annee as any)._id.toString();
+  }
 
   findAll() { return this.model.find({ actif: { $ne: false } }).exec(); }
   findById(id: string) { return this.model.findById(id).exec(); }
 
   async create(data: any) {
     this.validateCoefficients(data.coefficients);
-    const payload = { ...data };
+    const anneeScolaireId = await this.resolveAnneeCible();
+    const payload = { ...data, anneeScolaireId };
     delete payload.coefficient;
     const saved = await new this.model(payload).save();
-    await this.syncNiveauxFromCoefficients(saved._id.toString(), [], data.coefficients ?? []);
+    await this.syncNiveauxFromCoefficients(saved._id.toString(), [], data.coefficients ?? [], anneeScolaireId);
     return saved;
   }
 
@@ -35,25 +46,26 @@ export class MatieresService {
     const updated = await this.model.findByIdAndUpdate(id, payload, { new: true }).exec();
     if (data.coefficients !== undefined) {
       const oldCoeffs: any[] = (before as any)?.coefficients ?? [];
-      await this.syncNiveauxFromCoefficients(id, oldCoeffs, data.coefficients);
+      const anneeScolaireId = (before as any)?.anneeScolaireId ?? '';
+      await this.syncNiveauxFromCoefficients(id, oldCoeffs, data.coefficients, anneeScolaireId);
     }
     return updated;
   }
 
-  private async syncNiveauxFromCoefficients(matiereId: string, oldCoeffs: any[], newCoeffs: any[]) {
+  private async syncNiveauxFromCoefficients(matiereId: string, oldCoeffs: any[], newCoeffs: any[], anneeScolaireId: string) {
     const oldNiveaux = new Set(oldCoeffs.map((c: any) => c.niveau));
     const newNiveaux = new Set(newCoeffs.map((c: any) => c.niveau));
     const added = [...newNiveaux].filter(n => !oldNiveaux.has(n));
     const removed = [...oldNiveaux].filter(n => !newNiveaux.has(n));
     if (added.length > 0) {
       await this.niveauModel.updateMany(
-        { nom: { $in: added } },
+        { nom: { $in: added }, anneeScolaireId },
         { $addToSet: { matiere_ids: matiereId } },
       ).exec();
     }
     if (removed.length > 0) {
       await this.niveauModel.updateMany(
-        { nom: { $in: removed } },
+        { nom: { $in: removed }, anneeScolaireId },
         { $pull: { matiere_ids: matiereId } as any },
       ).exec();
     }

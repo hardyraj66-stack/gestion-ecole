@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -5,9 +7,10 @@ interface StatCardProps {
   icon?: string;
   color: 'blue' | 'purple' | 'green' | 'orange';
   trend?: number | null;
+  href?: string;
 }
 
-export function StatCard({ title, value, subtitle, icon, color, trend }: StatCardProps) {
+export function StatCard({ title, value, subtitle, icon, color, trend, href }: StatCardProps) {
   const getTrendIcon = () => {
     if (trend === null || trend === undefined) return null;
     if (trend > 0) return '↑';
@@ -22,8 +25,8 @@ export function StatCard({ title, value, subtitle, icon, color, trend }: StatCar
     return 'neutral';
   };
 
-  return (
-    <div className="stat-card">
+  const inner = (
+    <>
       <div className="stat-content">
         <div className="stat-title">{title}</div>
         <div className="stat-value">{value}</div>
@@ -41,6 +44,16 @@ export function StatCard({ title, value, subtitle, icon, color, trend }: StatCar
           </svg>
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link to={href} className="stat-card stat-card-link">
+        {inner}
+      </Link>
+    );
+  }
+
+  return <div className="stat-card">{inner}</div>;
 }

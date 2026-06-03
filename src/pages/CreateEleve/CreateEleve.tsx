@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useEleves } from '../../contexts/EleveContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -20,6 +21,7 @@ import { FormGrid, FormSection, FormActions } from '../../components/shared/Form
 export function CreateEleve() {
   const { t } = useTranslation();
   const { isViewingArchive } = useViewing();
+  const { isTerminee } = useAnneeScolaireStatus();
   const { create } = useEleves();
   const confirm = useConfirm();
   const navigate = useNavigate();
@@ -91,17 +93,19 @@ export function CreateEleve() {
   const suggestedClasse = classesNiveau.find((c: any) => c.id === suggestedId);
   const niveauOptions: SelectOption[] = niveaux.map(n => ({ value: n.niveau, label: `${n.niveau} (${n.count} classe${n.count > 1 ? 's' : ''})` }));
 
-  if (isViewingArchive) return <Navigate to="/eleves" replace />;
+  const readOnly = isViewingArchive || isTerminee;
+  if (readOnly) return <Navigate to="/eleves" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prenom.trim() || !nom.trim() || !dateNaissance || !classeId) { setError(t('eleves.creer.erreurChamps')); return; }
     setSubmitting(true); setError('');
     const result = await create({
-      prenom: prenom.trim(), nom: nom.trim(), genre, date_naissance: dateNaissance, classe_id: classeId,
+      prenom: prenom.trim(), nom: nom.trim(), genre, date_naissance: dateNaissance,
       statut: 'actif' as const,
       email: email.trim() || undefined, telephone: telephone.trim() || undefined, adresse: adresse.trim() || undefined,
-    });
+      ...(classeId ? { classeId } : {}),
+    } as any);
     if (result) {
       navigate(`/eleves/${result.id}`);
     } else { setError(t('eleves.creer.erreurCreation')); setSubmitting(false); }

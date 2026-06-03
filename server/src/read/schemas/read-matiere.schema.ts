@@ -17,7 +17,9 @@ export class ReadMatiere extends Document {
   coefficients: Array<{ niveau: string; coefficient: number }>;
   @Prop() description: string;
   @Prop() couleur: string;
+  @Prop({ default: '' }) anneeScolaireId: string;
 }
 
 export const ReadMatiereSchema = SchemaFactory.createForClass(ReadMatiere);
 ReadMatiereSchema.index({ source_id: 1 }, { unique: true });
+ReadMatiereSchema.index({ anneeScolaireId: 1 });

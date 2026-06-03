@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useReadOnly } from '../../hooks/useReadOnly';
 import { useNiveaux as useNiveauxCtx } from '../../contexts/NiveauContext';
 import { useNiveauxListData } from '../../hooks/usePageData';
 import { readApi } from '../../services/readApi';
@@ -28,7 +29,8 @@ interface EditForm {
 
 export function NiveauxList() {
   const { t } = useTranslation();
-  const { isViewingArchive: readOnly } = useViewing();
+  const { isViewingArchive } = useViewing();
+  const readOnly = useReadOnly();
   const { create, update, delete: deleteNiveau } = useNiveauxCtx();
   const confirm = useConfirm();
   const { data, loading, error } = useNiveauxListData();

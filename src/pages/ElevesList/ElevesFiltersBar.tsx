@@ -6,6 +6,7 @@ import { FilterBar } from '../../components/shared/FilterBar';
 import { NiveauClassePopover } from '../../components/shared/NiveauClassePopover';
 import { SearchInputSuggestions, Suggestion } from '../../components/shared/SearchInputSuggestions';
 import { Icon } from '../../components/shared/Icon';
+import { Button } from '../../components/shared/Button';
 
 interface ElevesFiltersBarProps {
   searchTerm: string;
@@ -18,6 +19,9 @@ interface ElevesFiltersBarProps {
   onReset: () => void;
   count: number;
   hasEleveFilter: boolean;
+  sansClasse: boolean;
+  onSansClasseChange: (v: boolean) => void;
+  hasAnneeActive: boolean;
 }
 
 export function ElevesFiltersBar({
@@ -29,8 +33,11 @@ export function ElevesFiltersBar({
   selectedNiveau,
   onNiveauClasseChange,
   onReset,
+  hasAnneeActive,
   count,
   hasEleveFilter,
+  sansClasse,
+  onSansClasseChange,
 }: ElevesFiltersBarProps) {
   const { t } = useTranslation();
   const { viewingId } = useViewing();
@@ -49,7 +56,7 @@ export function ElevesFiltersBar({
     onSuggestionSelect(s.id);
   };
 
-  const hasFilter = !!selectedClasseId || !!searchTerm || hasEleveFilter;
+  const hasFilter = !!selectedClasseId || !!searchTerm || hasEleveFilter || sansClasse;
 
   return (
     <FilterBar count={count} countLabel={t('elevesFiltersBar.eleveS')}>
@@ -59,15 +66,28 @@ export function ElevesFiltersBar({
         onChange={onSearchChange}
         onSelect={handleSuggestionSelect}
         fetchSuggestions={fetchSuggestions}
+        disabled={sansClasse}
       />
 
-      <NiveauClassePopover
-        selectedNiveau={selectedNiveau}
-        selectedClasseId={selectedClasseId}
-        selectedClasseNom={selectedClasseNom}
-        onChange={onNiveauClasseChange}
-        showCapacite={true}
-      />
+      {!sansClasse && (
+        <NiveauClassePopover
+          selectedNiveau={selectedNiveau}
+          selectedClasseId={selectedClasseId}
+          selectedClasseNom={selectedClasseNom}
+          onChange={onNiveauClasseChange}
+          showCapacite={true}
+        />
+      )}
+
+      {hasAnneeActive && (
+        <Button
+          variant={sansClasse ? 'primary' : 'outline'}
+          size="sm"
+          onClick={() => onSansClasseChange(!sansClasse)}
+        >
+          À réinscrire
+        </Button>
+      )}
 
       {hasFilter && (
         <button type="button" className="filter-reset-btn" onClick={onReset}>

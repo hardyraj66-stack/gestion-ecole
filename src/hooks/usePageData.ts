@@ -124,15 +124,17 @@ export function useElevesListData(page = 1, search = '', classeId = '', eleveId 
 }
 
 export function useMatieresListData(page = 1, niveau = '') {
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.matieresList(page, 8, niveau || undefined), [page, niveau]),
+    useCallback(() => readApi.matieresList(page, 8, niveau || undefined, viewingId ?? undefined), [page, niveau, viewingId]),
     undefined, 'matieres',
   );
 }
 
 export function useSallesListData(page = 1, type = '', search = '') {
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.sallesList(page, 10, type || undefined, search || undefined), [page, type, search]),
+    useCallback(() => readApi.sallesList(page, 10, type || undefined, search || undefined, viewingId ?? undefined), [page, type, search, viewingId]),
     undefined, 'salles',
   );
 }
@@ -150,10 +152,6 @@ export function usePlanningClasse(classeId: string) {
     useCallback(() => classeId ? readApi.planningClasse(classeId) : Promise.resolve(null), [classeId]),
     undefined, 'planning',
   );
-}
-
-export function useNotesPageData() {
-  return usePageFetch(useCallback(() => readApi.notesPage(), []), undefined, 'notes');
 }
 
 export function useNotesFiltersData() {
@@ -189,15 +187,24 @@ export function useNiveauxListData() {
 }
 
 export function useProfesseursListData(page = 1, search = '') {
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => readApi.professeurs(page, 20, search), [page, search]),
+    useCallback(() => readApi.professeurs(page, 20, search, viewingId ?? undefined), [page, search, viewingId]),
     undefined, 'professeurs',
   );
 }
 
 export function useProfesseurDetailData(id: string) {
+  const { viewingId } = useViewing();
   return usePageFetch(
-    useCallback(() => id ? readApi.professeur(id) : Promise.resolve(null), [id]),
+    useCallback(() => id ? readApi.professeur(id, viewingId ?? undefined) : Promise.resolve(null), [id, viewingId]),
     undefined, 'professeurs',
+  );
+}
+
+export function useElevesNonReinscritsData() {
+  return usePageFetch(
+    useCallback(() => readApi.elevesNonReinscrits(), []),
+    undefined, 'eleves',
   );
 }
