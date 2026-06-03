@@ -30,13 +30,20 @@ export interface TuteurInfo {
 
 export type EleveStatut = 'actif' | 'exclu' | 'parti';
 
+export interface Inscription {
+  classeId: string;
+  status: 'active' | 'inactive';
+  anneeScolaireId: string;
+  ordre: number;
+}
+
 export interface Eleve {
   id: string;
   nom: string;
   prenom: string;
   date_naissance: string;
   genre: 'M' | 'F';
-  classe_id: string;
+  classe_id?: string;
   email?: string;
   telephone?: string;
   adresse?: string;
@@ -46,6 +53,11 @@ export interface Eleve {
   statut: EleveStatut;
   inscrit_annee_id?: string | null;
   statut_inscription?: 'inscrit' | 'non_inscrit' | 'en_attente' | null;
+  inscriptions?: Inscription[];
+}
+
+export function getClasseActive(eleve: Eleve): Inscription | null {
+  return eleve.inscriptions?.find(i => i.status === 'active') ?? null;
 }
 
 export interface Avertissement {

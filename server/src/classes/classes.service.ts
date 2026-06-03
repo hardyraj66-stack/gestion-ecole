@@ -31,7 +31,10 @@ export class ClassesService {
   }
 
   async desactiver(id: string) {
-    const eleveActif = await this.eleveModel.findOne({ classe_id: id, statut: 'actif' }).exec();
+    const eleveActif = await this.eleveModel.findOne({
+      inscriptions: { $elemMatch: { classeId: id, status: 'active' } },
+      statut: 'actif',
+    }).exec();
     if (eleveActif) {
       throw new BadRequestException(
         'Impossible de désactiver une classe avec des élèves actifs. Changez d\'abord le statut de ces élèves.',
@@ -39,5 +42,9 @@ export class ClassesService {
     }
     const result = await this.model.findByIdAndUpdate(id, { actif: false }, { new: true }).exec();
     return !!result;
+  }
+
+  findByAnnee(anneeScolaireId: string) {
+    return this.model.find({ anneeScolaireId, actif: { $ne: false } }).exec();
   }
 }

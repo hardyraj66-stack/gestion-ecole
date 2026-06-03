@@ -9,3 +9,10 @@ server/dist/
 
 # Prompts perso
 prompts/
+
+# Local Claude settings & worktrees
+.claude/
+# Playwright artefacts
+test-results/
+server/test-results/
+playwright-report/

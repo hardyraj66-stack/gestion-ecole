@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Salle } from './salle.schema';
 import { Creneau } from '../planning/creneau.schema';
 import { Classe } from '../classes/classe.schema';
+import { AnneeScolaire } from '../annees/annee.schema';
 
 export interface SalleDisponible {
   id: string;
@@ -30,22 +31,39 @@ export class SallesService {
     @InjectModel(Salle.name) private salleModel: Model<Salle>,
     @InjectModel(Creneau.name) private creneauModel: Model<Creneau>,
     @InjectModel(Classe.name) private classeModel: Model<Classe>,
+    @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
   ) {}
+
+  /** Résout l'année cible pour les écritures : active sinon préparation. */
+  private async resolveAnneeCible(): Promise<string> {
+    let annee = await this.anneeModel.findOne({ statut: 'active' }).exec();
+    if (!annee) annee = await this.anneeModel.findOne({ statut: 'preparation' }).exec();
+    if (!annee) throw new BadRequestException('Aucune année scolaire active ou en préparation');
+    return (annee as any)._id.toString();
+  }
 
   findAll() { return this.salleModel.find({ actif: { $ne: false } }).exec(); }
   findById(id: string) { return this.salleModel.findById(id).exec(); }
 
   async create(data: any) {
-    const existing = await this.salleModel.findOne({ nom: { $regex: `^${data.nom.trim()}$`, $options: 'i' } }).exec();
+    const anneeScolaireId = await this.resolveAnneeCible();
+    const existing = await this.salleModel.findOne({
+      nom: { $regex: `^${data.nom.trim()}$`, $options: 'i' },
+      anneeScolaireId,
+      actif: { $ne: false },
+    }).exec();
     if (existing) throw new BadRequestException(`Une salle nommée « ${data.nom.trim()} » existe déjà`);
-    return new this.salleModel(data).save();
+    return new this.salleModel({ ...data, anneeScolaireId }).save();
   }
 
   async update(id: string, data: any) {
     if (data.nom) {
+      const current = await this.salleModel.findById(id).exec();
       const existing = await this.salleModel.findOne({
         nom: { $regex: `^${data.nom.trim()}$`, $options: 'i' },
+        anneeScolaireId: (current as any)?.anneeScolaireId ?? '',
         _id: { $ne: id },
+        actif: { $ne: false },
       }).exec();
       if (existing) throw new BadRequestException(`Une salle nommée « ${data.nom.trim()} » existe déjà`);
     }

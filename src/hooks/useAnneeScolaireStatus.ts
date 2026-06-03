@@ -22,8 +22,8 @@ export function useAnneeScolaireStatus() {
     // Bouton Terminer : orange si date non renseignée
     const terminaisonSansDate = !!active && !active.fin_planifie;
 
-    // Mode consultation post-clôture : aucune année active + au moins une terminée
-    const isTerminee = !active && annees.some(a => a.statut === 'terminee');
+    // Mode consultation post-clôture : aucune année active, aucune préparation, au moins une terminée
+    const isTerminee = !active && !preparation && annees.some(a => a.statut === 'terminee');
 
     // Jours restants avant date de fin planifiée
     const joursAvantFin = active?.fin_planifie

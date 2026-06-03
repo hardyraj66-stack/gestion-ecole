@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cahier de test — Ekolova (cycle scolaire)</title>
+<style>
+  :root{
+    --bg:#f1f5f9; --card:#fff; --border:#e2e8f0; --text:#0f172a; --muted:#64748b;
+    --primary:#16a34a; --primary-d:#15803d; --warning:#d97706; --danger:#dc2626;
+    --info:#2563eb; --ok:#16a34a; --ko:#dc2626; --na:#94a3b8; --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+  header.top{position:sticky;top:0;z-index:50;background:#0f172a;color:#fff;padding:14px 24px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header.top h1{margin:0;font-size:1.15rem;display:flex;align-items:center;gap:10px}
+  header.top .sub{font-size:.8rem;color:#94a3b8;margin-top:2px}
+  .progress-wrap{display:flex;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap}
+  .bar{flex:1;min-width:200px;height:10px;background:#1e293b;border-radius:99px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#16a34a,#22c55e);transition:width .3s}
+  .counts{font-size:.8rem;color:#cbd5e1;white-space:nowrap}
+  .counts b{color:#fff}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .toolbar button{font:inherit;font-size:.8rem;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#e2e8f0;padding:6px 12px;border-radius:8px}
+  .toolbar button:hover{background:#334155}
+  main{max-width:1100px;margin:0 auto;padding:24px}
+  .phase{margin:34px 0 14px}
+  .phase h2{font-size:1.15rem;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  .phase .badge{font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:99px;color:#fff}
+  .phase p.desc{color:var(--muted);margin:.2rem 0 0;font-size:.9rem}
+  .tc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .tc.ok{border-left:5px solid var(--ok)} .tc.ko{border-left:5px solid var(--ko)} .tc.na{border-left:5px solid var(--na)}
+  .tc-head{display:flex;align-items:flex-start;gap:12px;justify-content:space-between;flex-wrap:wrap}
+  .tc-id{font-family:ui-monospace,monospace;font-size:.72rem;font-weight:700;color:#fff;background:var(--info);padding:3px 8px;border-radius:6px;white-space:nowrap}
+  .tc-title{font-weight:650;font-size:1rem;flex:1;min-width:200px}
+  .tc-meta{font-size:.82rem;color:var(--muted);margin:8px 0}
+  .tc-meta b{color:var(--text)}
+  ol.steps{margin:8px 0;padding-left:20px}
+  ol.steps li{margin:3px 0}
+  .expect{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:.88rem;margin:8px 0}
+  .expect b{color:var(--primary-d)}
+  .status{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .status label{cursor:pointer;font-size:.8rem;border:1px solid var(--border);padding:5px 12px;border-radius:8px;user-select:none;display:inline-flex;gap:5px;align-items:center;background:#f8fafc}
+  .status input{display:none}
+  .status label.sel-ok{background:#dcfce7;border-color:var(--ok);color:var(--primary-d);font-weight:600}
+  .status label.sel-ko{background:#fee2e2;border-color:var(--ko);color:var(--danger);font-weight:600}
+  .status label.sel-na{background:#f1f5f9;border-color:var(--na);color:var(--muted);font-weight:600}
+  textarea.note{width:100%;margin-top:8px;border:1px solid var(--border);border-radius:8px;padding:8px;font:inherit;font-size:.85rem;resize:vertical;min-height:34px}
+  .tag{display:inline-block;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px}
+  .tag.ui{background:#dbeafe;color:#1e40af} .tag.regle{background:#fef3c7;color:#92400e} .tag.iso{background:#ede9fe;color:#6d28d9}
+  .note-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:.85rem;margin:10px 0;color:#1e3a8a}
+  .danger-box{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:.85rem;margin:10px 0;color:#991b1b}
+  footer{text-align:center;color:var(--muted);font-size:.8rem;padding:30px}
+  @media print{
+    header.top{position:static} .toolbar{display:none} .status label{border:1px solid #999}
+    .tc{break-inside:avoid;box-shadow:none}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>📋 Cahier de test — <span style="color:#22c55e">Ekolova</span></h1>
+  <div class="sub">Cycle de gestion d'année scolaire : préparation → démarrage → vie de l'année → terminaison → archive → nouveau cycle</div>
+  <div class="progress-wrap">
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="counts"><b id="cOk">0</b> OK · <b id="cKo">0</b> KO · <b id="cNa">0</b> N/A · <span id="cTot">0</span> total</div>
+  </div>
+  <div class="toolbar">
+    <button onclick="resetAll()">↺ Réinitialiser les résultats</button>
+    <button onclick="window.print()">🖨 Imprimer / PDF</button>
+    <button onclick="exportTxt()">⬇ Exporter (.txt)</button>
+    <span style="font-size:.75rem;color:#94a3b8;align-self:center">Progression sauvegardée automatiquement (localStorage)</span>
+  </div>
+</header>
+
+<main id="app"><!-- généré en JS --></main>
+<footer>Cahier de test généré le <span id="genDate"></span> — conforme au code source Ekolova (frontend React + backend NestJS).</footer>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+//  DONNÉES DU CAHIER DE TEST  (fidèles au comportement réel du code)
+// ════════════════════════════════════════════════════════════════════════════
+const PHASES = [
+  {
+    id:'P0', titre:'Pré-requis & Dashboard', color:'#475569',
+    desc:"Vérifications de base avant de tester le cycle. État de départ recommandé : une année 2024-2025 active complète (commande « cd server && npm run reset »).",
+    cases:[
+      { id:'P0-1', titre:'Lancer l\'application', tags:['ui'],
+        pre:'Backend (port 3000) et frontend (port 5173) démarrés ; base réinitialisée.',
+        steps:['Ouvrir http://localhost:5173','Observer la redirection vers /dashboard'],
+        expect:'Le tableau de bord s\'affiche sans erreur ; le menu latéral liste tous les modules.' },
+      { id:'P0-2', titre:'Cartes statistiques du dashboard', tags:['ui'],
+        pre:'Année 2024-2025 active.',
+        steps:['Sur le Dashboard, observer les 4 cartes (Classes, Élèves, Matières, Notes)'],
+        expect:'Classes=15, Élèves affiche « inscrits / total » (ex. 385/385), Matières=15, Notes > 0. Chaque carte est cliquable et mène à sa page.' },
+      { id:'P0-3', titre:'Badge année active', tags:['ui'],
+        pre:'Année active présente.',
+        steps:['Observer l\'en-tête du Dashboard et le bas du menu latéral'],
+        expect:'Le label « 2024-2025 » est affiché avec le badge « Active » (vert).' },
+    ]
+  },
+  {
+    id:'P1', titre:'PHASE 1 — Préparation d\'une année scolaire', color:'#d97706',
+    desc:"Création de la prochaine année au statut « préparation ». On part ici d'une année ACTIVE existante (2024-2025) ; la préparation se crée généralement automatiquement à la clôture, mais peut aussi être créée manuellement quand aucune année active n'existe.",
+    cases:[
+      { id:'P1-1', titre:'Accéder à la page Cycle scolaire', tags:['ui'],
+        pre:'—',
+        steps:['Menu latéral → « Cycle scolaire » (/annee-scolaire)'],
+        expect:'La page affiche le « Pipeline de transition » avec 3 étapes (Préparation · Active · Terminée) et met en surbrillance l\'étape courante (Active).' },
+      { id:'P1-2', titre:'Créer une année en préparation (manuel)', tags:['regle'],
+        pre:'Cas testable surtout quand AUCUNE année active n\'existe (sinon la préparation naît de la clôture). Pour ce test, le bouton « + Nouvelle année » n\'est visible que si aucune année n\'existe, ou via « Préparer l\'année suivante » après une clôture.',
+        steps:['Cliquer « + Nouvelle année » / « Préparer l\'année suivante »','Saisir un label (ex. 2026-2027), une date de début et de fin','Cliquer « Créer en préparation »'],
+        expect:'Une année au statut « préparation » est créée. La date de début doit être antérieure à la date de fin (sinon message d\'erreur).' },
+      { id:'P1-3', titre:'Refus de dates incohérentes', tags:['regle'],
+        pre:'Modal de création ouverte.',
+        steps:['Saisir une date de début POSTÉRIEURE à la date de fin','Valider'],
+        expect:'Message d\'erreur : « La date de début doit être antérieure à la date de fin ». Aucune année créée.' },
+      { id:'P1-4', titre:'Refus de label en double', tags:['regle'],
+        pre:'Une année « 2024-2025 » existe.',
+        steps:['Tenter de créer une année avec le label « 2024-2025 »'],
+        expect:'Message : « L\'année scolaire "2024-2025" existe déjà ».' },
+      { id:'P1-5', titre:'Modifier les dates de la préparation', tags:['ui'],
+        pre:'Une année en préparation existe.',
+        steps:['Dans la carte « préparation », cliquer « Modifier les dates »','Changer début/fin','Cliquer « Enregistrer »'],
+        expect:'Les dates sont mises à jour et ré-affichées.' },
+      { id:'P1-6', titre:'CUD autorisé en préparation', tags:['regle'],
+        pre:'Une année en préparation existe ET aucune active (cas post-clôture), OU année active — dans les deux cas la création est rattachée à l\'année active sinon à la préparation.',
+        steps:['Aller dans Classes / Matières / Salles / Niveaux','Vérifier la présence des boutons de création'],
+        expect:'Les boutons « Nouvelle … » sont présents et fonctionnels (la création est rattachée à l\'année active ou, à défaut, à la préparation).' },
+      { id:'P1-7', titre:'Supprimer une préparation', tags:['regle'],
+        pre:'Une année en préparation existe et aucune active.',
+        steps:['Dans la carte préparation, cliquer « Supprimer »'],
+        expect:'L\'année en préparation est supprimée. (Impossible de supprimer une année active ou terminée.)' },
+    ]
+  },
+  {
+    id:'P2', titre:'PHASE 2 — Démarrage de l\'année (start)', color:'#16a34a',
+    desc:"Passage du statut « préparation » à « active ». Pré-condition forte : il ne doit PAS déjà exister une année active.",
+    cases:[
+      { id:'P2-1', titre:'Bouton « Commencer l\'année »', tags:['ui'],
+        pre:'Une année en préparation existe et AUCUNE année active.',
+        steps:['Page Cycle scolaire → carte préparation','Observer le bouton « 🚀 Commencer l\'année scolaire »'],
+        expect:'Le bouton de démarrage est visible uniquement quand aucune année n\'est active.' },
+      { id:'P2-2', titre:'Démarrer l\'année', tags:['regle'],
+        pre:'Année en préparation, aucune active.',
+        steps:['Cliquer « 🚀 Commencer l\'année scolaire »','Confirmer « Démarrer »'],
+        expect:'L\'année passe au statut « active ». Sa date de début réelle (debut_reel) = date du jour. Le pipeline met « Active » en surbrillance.' },
+      { id:'P2-3', titre:'Refus de double démarrage', tags:['regle'],
+        pre:'Une année est déjà active.',
+        steps:['Tenter de démarrer une seconde année en préparation'],
+        expect:'Action refusée : « L\'année "…" est encore active. Terminez-la d\'abord. » Le bouton « Commencer » n\'est d\'ailleurs pas affiché si une active existe.' },
+      { id:'P2-4', titre:'Seule une « préparation » peut démarrer', tags:['regle'],
+        pre:'—',
+        steps:['Vérifier qu\'une année terminée ne peut pas être démarrée'],
+        expect:'Seule une année au statut « préparation » est démarrable.' },
+    ]
+  },
+  {
+    id:'P3', titre:'PHASE 3 — Vie de l\'année active (CRUD & logique métier)', color:'#2563eb',
+    desc:"Tous les modules pendant qu'une année est active. Tester création / modification / suppression et les règles métier.",
+    cases:[
+      // CLASSES
+      { id:'P3-CL1', titre:'Classes — créer (salle fixe)', tags:['ui'],
+        pre:'Année active.',
+        steps:['Classes → « Nouvelle classe »','Nom, niveau, capacité, type salle = fixe, choisir une salle','Enregistrer'],
+        expect:'La classe est créée et rattachée à l\'année active. Visible dans la liste avec 0 élève.' },
+      { id:'P3-CL2', titre:'Classes — salle variable masque le sélecteur', tags:['ui','regle'],
+        pre:'Formulaire de création ouvert.',
+        steps:['Choisir type de salle = « variable »'],
+        expect:'Le sélecteur de salle fixe est masqué (la salle est choisie par créneau de planning).' },
+      { id:'P3-CL3', titre:'Classes — modifier la capacité', tags:['ui'],
+        pre:'Une classe existe.',
+        steps:['Éditer une classe → changer la capacité → enregistrer'],
+        expect:'La capacité est mise à jour ; le taux de remplissage se recalcule.' },
+      { id:'P3-CL4', titre:'Classes — règle : désactivation refusée si élèves actifs', tags:['regle'],
+        pre:'Une classe avec au moins un élève actif.',
+        steps:['Tenter de désactiver la classe'],
+        expect:'Refus : « Impossible de désactiver une classe avec des élèves actifs. » Après avoir retiré/fait partir les élèves, la désactivation réussit.' },
+      { id:'P3-CL5', titre:'Classes — conflit de salle fixe', tags:['regle'],
+        pre:'Une salle déjà assignée en fixe à une classe.',
+        steps:['Créer/éditer une autre classe avec la même salle en fixe'],
+        expect:'Refus : « La salle "…" est déjà assignée à la classe "…". »' },
+      // ÉLÈVES
+      { id:'P3-EL1', titre:'Élèves — créer (avec suggestion de classe)', tags:['ui'],
+        pre:'Année active, au moins une classe.',
+        steps:['Élèves → « Nouvel élève »','Renseigner prénom, nom, genre, date de naissance','Choisir le niveau → la pop-up propose une classe suggérée selon l\'âge','Sélectionner une classe → Inscrire'],
+        expect:'L\'élève est créé avec une inscription ACTIVE dans la classe choisie (année active). La fiche s\'ouvre.' },
+      { id:'P3-EL2', titre:'Élèves — modifier la fiche', tags:['ui'],
+        pre:'Un élève existe.',
+        steps:['Ouvrir la fiche → modifier identité / famille / contact → enregistrer'],
+        expect:'Les modifications sont persistées.' },
+      { id:'P3-EL3', titre:'Élèves — exclure puis réintégrer', tags:['regle'],
+        pre:'Un élève actif.',
+        steps:['Fiche → bloc Statut → « Exclure » (motif requis) → confirmer','Puis « Réintégrer »'],
+        expect:'Statut passe à « exclu » (badge rouge) puis revient à « actif ».' },
+      { id:'P3-EL4', titre:'Élèves — marquer parti puis réintégrer', tags:['regle'],
+        pre:'Un élève actif.',
+        steps:['Fiche → Statut → « Marquer parti » (motif) → confirmer','Puis « Réintégrer »'],
+        expect:'Statut « parti » (badge orange) puis « actif ».' },
+      { id:'P3-EL5', titre:'Élèves — recherche & filtre par niveau/classe', tags:['ui'],
+        pre:'Plusieurs élèves.',
+        steps:['Liste Élèves → rechercher par nom','Filtrer par Niveau / Classe'],
+        expect:'La liste se filtre correctement ; le compteur d\'élèves se met à jour.' },
+      { id:'P3-EL6', titre:'Élèves — parcours scolaire (inscriptions)', tags:['ui'],
+        pre:'Un élève avec inscription.',
+        steps:['Ouvrir la fiche → section « Parcours scolaire »'],
+        expect:'Affiche les inscriptions (classe, année, statut) triées, l\'inscription active en tête.' },
+      // MATIÈRES
+      { id:'P3-MA1', titre:'Matières — créer avec coefficients par niveau', tags:['ui','regle'],
+        pre:'Année active.',
+        steps:['Matières → « Nouvelle matière »','Nom, code, couleur, ajouter des coefficients par niveau','Enregistrer'],
+        expect:'La matière est créée et rattachée à l\'année. Les coefficients par niveau sont enregistrés ; chaque niveau ne peut apparaître qu\'une fois ; coefficient > 0.' },
+      { id:'P3-MA2', titre:'Matières — modifier (couleur, coefficients)', tags:['ui'],
+        pre:'Une matière existe.',
+        steps:['Éditer la matière → changer couleur / coefficients → enregistrer'],
+        expect:'Mise à jour visible. La synchro avec les niveaux (matières autorisées) se fait automatiquement.' },
+      { id:'P3-MA3', titre:'Matières — désactiver (règle planning)', tags:['regle'],
+        pre:'Une matière utilisée dans un créneau.',
+        steps:['Tenter de désactiver une matière présente dans le planning'],
+        expect:'Refus : « Cette matière est utilisée dans le planning. » Sinon désactivation OK.' },
+      // PROFESSEURS
+      { id:'P3-PR1', titre:'Professeurs — créer', tags:['ui'],
+        pre:'Année active.',
+        steps:['Professeurs → « Ajouter »','Nom, prénom, genre, email → enregistrer'],
+        expect:'Le professeur apparaît dans la liste (statut actif).' },
+      { id:'P3-PR2', titre:'Professeurs — affecter à une matière/classe', tags:['regle'],
+        pre:'Un prof, une classe, une matière autorisée pour le niveau.',
+        steps:['Page Affectations → choisir prof + matière + classe → affecter'],
+        expect:'L\'affectation est créée. Si la matière n\'est pas enseignée dans le niveau de la classe, refus. Le planning de la classe affiche alors le prof sur les créneaux de cette matière.' },
+      { id:'P3-PR3', titre:'Professeurs — désactiver / réactiver', tags:['regle'],
+        pre:'Un prof actif.',
+        steps:['Désactiver le prof → vérifier son absence de la liste active','Réactiver'],
+        expect:'Le prof disparaît puis réapparaît dans la liste des actifs.' },
+      // NIVEAUX
+      { id:'P3-NV1', titre:'Niveaux — créer / réordonner', tags:['ui','regle'],
+        pre:'Année active.',
+        steps:['Niveaux → « Nouveau niveau » (nom, description)','Changer l\'ordre'],
+        expect:'Le niveau est créé (rattaché à l\'année) ; l\'ordre est compacté (0,1,2…). Nom unique par année.' },
+      { id:'P3-NV2', titre:'Niveaux — associer des matières', tags:['regle'],
+        pre:'Un niveau, des matières.',
+        steps:['Éditer le niveau → cocher des matières autorisées → enregistrer'],
+        expect:'Les matières liées se synchronisent dans les deux sens (niveau ↔ coefficients matière).' },
+      { id:'P3-NV3', titre:'Niveaux — suppression refusée si classe l\'utilise', tags:['regle'],
+        pre:'Un niveau utilisé par une classe active.',
+        steps:['Tenter de supprimer le niveau'],
+        expect:'Refus : « des classes actives l\'utilisent ».' },
+      // SALLES
+      { id:'P3-SA1', titre:'Salles — créer / modifier / supprimer', tags:['ui'],
+        pre:'Année active.',
+        steps:['Salles → « Nouvelle salle » (nom, capacité, type)','Modifier la capacité','Supprimer (soft delete)'],
+        expect:'Création, modification puis disparition de la liste. Nom unique par année.' },
+      { id:'P3-SA2', titre:'Salles — détail & disponibilités', tags:['ui'],
+        pre:'Une salle utilisée dans des créneaux.',
+        steps:['Ouvrir le détail d\'une salle'],
+        expect:'Statistiques d\'occupation (créneaux/semaine, taux) et liste des créneaux affichées.' },
+      // PLANNING
+      { id:'P3-PL1', titre:'Planning — créer un créneau', tags:['ui','regle'],
+        pre:'Une classe, une matière autorisée.',
+        steps:['Planning d\'une classe → ajouter un créneau (jour, heures, matière, salle)'],
+        expect:'Le créneau apparaît. Le prof affecté à la matière s\'affiche. Matière non autorisée pour le niveau → refus.' },
+      { id:'P3-PL2', titre:'Planning — supprimer un créneau', tags:['ui'],
+        pre:'Un créneau existe.',
+        steps:['Supprimer le créneau'],
+        expect:'Le créneau disparaît du planning.' },
+      // PÉRIODES
+      { id:'P3-PE1', titre:'Périodes — configurer les dates', tags:['ui'],
+        pre:'Année active (6 périodes : DS/Évaluation × 3 trimestres).',
+        steps:['Périodes → définir date début/fin d\'une période'],
+        expect:'Le statut de la période se calcule : non-planifiée / future / active / terminée selon les dates et la date du jour.' },
+      { id:'P3-PE2', titre:'Périodes — règle Évaluation après DS', tags:['regle'],
+        pre:'Période DS d\'un trimestre avec date de fin définie.',
+        steps:['Tenter de faire débuter l\'Évaluation du même trimestre avant la fin du DS'],
+        expect:'Refus : « La période Évaluation T… doit débuter après la fin du DS ».' },
+      { id:'P3-PE3', titre:'Périodes — clôturer une période', tags:['regle'],
+        pre:'Une période active.',
+        steps:['Terminer la période'],
+        expect:'La période passe au statut « terminée » (date de fin = aujourd\'hui).' },
+      // NOTES
+      { id:'P3-NO1', titre:'Notes — saisie bloquée hors période', tags:['regle'],
+        pre:'Aucune période active.',
+        steps:['Tenter de saisir une note'],
+        expect:'Refus : « Aucune période de saisie active. La saisie est bloquée hors période. »' },
+      { id:'P3-NO2', titre:'Notes — saisir en période active', tags:['regle'],
+        pre:'Une période active (DS ou Évaluation).',
+        steps:['Notes → choisir classe + matière','Saisir des notes (0–20) → enregistrer'],
+        expect:'Les notes sont enregistrées avec le type (ds/évaluation) et le trimestre de la période active. Valeur hors 0–20 → refus.' },
+      { id:'P3-NO3', titre:'Notes — modifier / annuler', tags:['ui'],
+        pre:'Des notes saisies.',
+        steps:['Modifier une valeur','Annuler une note'],
+        expect:'La valeur change ; la note annulée disparaît des calculs et du bulletin.' },
+      // BULLETIN
+      { id:'P3-BU1', titre:'Bulletin — affichage 3 trimestres', tags:['ui'],
+        pre:'Un élève avec des notes sur plusieurs trimestres.',
+        steps:['Fiche élève → Bulletin','Basculer entre T1 / T2 / T3'],
+        expect:'Chaque trimestre liste les matières (DS, évaluation, moyenne, coefficient) et la moyenne générale pondérée.' },
+      { id:'P3-BU2', titre:'Bulletin — export', tags:['ui'],
+        pre:'Un bulletin affiché.',
+        steps:['Cliquer « Imprimer / Exporter »'],
+        expect:'Le bulletin s\'ouvre/télécharge (PDF) pour le trimestre courant.' },
+    ]
+  },
+  {
+    id:'P4', titre:'PHASE 4 — Terminaison de l\'année', color:'#dc2626',
+    desc:"Clôture de l'année active. Action IRRÉVERSIBLE qui archive l'année et prépare automatiquement la suivante.",
+    cases:[
+      { id:'P4-1', titre:'Bouton « Terminer l\'année »', tags:['ui'],
+        pre:'Une année active.',
+        steps:['Page Cycle scolaire → carte année active','Observer le bouton de clôture'],
+        expect:'« Terminer l\'année scolaire » si on est après la date de fin planifiée ; « Terminer l\'année (avant la date prévue) » sinon.' },
+      { id:'P4-2', titre:'Double confirmation', tags:['regle'],
+        pre:'Année active.',
+        steps:['Cliquer « Terminer l\'année »','Confirmer une 1re fois','Confirmer une 2de fois'],
+        expect:'Deux dialogues de confirmation successifs avant exécution.' },
+      { id:'P4-3', titre:'Effet de la clôture', tags:['regle','iso'],
+        pre:'Clôture confirmée.',
+        steps:['Observer l\'état après clôture'],
+        expect:'L\'année passe « terminée » (date de fin réelle = aujourd\'hui). Une NOUVELLE année est créée automatiquement en « préparation » (label = années suivantes).' },
+      { id:'P4-4', titre:'Copie automatique des référentiels', tags:['iso'],
+        pre:'Clôture effectuée.',
+        steps:['Consulter la nouvelle année en préparation : Classes, Matières, Salles, Niveaux, Planning, Affectations profs'],
+        expect:'Toutes les classes, matières, salles, niveaux, créneaux de planning et affectations professeurs sont COPIÉS dans la nouvelle année (les références matières↔niveaux sont remappées).' },
+      { id:'P4-5', titre:'Archivage des inscriptions élèves', tags:['regle'],
+        pre:'Clôture effectuée.',
+        steps:['Aller dans Élèves'],
+        expect:'Toutes les inscriptions actives sont passées « inactives » : les élèves n\'ont plus de classe active et apparaissent « à réinscrire » (les classes de la nouvelle année sont à 0 élève).' },
+      { id:'P4-6', titre:'Périodes de la nouvelle année', tags:['regle'],
+        pre:'Clôture effectuée.',
+        steps:['Périodes (nouvelle année en préparation)'],
+        expect:'6 périodes initialisées (non planifiées). Les périodes de l\'année archivée restent « terminées ».' },
+    ]
+  },
+  {
+    id:'P5', titre:'PHASE 5 — Archive (lecture seule) & isolation', color:'#7c3aed',
+    desc:"Consultation d'une année terminée. Aucune écriture possible ; les données créées dans une autre année ne doivent JAMAIS apparaître.",
+    cases:[
+      { id:'P5-1', titre:'Entrer dans l\'archive', tags:['ui'],
+        pre:'Au moins une année terminée.',
+        steps:['Cycle scolaire → historique → « 📂 Consulter » sur l\'année terminée'],
+        expect:'Bandeau orange « Consultation de l\'année 2024-2025 (archivée · lecture seule) » affiché en haut. Redirection vers le Dashboard de l\'archive.' },
+      { id:'P5-2', titre:'Lecture seule sur TOUS les menus', tags:['iso','regle'],
+        pre:'Mode archive actif.',
+        steps:['Parcourir : Classes, Élèves, Matières, Salles, Niveaux, Professeurs, Notes, Périodes, Planning'],
+        expect:'Aucun bouton de création/modification/suppression n\'est visible. Le bandeau archive reste affiché sur chaque page. La page Notes affiche un message « archive ».' },
+      { id:'P5-3', titre:'Bulletins conservés', tags:['iso'],
+        pre:'Mode archive.',
+        steps:['Ouvrir le bulletin d\'un élève archivé (T1/T2/T3)'],
+        expect:'Les notes des 3 trimestres de l\'année archivée sont intactes.' },
+      { id:'P5-4', titre:'Professeurs & affectations conservés', tags:['iso'],
+        pre:'Mode archive.',
+        steps:['Ouvrir la fiche d\'un professeur'],
+        expect:'Les affectations (matière/classe) de l\'année archivée sont présentes.' },
+      { id:'P5-5', titre:'Classes de l\'année archivée avec leurs élèves', tags:['iso'],
+        pre:'Mode archive.',
+        steps:['Classes → ouvrir une classe'],
+        expect:'Les classes de l\'année archivée affichent leurs effectifs d\'alors (pas 0).' },
+      { id:'P5-6', titre:'ISOLATION — données d\'une autre année absentes', tags:['iso'],
+        pre:'Avoir créé en préparation : une matière, une salle, un niveau, une classe « E2E… ».',
+        steps:['En archive : aller dans Matières, Salles, Niveaux, Classes','Rechercher les éléments créés dans la préparation'],
+        expect:'AUCUN élément créé dans la préparation n\'apparaît dans l\'archive. Les totaux de l\'archive sont inchangés.' },
+      { id:'P5-7', titre:'Sortir de l\'archive', tags:['ui'],
+        pre:'Mode archive.',
+        steps:['Cliquer « ✕ Revenir à l\'année en cours » dans le bandeau'],
+        expect:'Retour au mode live (année active / préparation). Le bandeau disparaît.' },
+      { id:'P5-8', titre:'Archive non rechargeable par URL', tags:['regle'],
+        pre:'En mode archive.',
+        steps:['Rafraîchir la page (F5) en étant dans une page d\'archive'],
+        expect:'Le mode archive est perdu (état en mémoire) : on revient en mode live. Comportement attendu — la consultation d\'archive se fait via navigation dans l\'app.' },
+    ]
+  },
+  {
+    id:'P6', titre:'PHASE 6 — Nouveau cycle (réinscriptions & démarrage)', color:'#0891b2',
+    desc:"Après clôture : remplir la nouvelle année en préparation puis la démarrer.",
+    cases:[
+      { id:'P6-1', titre:'Liste « à réinscrire »', tags:['ui'],
+        pre:'Année clôturée → préparation en cours, aucune active.',
+        steps:['Élèves : observer les élèves sans classe active'],
+        expect:'Tous les anciens élèves apparaissent avec un bouton « Réinscrire ».' },
+      { id:'P6-2', titre:'Réinscription avec suggestion de niveau', tags:['regle'],
+        pre:'Un élève à réinscrire ayant des notes l\'an passé.',
+        steps:['Cliquer « Réinscrire »','Observer la suggestion de niveau'],
+        expect:'Le niveau proposé = niveau supérieur si moyenne ≥ 10 (promu), même niveau sinon (redouble), « diplômé » si Terminale réussie. La classe de même nom est présélectionnée si elle existe.' },
+      { id:'P6-3', titre:'Réinscription en classe', tags:['regle'],
+        pre:'Modal de réinscription.',
+        steps:['Choisir niveau → classe → Confirmer'],
+        expect:'L\'élève obtient une inscription active dans la classe de la préparation ; l\'effectif de la classe augmente ; l\'élève disparaît de « à réinscrire ».' },
+      { id:'P6-4', titre:'Réinscription en année active (validation stricte)', tags:['regle'],
+        pre:'Si une année est active (et non en simple préparation).',
+        steps:['Réinscrire un élève dans une classe complète'],
+        expect:'Avertissement de capacité dépassée → confirmation « Inscrire quand même ». Classe d\'une autre année / déjà inscrit → refus.' },
+      { id:'P6-5', titre:'Démarrer la nouvelle année', tags:['regle'],
+        pre:'Préparation prête, aucune active.',
+        steps:['Cycle scolaire → « 🚀 Commencer l\'année scolaire » → confirmer'],
+        expect:'La nouvelle année devient « active ». Le cycle complet est bouclé.' },
+    ]
+  },
+  {
+    id:'P7', titre:'Transverse — Paramètres, i18n, temps réel', color:'#475569',
+    desc:"Fonctionnalités transverses.",
+    cases:[
+      { id:'P7-1', titre:'Changer la langue (FR / EN / MG)', tags:['ui'],
+        pre:'—', steps:['Paramètres → changer la langue'],
+        expect:'L\'interface se traduit immédiatement (français, anglais, malgache).' },
+      { id:'P7-2', titre:'Mode sombre & couleur d\'accent', tags:['ui'],
+        pre:'—', steps:['Paramètres → activer le mode sombre, changer la couleur'],
+        expect:'Le thème s\'applique et persiste après rechargement (IndexedDB).' },
+      { id:'P7-3', titre:'Mise à jour temps réel', tags:['ui'],
+        pre:'Deux onglets ouverts sur la même page liste.',
+        steps:['Créer/modifier une donnée dans un onglet'],
+        expect:'L\'autre onglet se met à jour automatiquement (Socket.IO) sans rechargement.' },
+      { id:'P7-4', titre:'Export CSV / XLSX', tags:['ui'],
+        pre:'Une liste (élèves, salles…).',
+        steps:['Utiliser le menu Export'],
+        expect:'Le fichier est généré et téléchargé.' },
+    ]
+  },
+];
+
+// ════════════════════════════════════════════════════════════════════════════
+//  RENDU + LOGIQUE
+// ════════════════════════════════════════════════════════════════════════════
+const STORE_KEY = 'ekolova-cahier-test-v1';
+let state = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+
+function tagHtml(tags){
+  const map={ui:'UI',regle:'Règle métier',iso:'Isolation'};
+  return (tags||[]).map(t=>`<span class="tag ${t}">${map[t]||t}</span>`).join('');
+}
+
+function render(){
+  const app=document.getElementById('app');
+  let html='';
+  for(const ph of PHASES){
+    html+=`<section class="phase">
+      <h2><span class="badge" style="background:${ph.color}">${ph.id}</span> ${ph.titre}</h2>
+      <p class="desc">${ph.desc}</p>`;
+    for(const tc of ph.cases){
+      const st=state[tc.id]?.status||'';
+      const note=state[tc.id]?.note||'';
+      html+=`<div class="tc ${st}" id="card-${tc.id}">
+        <div class="tc-head">
+          <span class="tc-id">${tc.id}</span>
+          <span class="tc-title">${tc.titre} ${tagHtml(tc.tags)}</span>
+        </div>
+        <div class="tc-meta"><b>Pré-conditions :</b> ${tc.pre||'—'}</div>
+        <ol class="steps">${tc.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+        <div class="expect"><b>✓ Résultat attendu :</b> ${tc.expect}</div>
+        <div class="status">
+          <label class="${st==='ok'?'sel-ok':''}"><input type="radio" name="${tc.id}" ${st==='ok'?'checked':''} onclick="setStatus('${tc.id}','ok')">✅ OK</label>
+          <label class="${st==='ko'?'sel-ko':''}"><input type="radio" name="${tc.id}" ${st==='ko'?'checked':''} onclick="setStatus('${tc.id}','ko')">❌ KO</label>
+          <label class="${st==='na'?'sel-na':''}"><input type="radio" name="${tc.id}" ${st==='na'?'checked':''} onclick="setStatus('${tc.id}','na')">⏭ N/A</label>
+        </div>
+        <textarea class="note" placeholder="Notes / anomalie observée…" oninput="setNote('${tc.id}',this.value)">${note}</textarea>
+      </div>`;
+    }
+    html+=`</section>`;
+  }
+  app.innerHTML=html;
+  updateProgress();
+}
+
+function setStatus(id,val){
+  state[id]=state[id]||{}; state[id].status=val; save();
+  const card=document.getElementById('card-'+id);
+  card.classList.remove('ok','ko','na'); card.classList.add(val);
+  card.querySelectorAll('.status label').forEach(l=>l.className='');
+  const idx={ok:0,ko:1,na:2}[val];
+  const labels=card.querySelectorAll('.status label');
+  labels[idx].className={ok:'sel-ok',ko:'sel-ko',na:'sel-na'}[val];
+  updateProgress();
+}
+function setNote(id,val){ state[id]=state[id]||{}; state[id].note=val; save(); }
+function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+function allCases(){ return PHASES.flatMap(p=>p.cases); }
+function updateProgress(){
+  const cases=allCases(); const tot=cases.length;
+  let ok=0,ko=0,na=0;
+  for(const c of cases){ const s=state[c.id]?.status; if(s==='ok')ok++; else if(s==='ko')ko++; else if(s==='na')na++; }
+  document.getElementById('cOk').textContent=ok;
+  document.getElementById('cKo').textContent=ko;
+  document.getElementById('cNa').textContent=na;
+  document.getElementById('cTot').textContent=tot;
+  const done=ok+ko+na;
+  document.getElementById('barFill').style.width=(tot? (done/tot*100):0)+'%';
+}
+function resetAll(){
+  if(!confirm('Réinitialiser tous les résultats du cahier de test ?')) return;
+  state={}; save(); render();
+}
+function exportTxt(){
+  const lines=['CAHIER DE TEST EKOLOVA — RÉSULTATS','Date : '+new Date().toLocaleString('fr-FR'),''];
+  for(const ph of PHASES){
+    lines.push('','=== '+ph.id+' — '+ph.titre+' ===');
+    for(const tc of ph.cases){
+      const s=state[tc.id]?.status||'(non testé)';
+      const map={ok:'OK',ko:'KO',na:'N/A'};
+      lines.push(`[${(map[s]||s).padEnd(3)}] ${tc.id} — ${tc.titre}`);
+      if(state[tc.id]?.note) lines.push('       note: '+state[tc.id].note);
+    }
+  }
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='cahier-test-ekolova-'+new Date().toISOString().slice(0,10)+'.txt'; a.click();
+}
+
+document.getElementById('genDate').textContent=new Date().toLocaleDateString('fr-FR');
+render();
+</script>
+</body>
+</html>

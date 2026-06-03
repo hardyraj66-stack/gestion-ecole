@@ -75,3 +75,15 @@ export function calculateDuration(heureDebut: string, heureFin: string): number 
   const minutes2 = h2 * 60 + m2;
   return (minutes2 - minutes1) / 60;
 }
+
+/**
+ * Construit la query-string d'une URL d'export à partir de paramètres optionnels.
+ * Ignore les valeurs vides. Inclut anneeId (ex. mode archive) si fourni.
+ * Exemple : exportQs({ classeId, search, anneeId }) → "?classeId=…&anneeId=…"
+ */
+export function exportQs(params: Record<string, string | number | null | undefined>): string {
+  const parts = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`);
+  return parts.length ? `?${parts.join('&')}` : '';
+}

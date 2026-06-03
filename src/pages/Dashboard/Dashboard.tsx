@@ -91,10 +91,17 @@ export function Dashboard() {
       )}
 
       <div className="stats-grid">
-        <StatCard title={t('nav.classes')} value={stats.classes} subtitle={t('dashboard.stats.toutesNiveaux')} color="blue" icon="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-        <StatCard title={t('nav.eleves')} value={stats.eleves} subtitle={readOnly ? t('sidebar.statut.archive') : t('dashboard.stats.actifs')} color="purple" icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <StatCard title={t('nav.matieres')} value={stats.matieres} subtitle={t('dashboard.stats.auProgramme')} color="green" icon="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <StatCard title={t('nav.notes')} value={stats.notes} subtitle={readOnly ? t('sidebar.statut.archive') : t('dashboard.stats.total')} color="orange" icon="M12 20h9" />
+        <StatCard title={t('nav.classes')} value={stats.classes} subtitle={t('dashboard.stats.toutesNiveaux')} color="blue" icon="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" href="/classes" />
+        <StatCard
+          title={t('nav.eleves')}
+          value={`${stats.elevesInscrits ?? stats.eleves} / ${stats.elevesTotal ?? stats.eleves}`}
+          subtitle={t('dashboard.stats.elevesInscrits')}
+          color="purple"
+          icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+          href="/eleves"
+        />
+        <StatCard title={t('nav.matieres')} value={stats.matieres} subtitle={t('dashboard.stats.auProgramme')} color="green" icon="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" href="/matieres" />
+        <StatCard title={t('nav.notes')} value={stats.notes} subtitle={t('dashboard.stats.total')} color="orange" icon="M12 20h9" href="/notes" />
       </div>
 
       <div className="dashboard-grid">

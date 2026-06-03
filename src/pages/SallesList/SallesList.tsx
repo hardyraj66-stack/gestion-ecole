@@ -19,6 +19,7 @@ import { Salle, TypeSalle, TYPES_SALLE } from '../../types';
 import { API_BASE_URL } from '../../config/api';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { ExportMenu } from '../../components/shared/ExportMenu';
+import { exportQs } from '../../utils/helpers';
 
 const typeColors: Record<TypeSalle, string> = {
   standard:    'var(--primary)',
@@ -33,7 +34,7 @@ const typeColors: Record<TypeSalle, string> = {
 export function SallesList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isViewingArchive } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
   const readOnly = useReadOnly();
   const { delete: deleteSalle } = useSalles();
   const confirm = useConfirm();
@@ -91,8 +92,8 @@ export function SallesList() {
     <div>
       <PageHeader title={t('salles.titre')} subtitle={t('salles.nbSalles', { count: total })}>
         <ExportMenu
-          csvUrl={`/export/salles/csv${filterType ? `?type=${filterType}` : ''}`}
-          xlsxUrl={`/export/salles/xlsx${filterType ? `?type=${filterType}` : ''}`}
+          csvUrl={`/export/salles/csv${exportQs({ type: filterType, anneeId: viewingId })}`}
+          xlsxUrl={`/export/salles/xlsx${exportQs({ type: filterType, anneeId: viewingId })}`}
         />
         {!readOnly && (
           <Button variant="primary" onClick={() => navigate('/salles/nouvelle')}>

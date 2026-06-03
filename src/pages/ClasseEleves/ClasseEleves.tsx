@@ -14,11 +14,12 @@ import { Alert } from '../../components/shared/Alert';
 import { ClasseInfoBar } from './ClasseInfoBar';
 import { ElevesTable } from './ElevesTable';
 import { ExportMenu } from '../../components/shared/ExportMenu';
+import { exportQs } from '../../utils/helpers';
 
 export function ClasseEleves() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const { isViewingArchive } = useViewing();
+  const { isViewingArchive, viewingId } = useViewing();
   const { isTerminee } = useAnneeScolaireStatus();
   const readOnly = isViewingArchive || isTerminee;
   const [page, setPage] = useState(1);
@@ -72,8 +73,8 @@ export function ClasseEleves() {
         <Button as="link" to="/classes" variant="secondary">{t('classeEleves.retourClasses')}</Button>
         <Button as="link" to={`/classes/${id}/planning`} variant="outline">{t('classes.actions.planning')}</Button>
         <ExportMenu
-          csvUrl={`/export/classes/${id}/eleves/csv`}
-          xlsxUrl={`/export/classes/${id}/eleves/xlsx`}
+          csvUrl={`/export/classes/${id}/eleves/csv${exportQs({ anneeId: viewingId })}`}
+          xlsxUrl={`/export/classes/${id}/eleves/xlsx${exportQs({ anneeId: viewingId })}`}
         />
         {!readOnly && <Button as="link" to="/eleves/nouveau" variant="primary">{t('eleves.nouvelEleve')}</Button>}
       </PageHeader>

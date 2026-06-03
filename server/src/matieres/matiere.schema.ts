@@ -32,7 +32,12 @@ export class Matiere extends Document {
 
   @Prop({ default: true })
   actif: boolean;
+
+  /** Référence ID vers la collection AnneeScolaire — isole les matières par année */
+  @Prop({ default: '' })
+  anneeScolaireId: string;
 }
 
 export const MatiereSchema = SchemaFactory.createForClass(Matiere);
 MatiereSchema.index({ actif: 1 });
+MatiereSchema.index({ anneeScolaireId: 1 });

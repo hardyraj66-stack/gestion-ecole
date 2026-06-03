@@ -36,6 +36,27 @@ export class ReadController {
     return data;
   }
 
+  @Get('eleves/:id/suggestion-reinscription')
+  async getSuggestionReinscription(@Param('id') id: string) {
+    const data = await this.service.getSuggestionReinscription(id);
+    if (!data) throw new NotFoundException();
+    return data;
+  }
+
+  @Get('eleves/sans-classe')
+  getElevesSansClasse(
+    @Query('page') p?: string,
+    @Query('limit') l?: string,
+    @Query('search') s?: string,
+  ) {
+    return this.service.elevesSansClasse(parseInt(p!) || 1, parseInt(l!) || 12, s || '');
+  }
+
+  @Get('eleves/non-reinscrits')
+  getElevesNonReinscrits() {
+    return this.service.elevesNonReinscrits();
+  }
+
   @Get('eleves')
   getElevesList(
     @Query('page') p?: string, @Query('limit') l?: string,
@@ -46,16 +67,17 @@ export class ReadController {
   }
 
   @Get('matieres')
-  getMatieresList(@Query('page') p?: string, @Query('limit') l?: string, @Query('niveau') niveau?: string) {
-    return this.service.getMatieresList(parseInt(p!) || 1, parseInt(l!) || 8, niveau || '');
+  getMatieresList(@Query('page') p?: string, @Query('limit') l?: string, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
+    return this.service.getMatieresList(parseInt(p!) || 1, parseInt(l!) || 8, niveau || '', anneeId || undefined);
   }
 
   @Get('salles')
   getSallesList(
     @Query('page') p?: string, @Query('limit') l?: string,
     @Query('type') type?: string, @Query('search') search?: string,
+    @Query('anneeId') anneeId?: string,
   ) {
-    return this.service.getSallesList(parseInt(p!) || 1, parseInt(l!) || 8, type || '', search || '');
+    return this.service.getSallesList(parseInt(p!) || 1, parseInt(l!) || 8, type || '', search || '', anneeId || undefined);
   }
 
   @Get('salles/:id')
@@ -179,8 +201,8 @@ export class ReadController {
   getProfesseursActifs() { return this.service.getProfesseursActifs(); }
 
   @Get('professeurs/:id')
-  async getProfesseurDetail(@Param('id') id: string) {
-    const data = await this.service.getProfesseurDetail(id);
+  async getProfesseurDetail(@Param('id') id: string, @Query('anneeId') anneeId?: string) {
+    const data = await this.service.getProfesseurDetail(id, anneeId || undefined);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -190,7 +212,8 @@ export class ReadController {
     @Query('page') p?: string,
     @Query('limit') l?: string,
     @Query('search') s?: string,
+    @Query('anneeId') anneeId?: string,
   ) {
-    return this.service.getProfesseursList(parseInt(p!) || 1, parseInt(l!) || 20, s || '');
+    return this.service.getProfesseursList(parseInt(p!) || 1, parseInt(l!) || 20, s || '', anneeId || undefined);
   }
 }

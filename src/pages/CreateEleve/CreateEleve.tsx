@@ -101,10 +101,11 @@ export function CreateEleve() {
     if (!prenom.trim() || !nom.trim() || !dateNaissance || !classeId) { setError(t('eleves.creer.erreurChamps')); return; }
     setSubmitting(true); setError('');
     const result = await create({
-      prenom: prenom.trim(), nom: nom.trim(), genre, date_naissance: dateNaissance, classe_id: classeId,
+      prenom: prenom.trim(), nom: nom.trim(), genre, date_naissance: dateNaissance,
       statut: 'actif' as const,
       email: email.trim() || undefined, telephone: telephone.trim() || undefined, adresse: adresse.trim() || undefined,
-    });
+      ...(classeId ? { classeId } : {}),
+    } as any);
     if (result) {
       navigate(`/eleves/${result.id}`);
     } else { setError(t('eleves.creer.erreurCreation')); setSubmitting(false); }
