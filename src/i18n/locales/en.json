@@ -11,7 +11,8 @@
     "salles": "Rooms",
     "niveaux": "Levels",
     "cycle": "Academic year",
-    "parametres": "Settings"
+    "parametres": "Settings",
+    "utilisateurs": "Users"
   },
   "sidebar": {
     "anneeScolaire": "Academic year",
@@ -22,7 +23,15 @@
     },
     "retourAnneeEnCours": "✕ Click to return to current year",
     "administrateur": "Administrator",
-    "role": "Admin"
+    "role": "Admin",
+    "logout": "Sign out",
+    "roles": {
+      "admin": "Administrator",
+      "professeur": "Teacher",
+      "secretaire": "Secretary"
+    },
+    "logoutConfirmTitle": "Sign out",
+    "logoutConfirmMessage": "Do you really want to sign out?"
   },
   "common": {
     "nouveau": "New",
@@ -1138,5 +1147,44 @@
     "absente": "Absent",
     "notesCount": "{{nb}}/{{total}} students graded",
     "moyenneProvisoire": "Provisional average:"
+  },
+  "login": {
+    "subtitle": "Sign in to access the school management",
+    "username": "Username",
+    "usernamePlaceholder": "admin",
+    "password": "Password",
+    "submit": "Sign in",
+    "error": "Invalid credentials"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage accounts and access roles",
+    "add": "New user",
+    "name": "Name",
+    "username": "Username",
+    "role": "Role",
+    "status": "Status",
+    "actions": "Actions",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "resetPassword": "Reset",
+    "delete": "Delete",
+    "create": "Create",
+    "createTitle": "New user",
+    "cancel": "Cancel",
+    "passwordLabel": "Password",
+    "newPasswordPrompt": "New password for {{name}}:",
+    "passwordChanged": "Password changed.",
+    "passwordTooShort": "Password too short (min 4 chars).",
+    "confirmDelete": "Permanently delete {{name}}?",
+    "you": "you",
+    "empty": "No users.",
+    "errorLoad": "Unable to load users.",
+    "errorCreate": "Could not create.",
+    "errorUpdate": "Could not update.",
+    "errorDelete": "Could not delete.",
+    "formInvalid": "Username required and password of at least 4 characters."
   }
 }

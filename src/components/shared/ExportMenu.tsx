@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '../../config/api';
+import { getToken } from '../../services/authStorage';
 
 interface ExportMenuProps {
   csvUrl: string;
@@ -23,7 +24,12 @@ export function ExportMenu({ csvUrl, xlsxUrl, label }: ExportMenuProps) {
   }, [open]);
 
   const download = (path: string) => {
-    window.open(`${API_BASE_URL}${path}`, '_blank');
+    // window.open ne permet pas d'en-tête Authorization → on passe le token en query param,
+    // accepté en repli par le JwtAuthGuard côté serveur.
+    const token = getToken();
+    const sep = path.includes('?') ? '&' : '?';
+    const url = `${API_BASE_URL}${path}${token ? `${sep}token=${encodeURIComponent(token)}` : ''}`;
+    window.open(url, '_blank');
     setOpen(false);
   };
 

@@ -1,0 +1,94 @@
+/* #root est en display:flex (layout sidebar) → la page doit remplir l'espace */
+.login-screen {
+  flex: 1;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: var(--bg, #f1f5f9);
+  background-image: radial-gradient(
+    1000px 520px at 50% -8%,
+    color-mix(in srgb, var(--primary) 16%, transparent),
+    transparent 70%
+  );
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e8edf3);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 50px -12px rgba(2, 6, 23, 0.18),
+    0 4px 12px rgba(2, 6, 23, 0.05);
+  padding: 2.5rem 2rem 2rem;
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.login-subtitle {
+  margin: 0;
+  max-width: 280px;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-muted, #64748b);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.05rem;
+}
+
+.login-form .btn {
+  margin-top: 0.4rem;
+  height: 46px;
+  font-size: 0.95rem;
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--danger-light, #fef2f2);
+  color: var(--danger, #dc2626);
+  border: 1px solid var(--danger, #dc2626);
+  border-radius: var(--radius-sm, 8px);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+/* Spinner de chargement global (RequireAuth) — aussi enfant direct de #root */
+.auth-loading {
+  flex: 1;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid var(--border, #e2e8f0);
+  border-top-color: var(--primary, #6366f1);
+  border-radius: 50%;
+  animation: auth-spin 0.7s linear infinite;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

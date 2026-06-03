@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_URL } from '../config/api';
+import { getToken } from './authStorage';
 
 type Channel = 'classes' | 'eleves' | 'matieres' | 'notes' | 'planning' | 'salles' | 'annees' | 'niveaux' | 'professeurs' | 'evaluations' | 'periodes' | 'all';
 type Listener = () => void;
@@ -31,10 +32,31 @@ class SocketService {
   }
 
   private connect(): void {
-    this.socket = io(SOCKET_URL, { transports: ['websocket'], autoConnect: true });
+    // L'objet socket est toujours créé (pour que onEvent puisse s'abonner),
+    // mais ne se connecte que si un token est présent. Le serveur rejette
+    // toute connexion non authentifiée.
+    const token = getToken();
+    this.socket = io(SOCKET_URL, {
+      transports: ['websocket'],
+      autoConnect: !!token,
+      auth: { token: token || undefined },
+    });
     this.socket.on('connect', () => console.log('Socket connected:', this.socket?.id));
     this.socket.on('disconnect', () => console.log('Socket disconnected'));
     this.socket.on('connect_error', (error) => console.log('Socket connection error:', error.message));
+  }
+
+  /** Reconnecte le socket avec le token courant (appelé après login), ou le coupe (logout). */
+  refreshAuth(): void {
+    if (!this.socket) { this.connect(); return; }
+    const token = getToken();
+    this.socket.auth = { token: token || undefined };
+    if (token) {
+      if (this.socket.connected) this.socket.disconnect();
+      this.socket.connect();
+    } else {
+      this.socket.disconnect();
+    }
   }
 
   onEvent<T>(event: string, callback: (data: T) => void): () => void {
@@ -75,5 +97,7 @@ export const onEvent = <T>(event: string, callback: (data: T) => void) => socket
 export const emitEvent = (event: string, data?: unknown) => socketService.emitEvent(event, data);
 export const onDataChange = (channel: Channel, listener: Listener) => socketService.onDataChange(channel, listener);
 export const notifyDataChange = (channel: Channel) => socketService.notifyDataChange(channel);
+/** À appeler après login/logout pour (re)connecter le socket avec le bon token. */
+export const notifyAuthChanged = () => socketService.refreshAuth();
 export default socketService;
 export type { Channel };

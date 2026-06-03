@@ -305,6 +305,30 @@
   @include truncate;
 }
 
+.sidebar-logout {
+  @include sidebar-label-hidden;
+  background: transparent;
+  border: none;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar.sidebar-expanded .sidebar-logout {
+  @include sidebar-label-visible;
+}
+
+.sidebar-logout:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
 // --- Dark mode overrides ---
 [data-theme="dark"] {
   .sidebar.sidebar-expanded {

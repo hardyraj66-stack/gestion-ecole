@@ -3,6 +3,8 @@ import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useConfirm } from '../shared/ConfirmDialog';
 import { Badge } from '../ui/Badge';
 import { BrandIcon } from '../brand/BrandIcon';
 import { BrandWordmark } from '../brand/BrandWordmark';
@@ -46,6 +48,18 @@ export function Sidebar() {
   const { t } = useTranslation();
   const { active, preparation, getAll: fetchAnnees } = useAnnees();
   const { viewing, isViewingArchive, exitView } = useViewing();
+  const { user, logout, hasRole } = useAuth();
+  const confirm = useConfirm();
+
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: t('sidebar.logoutConfirmTitle'),
+      message: t('sidebar.logoutConfirmMessage'),
+      confirmText: t('sidebar.logout'),
+      variant: 'warning',
+    });
+    if (ok) logout();
+  };
   const [expanded, setExpanded] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -61,6 +75,16 @@ export function Sidebar() {
     ? t('sidebar.statut.archive')
     : active ? t('sidebar.statut.active') : preparation ? t('sidebar.statut.preparation') : '';
   const badgeVariant = isViewingArchive ? 'warning' : active ? 'success' : 'warning';
+
+  const displayName = user?.nom?.trim() || user?.username || '—';
+  const initials =
+    displayName
+      .split(/\s+/)
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'U';
+  const roleLabel = user ? t(`sidebar.roles.${user.role}`) : '';
 
   const navLabels: Record<string, string> = {
     '/dashboard': t('nav.dashboard'),
@@ -128,6 +152,15 @@ export function Sidebar() {
           </svg>
           <span className="nav-item-label">{t('nav.cycle')}</span>
         </NavLink>
+
+        {hasRole('admin') && (
+          <NavLink to="/utilisateurs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={!expanded ? t('nav.utilisateurs') : undefined}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="nav-item-icon">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-3.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-1-7.87" />
+            </svg>
+            <span className="nav-item-label">{t('nav.utilisateurs')}</span>
+          </NavLink>
+        )}
       </nav>
 
       <div className="sidebar-footer">
@@ -155,11 +188,22 @@ export function Sidebar() {
         </div>
 
         <div className="sidebar-user">
-          <div className="sidebar-avatar">AD</div>
+          <div className="sidebar-avatar">{initials}</div>
           <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{t('sidebar.administrateur')}</div>
-            <div className="sidebar-user-role">{t('sidebar.role')} · {displayLabel}</div>
+            <div className="sidebar-user-name">{displayName}</div>
+            <div className="sidebar-user-role">{roleLabel}</div>
           </div>
+          <button
+            type="button"
+            className="sidebar-logout"
+            onClick={handleLogout}
+            title={t('sidebar.logout')}
+            aria-label={t('sidebar.logout')}
+          >
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </div>
     </aside>

@@ -53,7 +53,10 @@
 }
 
 // --- Input avec icône ---
+// Spécificité (0,2,1) pour battre `.form-group input` (0,1,1) qui sinon
+// écrase le padding-left via son raccourci `padding`.
 .input-wrapper    { position: relative; }
+.form-group input.input-with-icon,
 .input-with-icon  { padding-left: 2.5rem; }
 .input-icon {
   position: absolute;

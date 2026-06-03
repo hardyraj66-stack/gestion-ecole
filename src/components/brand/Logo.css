@@ -1,0 +1,31 @@
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-logo--vertical {
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.brand-logo__wordmark {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  display: inline-flex;
+}
+
+/* "EKO" s'adapte au fond : sombre sur clair, blanc sur sombre */
+.brand-logo__eko {
+  color: var(--text, #0f172a);
+}
+.brand-logo--on-dark .brand-logo__eko {
+  color: #fff;
+}
+
+/* "LOVA" toujours en couleur primaire du thème */
+.brand-logo__lova {
+  color: var(--primary, #6366f1);
+}
