@@ -11,7 +11,8 @@
     "salles": "Salles",
     "niveaux": "Niveaux",
     "cycle": "Cycle scolaire",
-    "parametres": "Paramètres"
+    "parametres": "Paramètres",
+    "utilisateurs": "Utilisateurs"
   },
   "sidebar": {
     "anneeScolaire": "Année scolaire",
@@ -22,7 +23,13 @@
     },
     "retourAnneeEnCours": "✕ Cliquer pour revenir à l'année en cours",
     "administrateur": "Administrateur",
-    "role": "Admin"
+    "role": "Admin",
+    "logout": "Se déconnecter",
+    "roles": {
+      "admin": "Administrateur",
+      "professeur": "Professeur",
+      "secretaire": "Secrétaire"
+    }
   },
   "common": {
     "nouveau": "Nouveau",
@@ -1138,5 +1145,44 @@
     "absente": "Absent",
     "notesCount": "{{nb}}/{{total}} élèves notés",
     "moyenneProvisoire": "Moyenne provisoire :"
+  },
+  "login": {
+    "subtitle": "Connectez-vous pour accéder à la gestion de l'école",
+    "username": "Identifiant",
+    "usernamePlaceholder": "admin",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "error": "Identifiants invalides"
+  },
+  "users": {
+    "title": "Utilisateurs",
+    "subtitle": "Gérer les comptes et les rôles d'accès",
+    "add": "Nouvel utilisateur",
+    "name": "Nom",
+    "username": "Identifiant",
+    "role": "Rôle",
+    "status": "Statut",
+    "actions": "Actions",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "resetPassword": "Réinitialiser",
+    "delete": "Supprimer",
+    "create": "Créer",
+    "createTitle": "Nouvel utilisateur",
+    "cancel": "Annuler",
+    "passwordLabel": "Mot de passe",
+    "newPasswordPrompt": "Nouveau mot de passe pour {{name}} :",
+    "passwordChanged": "Mot de passe modifié.",
+    "passwordTooShort": "Mot de passe trop court (4 caractères min.).",
+    "confirmDelete": "Supprimer définitivement {{name}} ?",
+    "you": "vous",
+    "empty": "Aucun utilisateur.",
+    "errorLoad": "Impossible de charger les utilisateurs.",
+    "errorCreate": "Création impossible.",
+    "errorUpdate": "Modification impossible.",
+    "errorDelete": "Suppression impossible.",
+    "formInvalid": "Identifiant requis et mot de passe d'au moins 4 caractères."
   }
 }

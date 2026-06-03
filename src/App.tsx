@@ -26,13 +26,27 @@ import { EvaluationsList } from './pages/evaluations/EvaluationsList';
 import { EvaluationDetail } from './pages/evaluations/EvaluationDetail';
 import { CreateEvaluation } from './pages/evaluations/CreateEvaluation';
 import { Parametres } from './pages/Parametres/Parametres';
+import { Login } from './pages/Login/Login';
+import { UsersList } from './pages/Users/UsersList';
+import { AuthProvider } from './contexts/AuthContext';
+import { RequireAuth } from './components/auth/RequireAuth';
 
 function App() {
   return (
     <BrowserRouter>
-      <AppProviders>
+      <AuthProvider>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <AppProviders>
+                  <Layout />
+                </AppProviders>
+              </RequireAuth>
+            }
+          >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
 
@@ -70,10 +84,19 @@ function App() {
 
             <Route path="parametres" element={<Parametres />} />
 
+            <Route
+              path="utilisateurs"
+              element={
+                <RequireAuth roles={['admin']}>
+                  <UsersList />
+                </RequireAuth>
+              }
+            />
+
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>
-      </AppProviders>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

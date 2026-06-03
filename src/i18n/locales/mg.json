@@ -11,7 +11,8 @@
     "salles": "Efitrano",
     "niveaux": "Ambaratonga",
     "cycle": "Taom-pianarana",
-    "parametres": "Fikirana"
+    "parametres": "Fikirana",
+    "utilisateurs": "Mpampiasa"
   },
   "sidebar": {
     "anneeScolaire": "Taom-pianarana",
@@ -22,7 +23,13 @@
     },
     "retourAnneeEnCours": "✕ Tsindrio hiverina amin'ny taona ankehitriny",
     "administrateur": "Mpitantana",
-    "role": "Admin"
+    "role": "Admin",
+    "logout": "Hivoaka",
+    "roles": {
+      "admin": "Mpitantana",
+      "professeur": "Mpampianatra",
+      "secretaire": "Sekretera"
+    }
   },
   "common": {
     "nouveau": "Vaovao",
@@ -1137,5 +1144,44 @@
     "absente": "Tsy tonga",
     "notesCount": "{{nb}}/{{total}} mpianatra nomena marika",
     "moyenneProvisoire": "Salan'isa vonjimaika:"
+  },
+  "login": {
+    "subtitle": "Midira mba hahazoana ny fitantanana ny sekoly",
+    "username": "Anaran'ny mpampiasa",
+    "usernamePlaceholder": "admin",
+    "password": "Tenimiafina",
+    "submit": "Hiditra",
+    "error": "Diso ny anaran'ny mpampiasa na ny tenimiafina"
+  },
+  "users": {
+    "title": "Mpampiasa",
+    "subtitle": "Hitantana ny kaonty sy ny anjara asa",
+    "add": "Mpampiasa vaovao",
+    "name": "Anarana",
+    "username": "Anaran'ny mpampiasa",
+    "role": "Anjara asa",
+    "status": "Sata",
+    "actions": "Hetsika",
+    "active": "Mavitrika",
+    "inactive": "Tsy mavitrika",
+    "activate": "Hampavitrika",
+    "deactivate": "Hampiato",
+    "resetPassword": "Hanavao",
+    "delete": "Hamafa",
+    "create": "Hamorona",
+    "createTitle": "Mpampiasa vaovao",
+    "cancel": "Hanafoana",
+    "passwordLabel": "Tenimiafina",
+    "newPasswordPrompt": "Tenimiafina vaovao ho an'i {{name}}:",
+    "passwordChanged": "Voaova ny tenimiafina.",
+    "passwordTooShort": "Fohy loatra ny tenimiafina (4 farafahakeliny).",
+    "confirmDelete": "Hamafa tanteraka an'i {{name}}?",
+    "you": "ianao",
+    "empty": "Tsy misy mpampiasa.",
+    "errorLoad": "Tsy afaka maka ny mpampiasa.",
+    "errorCreate": "Tsy afaka mamorona.",
+    "errorUpdate": "Tsy afaka manova.",
+    "errorDelete": "Tsy afaka mamafa.",
+    "formInvalid": "Ilaina ny anarana sy tenimiafina 4 litera farafahakeliny."
   }
 }
