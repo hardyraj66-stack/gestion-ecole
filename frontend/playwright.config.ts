@@ -23,7 +23,7 @@ export default defineConfig({
     },
     {
       // Si le port 3000 est déjà pris, on reste en vie avec tail ; sinon on démarre le backend
-      command: 'lsof -ti:3000 >/dev/null 2>&1 && tail -f /dev/null || (cd server && npm run dev)',
+      command: 'lsof -ti:3000 >/dev/null 2>&1 && tail -f /dev/null || (cd ../server && npm run dev)',
       url: 'http://localhost:3000/read/classes?limit=1',
       reuseExistingServer: true,
       timeout: 60_000,
