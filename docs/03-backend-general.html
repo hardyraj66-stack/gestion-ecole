@@ -13,13 +13,18 @@ npm run dev
 npm run build && npm start</code></pre>
 <div class="callout callout-info"><p>Port <strong>3000</strong> (via <code>PORT</code>). MongoDB : <code>mongodb://localhost:27017/ekolova</code> (via <code>MONGO_URI</code>).</p></div>
 
+<div class="callout callout-warn"><p><strong>Sécurité.</strong> Toutes les routes sont protégées par défaut via deux gardes globales (<code>JwtAuthGuard</code> puis <code>RolesGuard</code>). Un jeton <code>Authorization: Bearer &lt;token&gt;</code> est requis, sauf sur les routes <code>@Public()</code> (ex. <code>POST /auth/login</code>). Voir <a href="28-auth.html">Authentification &amp; Comptes</a>.</p></div>
+
 <h2>Architecture modulaire</h2>
 <div class="schema">
 AppModule
+├── auth/                        JWT, gardes globales (JwtAuthGuard + RolesGuard), décorateurs
+├── users/                       CRUD comptes (admin) + admin par défaut au 1er démarrage
+├── migration/                   Migrations de données au démarrage
 ├── common/
 │   └── ApiLoggerMiddleware      Logs structurés de toutes les requêtes
 ├── events/
-│   └── EventsGateway            WebSocket Gateway global (Socket.IO)
+│   └── EventsGateway            WebSocket Gateway global (Socket.IO, connexion authentifiée)
 ├── data/
 │   └── SeederService            Seed des collections write si base vide
 ├── read/
@@ -33,7 +38,13 @@ AppModule
 ├── niveaux/                     Write side + GET /niveaux + POST /niveaux/recompact
 ├── notes/                       Write side
 ├── planning/                    Write side + POST /planning/merge/:classeId
+├── planning-executions/         Séances de planning réalisées
 ├── salles/                      Write side + GET /disponibles + GET /:id/stats
+├── professeurs/                 Write side + activation/désactivation
+├── teacher-assignments/         Affectations professeur → matière → classe
+├── evaluations/                 DS et évaluations libres par classe/matière/trimestre
+├── periodes/                    Fenêtres de saisie par trimestre (PériodeEvaluation)
+├── export/                      CSV, Excel, bulletin HTML, carte scolaire
 ├── suivi/                       Avertissements, absences, retards, convocations
 ├── exclusions/                  Exclusions d'élèves
 ├── departs/                     Départs d'élèves

@@ -11,8 +11,9 @@
 | Attribut | Valeur |
 |----------|--------|
 | Nom | Direction / Chef d'établissement |
+| Rôle technique | `admin` |
 | Accès | Application web complète |
-| Authentification | Aucune (réseau local sécurisé) |
+| Authentification | Obligatoire (compte + mot de passe, JWT) |
 | Application | Front web React, desktop |
 
 ---

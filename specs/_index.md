@@ -1,13 +1,13 @@
-# GestionÉcole — Spécifications fonctionnelles et techniques
+# Ekolova — Spécifications fonctionnelles et techniques
 
-> Version : 1.0 | Date : 2026-05-27 | Statut : Complet
+> Version : 1.1 | Date : 2026-06-07 | Statut : Complet
 > Point d'entrée principal — à lire en premier
 
 ---
 
 ## Vision
 
-GestionÉcole est une application de gestion scolaire full-stack (React + NestJS + MongoDB). Elle couvre le cycle complet d'un établissement : configuration des niveaux et matières, gestion des classes et élèves, saisie des notes, planning hebdomadaire, suivi des présences et des comportements, gestion des évaluations formelles et des années scolaires archivées.
+Ekolova est une application de gestion scolaire full-stack (React + NestJS + MongoDB). Elle couvre le cycle complet d'un établissement : configuration des niveaux et matières, gestion des classes et élèves, saisie des notes, planning hebdomadaire, suivi des présences et des comportements, gestion des évaluations formelles et des années scolaires archivées. L'accès est protégé par authentification (JWT) avec gestion des comptes et des rôles.
 
 ---
 
@@ -30,6 +30,9 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 |---|--------|------|-------|
 | 1 | Secrétariat | Saisie quotidienne : élèves, notes, absences, planning | [n1-acteurs/secretariat/](n1-acteurs/secretariat/_index.md) |
 | 2 | Direction | Consultation, archives, configuration de l'établissement | [n1-acteurs/direction/](n1-acteurs/direction/_index.md) |
+| 3 | Administrateur | Gestion des comptes utilisateurs, attribution des rôles, mots de passe | [n1-acteurs/administrateur/](n1-acteurs/administrateur/_index.md) |
+
+**Rôles techniques ↔ acteurs.** L'authentification définit trois rôles applicatifs : `admin`, `professeur`, `secretaire`. La correspondance proposée ci-dessous est une **convention documentaire** (le code n'attache pas d'acteur à un rôle ; il ne vérifie que le rôle technique sur les routes restreintes) : `admin` ↔ Administrateur (couvre aussi les tâches de Direction), `secretaire` ↔ Secrétariat, `professeur` = rôle à accès restreint (consultation). Côté code, seule la restriction `admin` est appliquée explicitement (gestion des comptes : `/users`, page `/utilisateurs`).
 
 ---
 
@@ -48,6 +51,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | 9 | **Professeurs** | PRF | Référentiel profs, affectations classe/matière | [bc-professeurs/](n2a-domaine/bc-professeurs/_index.md) |
 | 10 | **Niveaux** | NIV | Niveaux scolaires, matières associées | [bc-niveaux/](n2a-domaine/bc-niveaux/_index.md) |
 | 11 | **Suivi élève** | SUI | Absences, avertissements, convocations, exclusions, départs | [bc-suivi/](n2a-domaine/bc-suivi/_index.md) |
+| 12 | **Authentification & Comptes** | AUT | Connexion JWT, gardes globales, rôles, gestion des comptes utilisateurs | [bc-auth/](n2a-domaine/bc-auth/_index.md) |
 
 ---
 
@@ -67,6 +71,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | Évaluations | Périodes, liste, créer, détail | [n2b-ihm/evaluations/](n2b-ihm/evaluations/_index.md) |
 | Année scolaire | Cycle, archives | [n2b-ihm/annee-scolaire/](n2b-ihm/annee-scolaire/_index.md) |
 | Paramètres | Thème, couleur, langue | [n2b-ihm/parametres/](n2b-ihm/parametres/_index.md) |
+| Authentification | Connexion, Utilisateurs (admin) | [n2b-ihm/auth/](n2b-ihm/auth/_index.md) |
 
 ---
 
@@ -79,6 +84,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | Architecture backend | NestJS, modules, CQRS inspiré, MongoDB | [n3-comment/backend/architecture/backend.md](n3-comment/backend/architecture/backend.md) |
 | Schémas MongoDB | Toutes les collections, index, contraintes | [n3-comment/backend/schemas/schemas.md](n3-comment/backend/schemas/schemas.md) |
 | Module Read | ReadController, ReadService, ViewBuilder | [n3-comment/backend/read/read.md](n3-comment/backend/read/read.md) |
+| Sécurité & authentification | Gardes globales JWT, rôles (backend) · AuthContext, RequireAuth, intercepteur httpClient (frontend) | [backend.md](n3-comment/backend/architecture/backend.md) · [frontend.md](n3-comment/frontend/architecture/frontend.md) |
 
 ---
 
@@ -89,7 +95,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | Frontend UI | React | 19.x |
 | Bundler | Vite | 7.x |
 | Routing | React Router | 7.x |
-| CSS | Tailwind CSS | 4.x |
+| CSS | Tailwind CSS + SCSS (Sass) | 4.x / 1.x |
 | Temps réel | Socket.IO client | 4.8.x |
 | i18n | react-i18next | — |
 | Build prod | vite-plugin-singlefile | — |
@@ -97,6 +103,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | ODM | Mongoose | — |
 | Base de données | MongoDB | localhost:27017/gestion-ecole |
 | WebSocket | Socket.IO server | — |
+| Authentification | JWT (signature HS256 maison), token en localStorage | — |
 
 ---
 
@@ -117,6 +124,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | `UC-PRF-NNN` | Use case BC Professeurs | `UC-PRF-001` |
 | `UC-NIV-NNN` | Use case BC Niveaux | `UC-NIV-001` |
 | `UC-SUI-NNN` | Use case BC Suivi | `UC-SUI-001` |
+| `UC-AUT-NNN` | Use case BC Authentification & Comptes | `UC-AUT-001` |
 | `PAGE-NNN` | Page IHM | `PAGE-001` |
 
 ---

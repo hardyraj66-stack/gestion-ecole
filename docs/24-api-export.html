@@ -17,7 +17,7 @@ server/src/export/
 ├── export.service.ts      # Logique de génération (CSV, XLSX, HTML)
 └── export.module.ts
 
-src/components/shared/
+frontend/src/components/shared/
 └── ExportMenu.tsx         # Bouton dropdown CSV / Excel dans le header des pages
 </div>
 
@@ -93,7 +93,7 @@ res.send('﻿' + csv);
 </code></pre>
 
 <h2>Composant frontend — ExportMenu</h2>
-<p>Fichier : <code>src/components/shared/ExportMenu.tsx</code></p>
+<p>Fichier : <code>frontend/src/components/shared/ExportMenu.tsx</code></p>
 <pre><code>interface ExportMenuProps {
   csvUrl: string;   // chemin relatif, ex: '/export/eleves/csv?classeId=xxx'
   xlsxUrl: string;  // chemin relatif, ex: '/export/eleves/xlsx?classeId=xxx'

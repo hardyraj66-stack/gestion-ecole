@@ -1,4 +1,4 @@
-# Documentation — GestionÉcole
+# Documentation — Ekolova
 
 Ce dossier contient la documentation technique HTML existante et le manuel utilisateur.
 
@@ -46,6 +46,7 @@ Documentation technique générée pour les développeurs :
 | [25-api-professeurs.html](25-api-professeurs.html) | API Professeurs |
 | [26-api-evaluations-periodes.html](26-api-evaluations-periodes.html) | API Évaluations & Périodes |
 | [27-front-parametres-i18n.html](27-front-parametres-i18n.html) | Frontend — Paramètres & i18n |
+| [28-auth.html](28-auth.html) | Authentification & Comptes (JWT, rôles, gestion des comptes) |
 | [api-niveaux.html](api-niveaux.html) | API Niveaux |
 
 ## Spécifications complètes

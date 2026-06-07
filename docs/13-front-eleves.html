@@ -19,7 +19,7 @@
 <p>La barre de filtres propose une navigation progressive en deux étapes : <strong>niveau → classe</strong>.</p>
 
 <h3>Recherche avec auto-complétion — <code>SearchInputSuggestions</code></h3>
-<p>Composant réutilisable (<code>src/components/shared/SearchInputSuggestions.tsx</code>) qui remplace le <code>SearchInput</code> basique.</p>
+<p>Composant réutilisable (<code>frontend/src/components/shared/SearchInputSuggestions.tsx</code>) qui remplace le <code>SearchInput</code> basique.</p>
 <ul>
 <li>Debounce de 250 ms avant chaque appel de suggestions</li>
 <li>Suggestions à partir de 2 caractères saisis, via <code>fetchSuggestions(query)</code> passé en prop</li>
@@ -31,7 +31,7 @@
 
 <h3>Filtre niveau → popover niveaux</h3>
 <ul>
-<li>Un bouton <em>Niveau / Classe</em> ouvre un <strong>Popover</strong> (<code>src/components/shared/Popover.tsx</code>) listant les niveaux disponibles</li>
+<li>Un bouton <em>Niveau / Classe</em> ouvre un <strong>Popover</strong> (<code>frontend/src/components/shared/Popover.tsx</code>) listant les niveaux disponibles</li>
 <li>Les niveaux sont chargés via <code>GET /read/niveaux</code> une seule fois (mémoïsé via <code>useRef</code>)</li>
 <li>Chaque entrée affiche le niveau + le nombre de classes (<code>Badge</code>)</li>
 </ul>

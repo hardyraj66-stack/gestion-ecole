@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Authentification &amp; Comptes — EKOLOVA</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="topbar"><a class="home" href="index.html">📘 EKOLOVA</a><span class="sep">›</span><a href="index.html">Sommaire</a></div>
+<div class="doc">
+
+<h1>🔐 Authentification &amp; Comptes</h1>
+<p class="subtitle">Connexion JWT, gardes globales, rôles et gestion des comptes utilisateurs</p>
+
+<div class="callout callout-info">
+<p>Authentification par <strong>JWT</strong> (signature HS256, implémentation maison sans dépendance npm). L'API est protégée par défaut : toutes les routes exigent un jeton valide, sauf celles marquées <code>@Public()</code>. Le hachage des mots de passe utilise <code>scrypt</code> (intégré à Node).</p>
+</div>
+
+<h2>Architecture</h2>
+<div class="schema">
+server/src/auth/
+├── auth.controller.ts        # POST /auth/login, GET /auth/me, POST /auth/change-password
+├── auth.service.ts           # login / me / changePassword
+├── auth.module.ts            # enregistre JwtAuthGuard + RolesGuard en APP_GUARD
+├── jwt.util.ts               # signJwt / verifyJwt (HS256)
+├── password.util.ts          # hashPassword / verifyPassword (scrypt, format salt:hash)
+├── jwt-auth.guard.ts         # garde globale : vérifie le jeton (laisse passer @Public)
+├── roles.guard.ts            # garde globale : vérifie le rôle (@Roles)
+├── public.decorator.ts       # @Public()
+├── roles.decorator.ts        # @Roles('admin', …)
+├── current-user.decorator.ts # @CurrentUser()
+└── auth.constants.ts         # JWT_SECRET, expiration 12 h, rôles
+
+server/src/users/             # CRUD des comptes — contrôleur entièrement @Roles('admin')
+├── user.schema.ts            # username, passwordHash, nom, role, actif
+├── users.controller.ts
+└── users.service.ts          # admin par défaut au 1er démarrage, règle « dernier admin »
+
+frontend/src/contexts/AuthContext.tsx   # session, login/logout, hasRole
+frontend/src/components/auth/RequireAuth.tsx   # garde de route
+frontend/src/services/httpClient.ts     # intercepteur fetch : Bearer + 401 → logout
+frontend/src/services/authStorage.ts     # token en localStorage (clé auth_token)
+</div>
+
+<h2>Endpoints — Authentification</h2>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Accès</th><th>Corps</th><th>Réponse</th></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/auth/login</code></td><td>Public</td><td><code>{ username, password }</code></td><td><code>{ access_token, user }</code></td></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/auth/me</code></td><td>Authentifié</td><td>—</td><td>Utilisateur courant</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/auth/change-password</code></td><td>Authentifié</td><td><code>{ current, next }</code></td><td><code>{ ok: true }</code></td></tr>
+</table>
+
+<h2>Endpoints — Comptes <span class="badge b-get" style="vertical-align:middle">admin</span></h2>
+<p>Tout le contrôleur <code>/users</code> est restreint aux administrateurs (<code>@Roles('admin')</code>).</p>
+<table>
+<tr><th>Méthode</th><th>Route</th><th>Corps</th><th>Notes</th></tr>
+<tr><td><span class="badge b-get">GET</span></td><td><code>/users</code></td><td>—</td><td>Liste des comptes (sans <code>passwordHash</code>)</td></tr>
+<tr><td><span class="badge b-post">POST</span></td><td><code>/users</code></td><td><code>{ username, password, nom?, role? }</code></td><td>409 si identifiant déjà pris</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/users/:id</code></td><td><code>{ nom?, role?, actif? }</code></td><td>Bloqué si retire le dernier admin actif</td></tr>
+<tr><td><span class="badge b-patch">PATCH</span></td><td><code>/users/:id/password</code></td><td><code>{ password }</code></td><td>Mot de passe min. 4 caractères</td></tr>
+<tr><td><span class="badge b-delete">DELETE</span></td><td><code>/users/:id</code></td><td>—</td><td>Bloqué pour le dernier admin actif</td></tr>
+</table>
+
+<h2>Rôles</h2>
+<table>
+<tr><th>Rôle</th><th>Description</th><th>Accès particulier</th></tr>
+<tr><td><code>admin</code></td><td>Administrateur</td><td>Gestion des comptes (<code>/users</code>, page <code>/utilisateurs</code>)</td></tr>
+<tr><td><code>secretaire</code></td><td>Secrétariat</td><td>Saisie et consultation courante</td></tr>
+<tr><td><code>professeur</code></td><td>Professeur</td><td>Accès restreint (consultation)</td></tr>
+</table>
+
+<h2>Gardes globales</h2>
+<p>Enregistrées via <code>APP_GUARD</code> dans <code>auth.module.ts</code>, appliquées à toutes les routes dans l'ordre :</p>
+<ul>
+<li><strong>JwtAuthGuard</strong> — extrait <code>Authorization: Bearer &lt;token&gt;</code>, vérifie la signature et l'expiration, attache l'utilisateur à la requête ; laisse passer les routes <code>@Public()</code>.</li>
+<li><strong>RolesGuard</strong> — vérifie que le rôle de l'utilisateur figure parmi ceux exigés par <code>@Roles(...)</code>.</li>
+</ul>
+
+<h2>Jeton JWT</h2>
+<pre><code>// Payload signé HS256
+{ sub: userId, username, role, iat, exp }   // exp = iat + 12 h
+
+// Transmis par le client
+Authorization: Bearer &lt;token&gt;
+</code></pre>
+
+<div class="callout callout-warn">
+<p><strong>Compte admin par défaut.</strong> Au premier démarrage, si aucun utilisateur n'existe, un compte <code>admin</code> / <code>admin123</code> est créé automatiquement (surchargeable via <code>ADMIN_USERNAME</code> / <code>ADMIN_PASSWORD</code>). À sécuriser dès la première connexion.</p>
+</div>
+
+<h2>Frontend — session &amp; protection des routes</h2>
+<ul>
+<li><strong>AuthContext</strong> — expose <code>user</code>, <code>status</code> (<code>loading | authenticated | unauthenticated</code>), <code>login</code>, <code>logout</code>, <code>changePassword</code>, <code>hasRole(...)</code>. Au démarrage, restaure la session via <code>GET /auth/me</code> si un token est présent.</li>
+<li><strong>RequireAuth</strong> — redirige vers <code>/login</code> si non authentifié, vers <code>/dashboard</code> si le rôle ne fait pas partie de <code>roles</code>. La route <code>/utilisateurs</code> utilise <code>roles={['admin']}</code>.</li>
+<li><strong>httpClient</strong> — remplace <code>window.fetch</code> globalement : ajoute l'en-tête <code>Authorization</code> à chaque appel API et déclenche la déconnexion sur une réponse <code>401</code>.</li>
+<li><strong>authStorage</strong> — token persistant en <code>localStorage</code> (clé <code>auth_token</code>), source de vérité unique partagée par le fetch, le socket et le contexte.</li>
+<li><strong>WebSocket authentifié</strong> — <code>socketService</code> ne se connecte que si un token est présent et le transmet dans le handshake (<code>auth: { token }</code>). La gateway <code>EventsGateway.handleConnection</code> vérifie le token et <strong>déconnecte</strong> toute connexion non authentifiée. <code>refreshAuth()</code> reconnecte (après login) ou coupe le socket (après logout).</li>
+<li><strong>Sidebar</strong> — affiche l'utilisateur connecté et son rôle, le bouton de déconnexion (avec confirmation) et le lien <code>/utilisateurs</code> visible uniquement pour les <code>admin</code>.</li>
+</ul>
+
+<div class="doc-footer">
+  <a href="27-front-parametres-i18n.html">← Paramètres &amp; i18n</a>
+  <span>Authentification &amp; Comptes — EKOLOVA</span>
+  <a href="index.html">Sommaire →</a>
+</div>
+</div>
+</body></html>

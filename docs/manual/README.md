@@ -1,6 +1,6 @@
-# Manuel d'utilisation — GestionÉcole
+# Manuel d'utilisation — Ekolova
 
-Bienvenue dans le manuel d'utilisation de l'application GestionÉcole.
+Bienvenue dans le manuel d'utilisation de l'application Ekolova.
 
 ## Sommaire
 
@@ -17,6 +17,7 @@ Bienvenue dans le manuel d'utilisation de l'application GestionÉcole.
 | [08 — Professeurs](08-professeurs.md) | Professeurs, affectations, désactivation |
 | [09 — Paramètres](09-parametres.md) | Thème, couleur, langue |
 | [10 — Tableau de bord](10-tableau-de-bord.md) | Statistiques, convocations, actions rapides |
+| [11 — Comptes & connexion](11-comptes-connexion.md) | Se connecter, changer son mot de passe, gérer les comptes (admin) |
 
 ## Démarrage rapide
 

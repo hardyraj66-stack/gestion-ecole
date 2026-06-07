@@ -9,11 +9,12 @@
 <h2>Stack technique</h2>
 <table>
 <tr><th>Couche</th><th>Technologie</th><th>Rôle</th></tr>
-<tr><td>Frontend</td><td>React 19 + TypeScript + Vite</td><td>SPA avec routing client-side</td></tr>
-<tr><td>Styling</td><td>Variables CSS + composants partagés</td><td>Design system cohérent</td></tr>
-<tr><td>Backend</td><td>NestJS 10 + TypeScript</td><td>API REST séparée read/write + WebSocket</td></tr>
+<tr><td>Frontend</td><td>React 19 + TypeScript + Vite (monorepo, dossier <code>frontend/</code>)</td><td>SPA avec routing client-side</td></tr>
+<tr><td>Styling</td><td>Design system SCSS (variables, thèmes clair/sombre) + Tailwind v4</td><td>Design system cohérent, marque Ekolova</td></tr>
+<tr><td>Backend</td><td>NestJS 10 + TypeScript (dossier <code>server/</code>)</td><td>API REST séparée read/write + WebSocket</td></tr>
 <tr><td>Base de données</td><td>MongoDB + Mongoose 8</td><td>Stockage persistant + projections read</td></tr>
 <tr><td>Temps réel</td><td>Socket.IO + Change Streams / fallback contrôleurs</td><td>Synchronisation front/back</td></tr>
+<tr><td>Sécurité</td><td>JWT (HS256) + gardes globales NestJS</td><td>Authentification, rôles, gestion des comptes</td></tr>
 </table>
 
 <h2>Architecture globale</h2>
@@ -38,17 +39,19 @@ Backend (NestJS)
 </div>
 
 <h2>Structure des dossiers</h2>
-<h3>Frontend (<code>src/</code>)</h3>
-<pre><code>src/
-├── App.tsx
-├── main.tsx
-├── index.css
+<p>Le dépôt est un <strong>monorepo</strong> : <code>frontend/</code> (React) et <code>server/</code> (NestJS), sans <code>package.json</code> à la racine.</p>
+<h3>Frontend (<code>frontend/src/</code>)</h3>
+<pre><code>frontend/src/
+├── App.tsx                    Routes — /login public + reste sous RequireAuth
+├── main.tsx                   Montage AuthProvider + AppProviders
 ├── config/api.ts
 ├── types/index.ts
-├── data/mockData.ts
+├── data/mockData.ts           Données de repli (fallback) côté frontend
 ├── services/
-│   ├── socketService.ts       Singleton Socket.IO + notifyDataChange
+│   ├── socketService.ts       Singleton Socket.IO + notifyDataChange (token d'auth)
 │   ├── readApi.ts             Appels GET /read/* centralisés
+│   ├── httpClient.ts          Intercepteur fetch : Bearer token + 401 → logout
+│   ├── authStorage.ts         Token en localStorage (clé auth_token)
 │   └── settingsDB.ts          IndexedDB — persistance thème/couleur/langue
 ├── i18n/
 │   ├── index.ts               Init i18next (importé avant App dans main.tsx)
@@ -56,6 +59,7 @@ Backend (NestJS)
 ├── hooks/
 │   └── usePageData.ts         1 hook dédié par page / endpoint
 ├── contexts/
+│   ├── AuthContext.tsx              Session JWT, login/logout, rôles (hors AppProviders)
 │   ├── AnneeContext.tsx             Années scolaires
 │   ├── ClasseContext.tsx            Write only + socket listen
 │   ├── EleveContext.tsx             Write only + socket listen
@@ -71,15 +75,21 @@ Backend (NestJS)
 │   ├── SettingsContext.tsx          Thème, couleur, langue — persistance IndexedDB
 │   └── AppProviders.tsx             Ordre : SettingsProvider (1er) → ConfirmProvider → AnneeProvider → …
 ├── components/
-│   ├── layout/
+│   ├── layout/                Layout, Sidebar (user + rôle + déconnexion), ArchiveBanner
+│   ├── auth/                  RequireAuth — garde de route
+│   ├── brand/                 Logo, BrandIcon, BrandWordmark (identité Ekolova)
 │   ├── ui/
 │   └── shared/
-└── pages/</code></pre>
+├── styles/                    Design system SCSS (_variables, _themes, components/, layout/, pages/)
+└── pages/                     dont Login/ (public) et Users/ (gestion des comptes, admin)</code></pre>
 
 <h3>Backend (<code>server/src/</code>)</h3>
 <pre><code>server/src/
 ├── main.ts
 ├── app.module.ts
+├── auth/             JWT, gardes globales (JwtAuthGuard + RolesGuard), décorateurs
+├── users/            CRUD des comptes (admin) + admin par défaut au 1er démarrage
+├── migration/        migrations de données au démarrage
 ├── common/
 │   └── api-logger.middleware.ts
 ├── events/
@@ -106,8 +116,10 @@ Backend (NestJS)
 ├── planning/
 ├── salles/
 ├── professeurs/    CRUD professeurs + activation/désactivation
+├── teacher-assignments/  affectations professeur → matière → classe
 ├── evaluations/    DS et évaluations libres par classe/matière/trimestre
 ├── periodes/       Fenêtres de saisie par trimestre (PériodeEvaluation)
+├── planning-executions/  séances de planning réalisées
 ├── export/         CSV, Excel (SpreadsheetML), bulletin HTML, carte scolaire
 ├── suivi/          avertissements, absences, retards, convocations
 ├── exclusions/     gestion des exclusions d'élèves
@@ -160,6 +172,7 @@ Backend (NestJS)
 <tr><td><code>teacherassignments</code></td><td>teacher_assignments</td><td>Affectations professeur → matière → classe</td></tr>
 <tr><td><code>evaluations</code></td><td>evaluations</td><td>DS et évaluations libres avec notes individuelles</td></tr>
 <tr><td><code>periodeevaluations</code></td><td>periode_evaluations</td><td>Fenêtres de saisie par trimestre (6 max / année)</td></tr>
+<tr><td><code>users</code></td><td>users</td><td>Comptes utilisateurs — username, hash scrypt, rôle, statut</td></tr>
 </table>
 
 <div class="doc-footer">
