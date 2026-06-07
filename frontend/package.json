@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "reset:db": "cd server && npm run reset"
+    "reset:db": "cd ../server && npm run reset"
   },
   "dependencies": {
     "clsx": "2.1.1",
