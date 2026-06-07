@@ -232,6 +232,22 @@
 
 ---
 
+## Collection `users`
+
+| Champ | Type | Requis | Défaut | Enum / Contrainte |
+|-------|------|--------|--------|------------------|
+| `username` | String | oui — unique | — | normalisé en minuscules (`lowercase`, `trim`) |
+| `passwordHash` | String | oui | — | hachage scrypt `salt:hash` ; **supprimé du JSON** |
+| `nom` | String | non | `''` | — |
+| `role` | String | oui | `'secretaire'` | `'admin'` \| `'professeur'` \| `'secretaire'` |
+| `actif` | Boolean | non | `true` | — |
+
+Schéma en `timestamps: true` (`createdAt`, `updatedAt`). Le `toJSON` retire `_id`, `__v` et `passwordHash`.
+
+**Index** : `{ username: 1 }` — unique
+
+---
+
 ## Collections vues dénormalisées (read-*)
 
 Maintenues par `ViewBuilderService`. Même structure que les collections sources mais enrichies de données jointes (ex: `read-eleves` contient `classe_nom`, `niveau`).

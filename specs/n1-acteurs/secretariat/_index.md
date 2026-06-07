@@ -11,8 +11,9 @@
 | Attribut | Valeur |
 |----------|--------|
 | Nom | Secrétariat / Agent administratif |
+| Rôle technique | `secretaire` |
 | Accès | Application web complète |
-| Authentification | Aucune (réseau local sécurisé) |
+| Authentification | Obligatoire (compte + mot de passe, JWT) |
 | Application | Front web React, desktop |
 
 ---
