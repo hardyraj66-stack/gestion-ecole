@@ -12,31 +12,37 @@ Primitives de formulaire, d'affichage et de mise en page, sans logique métier.
 
 | Composant | Rôle | Props clés |
 |-----------|------|-----------|
-| `Button` | Bouton avec variantes (primary, outline, danger…) | `variant`, `size`, `loading`, `fullWidth`, `onClick` |
-| `Input` | Champ de saisie texte (icône optionnelle) | `label`, `error`, `icon`, `value`, `onChange` |
-| `Select` | Menu déroulant | `options: { value, label }[]`, `value`, `fullWidth`, `onChange` |
-| `Textarea` | Champ texte multiligne | `label`, `rows`, `value`, `onChange` |
-| `Table` | Tableau générique avec colonnes configurables | `columns`, `data`, `loading` |
+| `Button` | Bouton (variantes `primary`, `secondary`, `outline`, `danger`, `link`, `icon`) | `variant`, `size`, `loading`, `fullWidth`, `onClick` |
+| `Input` | Champ de saisie texte (icône optionnelle) | `label`, `error`, `hint`, `icon`, `fullWidth` |
+| `Select` | Menu déroulant | `options`, `label`, `error`, `hint`, `fullWidth`, `badge` |
+| `Textarea` | Champ texte multiligne | `label`, `error`, `hint`, `fullWidth` |
+| `Table` | Conteneur de tableau (wrapper stylé `<table>`) | `children`, `className` |
 | `Modal` | Fenêtre modale avec overlay | `title`, `onClose`, `footer`, `children` |
-| `ConfirmDialog` | Dialogue de confirmation (via `useConfirm`) | `message`, `title`, `variant`, `confirmText` |
-| `Alert` / `InfoBar` | Bandeaux de message (info, succès, avertissement, erreur) | `variant`, `children` |
-| `Card` | Conteneur carte | `children` |
-| `Avatar` | Pastille d'initiales / photo | `name`, `size` |
-| `Badge` *(voir aussi ui/)* | — | — |
-| `Icon` | Icône SVG centralisée | `name`, `size` |
-| `Pagination` / `MiniPagination` | Contrôles de pagination | `page`, `total`, `limit`, `onChange` |
-| `SearchInput` / `SearchInputSuggestions` | Recherche, avec ou sans suggestions | `value`, `onChange`, `suggestions` |
-| `FilterBar` | Barre de filtres de liste | `children` |
-| `FormGrid` | Grille de mise en page de formulaire | `children` |
-| `DropdownMenu` / `Popover` | Menu/contenu flottant | `trigger`, `children` |
-| `ColorPicker` | Sélecteur de couleur (palette prédéfinie) | `value`, `onChange`, `colors` |
-| `ExportMenu` | Menu d'export CSV/XLSX/PDF/Carte | `data`, `filename`, `columns` |
-| `ProgressBar` / `PipelineStep` | Progression / étapes d'un pipeline | `value` · `step`, `status` |
-| `StatItem` / `StatusDot` | Statistique inline / pastille d'état | `label`, `value` · `status` |
-| `ListItem` | Élément de liste générique | `children` |
-| `AuditEntry` | Entrée d'historique/audit | `entry` |
-| `MatierePills` | Pastilles de matières | `matieres` |
-| `NiveauClassePopover` | Popover niveau/classe | `niveau` |
+| `ConfirmDialog` | Dialogue de confirmation (via `useConfirm()`) | `message`, `title`, `variant`, `confirmText` |
+| `Alert` | Bandeau de message (info, succès, avertissement, erreur) | `variant`, `icon`, `success`, `children` |
+| `InfoBar` | Barre d'informations en ligne | `items`, `children` |
+| `Card` | Conteneur carte | `children`, `padding`, `borderTop`, `onClick` |
+| `Avatar` | Pastille d'initiales | `initiales`, `genre`, `size` |
+| `Badge` *(voir aussi ui/)* | Étiquette de statut | `label`, `variant` |
+| `Icon` | Icône SVG centralisée (par `path`) | `path`, `size`, `strokeWidth` |
+| `Pagination` | Pagination complète | `currentPage`, `totalItems`, `pageSize`, `onPageChange` |
+| `MiniPagination` | Pagination compacte | `page`, `totalPages`, `onPageChange` |
+| `SearchInput` | Champ de recherche simple | `onSearch` |
+| `SearchInputSuggestions` | Recherche avec auto-complétion | `value`, `onChange`, `onSelect`, `fetchSuggestions`, `debounceMs` |
+| `FilterBar` | Barre de filtres de liste | `children`, `count`, `countLabel` |
+| `FormGrid` | Grille de mise en page de formulaire | `children`, `columns` |
+| `DropdownMenu` | Menu déroulant d'actions | `items`, `open`, `onOpenChange`, `align`, `triggerLabel` |
+| `Popover` | Contenu flottant ancré | `trigger`, `children`, `open`, `onClose`, `align` |
+| `ColorPicker` | Sélecteur de couleur (palette prédéfinie) | `label`, `colors`, `value`, `onChange` |
+| `ExportMenu` | Menu d'export CSV/XLSX | `csvUrl`, `xlsxUrl`, `label` |
+| `ProgressBar` | Barre de progression | `value`, `max`, `showLabel`, `variant`, `size` |
+| `PipelineStep` | Étape d'un pipeline | `label`, `active` |
+| `StatItem` | Statistique en ligne | `label`, `value` |
+| `StatusDot` | Pastille d'état colorée | `color`, `size` |
+| `ListItem` | Élément de liste générique | `title`, `subtitle`, `selected`, `onClick`, `trailing` |
+| `AuditEntry` | Entrée d'historique/audit | `details`, `date`, `context`, `color` |
+| `MatierePills` | Pastilles de matières (sélection) | `matieres`, `selectedIds`, `onToggle`, `singleSelect` |
+| `NiveauClassePopover` | Popover de sélection niveau/classe | `selectedNiveau`, `selectedClasseId`, `onChange` |
 
 ---
 

@@ -46,8 +46,9 @@ Backend (NestJS)
 ├── main.tsx                   Montage AuthProvider + AppProviders
 ├── config/api.ts
 ├── types/index.ts
+├── data/mockData.ts           Données de repli (fallback) côté frontend
 ├── services/
-│   ├── socketService.ts       Singleton Socket.IO + notifyDataChange
+│   ├── socketService.ts       Singleton Socket.IO + notifyDataChange (token d'auth)
 │   ├── readApi.ts             Appels GET /read/* centralisés
 │   ├── httpClient.ts          Intercepteur fetch : Bearer token + 401 → logout
 │   ├── authStorage.ts         Token en localStorage (clé auth_token)

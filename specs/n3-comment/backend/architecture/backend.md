@@ -134,6 +134,9 @@ Enregistrées dans `auth.module.ts`, appliquées à **toutes** les routes dans l
 - Bootstrap : `UsersService.onModuleInit()` crée un admin par défaut (`ADMIN_USERNAME`/`ADMIN_PASSWORD`) si la collection est vide.
 - Règle « dernier admin » : impossible de supprimer, désactiver ou rétrograder le dernier administrateur actif.
 
+### Connexion WebSocket
+La gateway Socket.IO authentifie **chaque connexion** : `EventsGateway.handleConnection` lit le token dans le handshake (`client.handshake.auth.token`, repli sur `query.token`), le vérifie avec `verifyJwt(token, JWT_SECRET)` et **déconnecte immédiatement** (`client.disconnect(true)`) toute connexion sans token ou avec un token invalide/expiré. Le temps réel n'est donc accessible qu'aux clients authentifiés.
+
 > Détails fonctionnels et contrat API complet : [bc-auth/_index.md](../../../n2a-domaine/bc-auth/_index.md).
 
 ---

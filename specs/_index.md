@@ -32,7 +32,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | 2 | Direction | Consultation, archives, configuration de l'établissement | [n1-acteurs/direction/](n1-acteurs/direction/_index.md) |
 | 3 | Administrateur | Gestion des comptes utilisateurs, attribution des rôles, mots de passe | [n1-acteurs/administrateur/](n1-acteurs/administrateur/_index.md) |
 
-**Rôles techniques ↔ acteurs.** L'authentification définit trois rôles applicatifs : `admin`, `professeur`, `secretaire`. Le rôle `admin` correspond à l'acteur Administrateur (et couvre les tâches de Direction) ; `secretaire` correspond au Secrétariat ; `professeur` est un rôle à accès restreint (consultation). Seul `admin` accède à la gestion des comptes (`/utilisateurs`).
+**Rôles techniques ↔ acteurs.** L'authentification définit trois rôles applicatifs : `admin`, `professeur`, `secretaire`. La correspondance proposée ci-dessous est une **convention documentaire** (le code n'attache pas d'acteur à un rôle ; il ne vérifie que le rôle technique sur les routes restreintes) : `admin` ↔ Administrateur (couvre aussi les tâches de Direction), `secretaire` ↔ Secrétariat, `professeur` = rôle à accès restreint (consultation). Côté code, seule la restriction `admin` est appliquée explicitement (gestion des comptes : `/users`, page `/utilisateurs`).
 
 ---
 

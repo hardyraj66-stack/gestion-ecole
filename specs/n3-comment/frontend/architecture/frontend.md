@@ -180,6 +180,7 @@ React Router v7. `/login` est **publique** ; toutes les autres routes sont enfan
 - **`RequireAuth`** (`components/auth/RequireAuth.tsx`) — garde de route : redirige vers `/login` si non authentifié, vers `/dashboard` si le rôle ne fait pas partie de `roles`. Affiche un spinner pendant `status === 'loading'`.
 - **Stockage du token** : `services/authStorage.ts` (localStorage, clé `auth_token`) — source de vérité unique, lue par l'intercepteur fetch, le service socket et `AuthContext`.
 - **Intercepteur** : `services/httpClient.ts` remplace `window.fetch` globalement → ajoute `Authorization: Bearer <token>` à chaque appel API (sans toucher aux ~80 `fetch` existants) et déclenche `onUnauthorized` (→ `logout`) sur une réponse `401`.
+- **WebSocket authentifié** : `services/socketService.ts` ne se connecte que si un token est présent (`autoConnect: !!token`) et le transmet dans le handshake (`auth: { token }`). Le serveur rejette toute connexion non authentifiée. `notifyAuthChanged()` appelle `refreshAuth()` : reconnexion avec le nouveau token après `login`, coupure du socket après `logout`.
 - **Connexion / déconnexion** : `login()` stocke le token et l'utilisateur ; `logout()` purge le token et notifie le socket (`notifyAuthChanged`). La déconnexion est déclenchée depuis la `Sidebar` (avec confirmation).
 
 > Contrat API et règles : [bc-auth/_index.md](../../../n2a-domaine/bc-auth/_index.md).

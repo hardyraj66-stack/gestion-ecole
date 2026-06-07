@@ -88,6 +88,7 @@ Authorization: Bearer &lt;token&gt;
 <li><strong>RequireAuth</strong> — redirige vers <code>/login</code> si non authentifié, vers <code>/dashboard</code> si le rôle ne fait pas partie de <code>roles</code>. La route <code>/utilisateurs</code> utilise <code>roles={['admin']}</code>.</li>
 <li><strong>httpClient</strong> — remplace <code>window.fetch</code> globalement : ajoute l'en-tête <code>Authorization</code> à chaque appel API et déclenche la déconnexion sur une réponse <code>401</code>.</li>
 <li><strong>authStorage</strong> — token persistant en <code>localStorage</code> (clé <code>auth_token</code>), source de vérité unique partagée par le fetch, le socket et le contexte.</li>
+<li><strong>WebSocket authentifié</strong> — <code>socketService</code> ne se connecte que si un token est présent et le transmet dans le handshake (<code>auth: { token }</code>). La gateway <code>EventsGateway.handleConnection</code> vérifie le token et <strong>déconnecte</strong> toute connexion non authentifiée. <code>refreshAuth()</code> reconnecte (après login) ou coupe le socket (après logout).</li>
 <li><strong>Sidebar</strong> — affiche l'utilisateur connecté et son rôle, le bouton de déconnexion (avec confirmation) et le lien <code>/utilisateurs</code> visible uniquement pour les <code>admin</code>.</li>
 </ul>
 

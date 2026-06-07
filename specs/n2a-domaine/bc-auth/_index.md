@@ -15,7 +15,7 @@
 | Nom | Authentification & Comptes |
 | Modules NestJS | `AuthModule` + `UsersModule` |
 | Collection MongoDB | `users` |
-| Canal Socket.IO | — (aucun événement temps réel émis) |
+| Canal Socket.IO | Aucun événement émis, mais **la connexion WebSocket est authentifiée** par jeton (voir Sécurité) |
 
 ---
 
@@ -134,4 +134,5 @@ Protéger l'accès à l'application par authentification JWT et gérer les compt
 - Authentification **JWT** (HS256, implémentation maison sans dépendance), jeton transmis via l'en-tête `Authorization: Bearer <token>`.
 - Deux **gardes globales** (`APP_GUARD`) : `JwtAuthGuard` (vérifie le jeton) puis `RolesGuard` (vérifie le rôle).
 - Décorateurs : `@Public()` (ouvre une route), `@Roles(...)` (restreint par rôle), `@CurrentUser()` (injecte l'utilisateur courant).
+- **WebSocket** : la gateway Socket.IO authentifie chaque connexion via le jeton du handshake et déconnecte les clients non authentifiés.
 - Voir [n3-comment/backend/architecture/backend.md](../../n3-comment/backend/architecture/backend.md) §Sécurité.
