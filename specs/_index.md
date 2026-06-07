@@ -122,7 +122,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | `UC-MAT-NNN` | Use case BC Matières | `UC-MAT-001` |
 | `UC-ANN-NNN` | Use case BC Années | `UC-ANN-001` |
 | `UC-EVA-NNN` | Use case BC Évaluations | `UC-EVA-001` |
-| `UC-PRF-NNN` | Use case BC Professeurs | `UC-PRF-001` |
+| `UC-PRO-NNN` | Use case BC Professeurs | `UC-PRO-001` |
 | `UC-NIV-NNN` | Use case BC Niveaux | `UC-NIV-001` |
 | `UC-SUI-NNN` | Use case BC Suivi | `UC-SUI-001` |
 | `UC-AUT-NNN` | Use case BC Authentification & Comptes | `UC-AUT-001` |

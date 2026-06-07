@@ -37,7 +37,7 @@ Consulter en **lecture seule** les classes où le professeur est affecté, les �
 | # | Étape | Ref. UC | Ref. page |
 |---|-------|---------|-----------|
 | 1 | Naviguer vers Classes | — | [PAGE-CLS-001](../../n2b-ihm/classes/page-liste-classes.md) |
-| 2 | La liste n'affiche **que ses classes** (périmètre serveur) | UC-PRF-005 *(proposé)* | — |
+| 2 | La liste n'affiche **que ses classes** (périmètre serveur) | UC-PRO-005 *(proposé)* | — |
 | 3 | Ouvrir une classe → liste des élèves (lecture seule) | — | [PAGE-CLS-002](../../n2b-ihm/classes/page-eleves-classe.md) |
 | 4 | Ouvrir la fiche d'un élève de la classe | — | [PAGE-ELV-002](../../n2b-ihm/eleves/page-fiche-eleve.md) |
 
@@ -53,7 +53,7 @@ Consulter en **lecture seule** les classes où le professeur est affecté, les �
 | # | Étape | Ref. UC | Ref. page |
 |---|-------|---------|-----------|
 | 1 | Naviguer vers Planning | — | [PAGE-PLN-001](../../n2b-ihm/planning/page-planning-global.md) |
-| 2 | Le planning affiché est limité à ses créneaux / ses classes | UC-PRF-005 *(proposé)* | — |
+| 2 | Le planning affiché est limité à ses créneaux / ses classes | UC-PRO-005 *(proposé)* | — |
 
 ---
 

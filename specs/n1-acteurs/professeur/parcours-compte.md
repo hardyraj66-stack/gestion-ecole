@@ -35,7 +35,7 @@ Permettre à un professeur de récupérer ses identifiants de connexion (créés
 
 | # | Étape | Ref. UC | Ref. page |
 |---|-------|---------|-----------|
-| 1 | L'admin/direction crée une fiche professeur (nom, prénom, **email requis**, mot de passe saisi ou auto-généré) | UC-PRF-001 · UC-AUT-009 *(proposé)* | [PAGE-PRO-003](../../n2b-ihm/professeurs/page-creer-professeur.md) |
+| 1 | L'admin/direction crée une fiche professeur (nom, prénom, **email requis**, mot de passe saisi ou auto-généré) | UC-PRO-001 · UC-AUT-009 *(proposé)* | [PAGE-PRO-003](../../n2b-ihm/professeurs/page-creer-professeur.md) |
 | 2 | Le système crée la fiche `Professeur` **et** le compte `User` lié (`role = professeur`, `professeur_id`) | UC-AUT-009 *(proposé)* | — |
 | 3 | Un email contenant **l'identifiant + le mot de passe** est envoyé à l'adresse du professeur | UC-AUT-010 *(proposé)* | — |
 | 4 | Confirmation à l'écran : « Compte créé, identifiants envoyés à \<email\> » | — | — |
