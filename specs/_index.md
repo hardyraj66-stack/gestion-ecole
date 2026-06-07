@@ -31,8 +31,9 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | 1 | Secrétariat | Saisie quotidienne : élèves, notes, absences, planning | [n1-acteurs/secretariat/](n1-acteurs/secretariat/_index.md) |
 | 2 | Direction | Consultation, archives, configuration de l'établissement | [n1-acteurs/direction/](n1-acteurs/direction/_index.md) |
 | 3 | Administrateur | Gestion des comptes utilisateurs, attribution des rôles, mots de passe | [n1-acteurs/administrateur/](n1-acteurs/administrateur/_index.md) |
+| 4 | Professeur | Consultation de ses classes, saisie des notes/évaluations de ses matières *(cible — voir statut)* | [n1-acteurs/professeur/](n1-acteurs/professeur/_index.md) |
 
-**Rôles techniques ↔ acteurs.** L'authentification définit trois rôles applicatifs : `admin`, `professeur`, `secretaire`. La correspondance proposée ci-dessous est une **convention documentaire** (le code n'attache pas d'acteur à un rôle ; il ne vérifie que le rôle technique sur les routes restreintes) : `admin` ↔ Administrateur (couvre aussi les tâches de Direction), `secretaire` ↔ Secrétariat, `professeur` = rôle à accès restreint (consultation). Côté code, seule la restriction `admin` est appliquée explicitement (gestion des comptes : `/users`, page `/utilisateurs`).
+**Rôles techniques ↔ acteurs.** L'authentification définit trois rôles applicatifs : `admin`, `professeur`, `secretaire`. La correspondance proposée ci-dessous est une **convention documentaire** (le code n'attache pas d'acteur à un rôle ; il ne vérifie que le rôle technique sur les routes restreintes) : `admin` ↔ Administrateur (couvre aussi les tâches de Direction), `secretaire` ↔ Secrétariat, `professeur` ↔ Professeur (accès restreint à ses classes — **design cible proposé, non encore implémenté**, voir la [fiche Professeur](n1-acteurs/professeur/_index.md)). Côté code, seule la restriction `admin` est appliquée explicitement (gestion des comptes : `/users`, page `/utilisateurs`).
 
 ---
 
@@ -121,7 +122,7 @@ Les specs sont organisées en 4 niveaux orthogonaux :
 | `UC-MAT-NNN` | Use case BC Matières | `UC-MAT-001` |
 | `UC-ANN-NNN` | Use case BC Années | `UC-ANN-001` |
 | `UC-EVA-NNN` | Use case BC Évaluations | `UC-EVA-001` |
-| `UC-PRF-NNN` | Use case BC Professeurs | `UC-PRF-001` |
+| `UC-PRO-NNN` | Use case BC Professeurs | `UC-PRO-001` |
 | `UC-NIV-NNN` | Use case BC Niveaux | `UC-NIV-001` |
 | `UC-SUI-NNN` | Use case BC Suivi | `UC-SUI-001` |
 | `UC-AUT-NNN` | Use case BC Authentification & Comptes | `UC-AUT-001` |
