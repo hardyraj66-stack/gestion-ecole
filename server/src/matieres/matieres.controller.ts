@@ -2,8 +2,11 @@ import { Controller, Post, Patch, Param, Body, NotFoundException, HttpCode } fro
 import { MatieresService } from './matieres.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Configuration : réservé admin + secrétariat (le professeur lit via /read/matieres).
 @Controller('matieres')
+@Roles('admin', 'secretaire')
 export class MatieresController {
   constructor(
     private readonly service: MatieresService,

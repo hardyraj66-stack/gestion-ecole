@@ -86,6 +86,11 @@ export function Sidebar() {
       .toUpperCase() || 'U';
   const roleLabel = user ? t(`sidebar.roles.${user.role}`) : '';
 
+  // Modules de configuration réservés admin + secrétariat (masqués au professeur).
+  const configPaths = ['/matieres', '/professeurs', '/salles', '/niveaux'];
+  const canConfig = hasRole('admin', 'secretaire');
+  const visibleNavItems = navItems.filter((item) => canConfig || !configPaths.includes(item.path));
+
   const navLabels: Record<string, string> = {
     '/dashboard': t('nav.dashboard'),
     '/classes': t('nav.classes'),
@@ -126,7 +131,7 @@ export function Sidebar() {
       </div>
 
       <nav className="sidebar-nav">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -144,14 +149,16 @@ export function Sidebar() {
           </NavLink>
         ))}
 
-        <div className="sidebar-divider" />
+        {canConfig && <div className="sidebar-divider" />}
 
-        <NavLink to="/annee-scolaire" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={!expanded ? t('nav.cycle') : undefined}>
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="nav-item-icon">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span className="nav-item-label">{t('nav.cycle')}</span>
-        </NavLink>
+        {canConfig && (
+          <NavLink to="/annee-scolaire" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={!expanded ? t('nav.cycle') : undefined}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="nav-item-icon">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span className="nav-item-label">{t('nav.cycle')}</span>
+          </NavLink>
+        )}
 
         {hasRole('admin') && (
           <NavLink to="/utilisateurs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={!expanded ? t('nav.utilisateurs') : undefined}>
@@ -188,11 +195,13 @@ export function Sidebar() {
         </div>
 
         <div className="sidebar-user">
-          <div className="sidebar-avatar">{initials}</div>
-          <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{displayName}</div>
-            <div className="sidebar-user-role">{roleLabel}</div>
-          </div>
+          <NavLink to="/profil" className="sidebar-user-link" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }} title={t('nav.profil', 'Mon profil')}>
+            <div className="sidebar-avatar">{initials}</div>
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-name">{displayName}</div>
+              <div className="sidebar-user-role">{roleLabel}</div>
+            </div>
+          </NavLink>
           <button
             type="button"
             className="sidebar-logout"

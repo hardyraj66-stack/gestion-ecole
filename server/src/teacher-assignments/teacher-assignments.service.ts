@@ -17,8 +17,22 @@ export class TeacherAssignmentsService {
 
   findAll() { return this.model.find().exec(); }
   findByClasse(classeId: string) { return this.model.find({ classe_id: classeId }).exec(); }
+  findByProfesseur(professeurId: string) { return this.model.find({ professeur_id: professeurId }).exec(); }
   findByClasseAndMatiere(classeId: string, matiereId: string) {
     return this.model.findOne({ classe_id: classeId, matiere_id: matiereId }).exec();
+  }
+
+  /**
+   * Périmètre d'un professeur dérivé de ses affectations.
+   * Le classe_id encode déjà l'année (Classe.anneeScolaireId unique).
+   * @returns classeIds (lecture) + couples "classeId|matiereId" (écriture)
+   */
+  async scopeFor(professeurId: string): Promise<{ classeIds: string[]; couples: Set<string> }> {
+    const assignments = await this.model.find({ professeur_id: professeurId }).lean().exec();
+    return {
+      classeIds: [...new Set(assignments.map((a: any) => a.classe_id))],
+      couples: new Set(assignments.map((a: any) => `${a.classe_id}|${a.matiere_id}`)),
+    };
   }
 
   async resolve(classeId: string, matiereId: string) {

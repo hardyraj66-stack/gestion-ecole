@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../contexts/SettingsContext';
+import { ChangePasswordSection } from '../../components/account/ChangePasswordSection';
 import { AppSettings } from '../../services/settingsDB';
 
 const COLOR_OPTIONS: { value: AppSettings['color']; hex: string }[] = [
@@ -94,6 +95,9 @@ export function Parametres() {
             ))}
           </div>
         </div>
+
+        {/* Sécurité — changer son mot de passe */}
+        <ChangePasswordSection />
       </div>
     </div>
   );

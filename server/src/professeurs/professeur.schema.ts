@@ -16,7 +16,7 @@ export class Professeur extends Document {
   @Prop({ required: true })
   prenom: string;
 
-  @Prop({ default: '' })
+  @Prop({ required: true })
   email: string;
 
   @Prop({ default: '' })

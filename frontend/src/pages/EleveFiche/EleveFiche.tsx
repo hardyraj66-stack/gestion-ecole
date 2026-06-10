@@ -5,6 +5,7 @@ import { EleveStatut, getClasseActive } from '../../types';
 import { useEleveFicheData } from '../../hooks/usePageData';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
+import { useAuth } from '../../contexts/AuthContext';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
 import { Button } from '../../components/shared/Button';
@@ -23,8 +24,9 @@ export function EleveFiche() {
   const { id } = useParams<{ id: string }>();
   const { viewingId } = useViewing();
   const { isTerminee } = useAnneeScolaireStatus();
+  const { hasRole } = useAuth();
   const { data, loading, error, readOnly: readOnlyArchive } = useEleveFicheData(id || '');
-  const readOnly = readOnlyArchive || isTerminee;
+  const readOnly = readOnlyArchive || isTerminee || hasRole('professeur');
   const [statut, setStatut] = useState<EleveStatut | null>(null);
   const [nbAvertissements, setNbAvertissements] = useState(0);
   // anneeId passé aux sous-composants pour isoler les données de suivi par année

@@ -10,6 +10,7 @@ import { AnneeScolaire, AnneeScolaireSchema } from '../annees/annee.schema';
 import { Convocation, ConvocationSchema } from '../suivi/convocation.schema';
 import { Professeur, ProfesseurSchema } from '../professeurs/professeur.schema';
 import { TeacherAssignment, TeacherAssignmentSchema } from '../teacher-assignments/teacher-assignment.schema';
+import { User, UserSchema } from '../users/user.schema';
 import { ReadClasse, ReadClasseSchema } from './schemas/read-classe.schema';
 import { ReadEleve, ReadEleveSchema } from './schemas/read-eleve.schema';
 import { ReadMatiere, ReadMatiereSchema } from './schemas/read-matiere.schema';
@@ -45,6 +46,7 @@ import { ViewBuilderService } from './view-builder.service';
       { name: Niveau.name, schema: NiveauSchema },
       { name: Professeur.name, schema: ProfesseurSchema },
       { name: TeacherAssignment.name, schema: TeacherAssignmentSchema },
+      { name: User.name, schema: UserSchema },
       { name: Evaluation.name, schema: EvaluationSchema },
       { name: ReadEvaluation.name, schema: ReadEvaluationSchema },
       { name: PeriodeEvaluation.name, schema: PeriodeEvaluationSchema },

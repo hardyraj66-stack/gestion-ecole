@@ -2,8 +2,12 @@ import { Controller, Post, Patch, Delete, Param, Body, NotFoundException, HttpCo
 import { PlanningService } from './planning.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Écriture du planning réservée à l'administration et au secrétariat.
+// Le professeur consulte son planning en lecture seule via /read/planning/*.
 @Controller('planning')
+@Roles('admin', 'secretaire')
 export class PlanningController {
   constructor(
     private readonly service: PlanningService,

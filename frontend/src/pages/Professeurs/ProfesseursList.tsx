@@ -68,6 +68,7 @@ export function ProfesseursList() {
   const [form, setForm] = useState({ ...empty });
   const [formError, setFormError] = useState('');
   const [formSubmitting, setFormSubmitting] = useState(false);
+  const [accountResult, setAccountResult] = useState<{ username: string; emailSent: boolean; password?: string } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
@@ -87,6 +88,10 @@ export function ProfesseursList() {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nom.trim() || !form.prenom.trim()) { setFormError(t('professeurs.erreurNomPrenom')); return; }
+    if (!editingId && !form.email.trim()) {
+      setFormError(t('professeurs.erreurEmailRequis', "L'email est requis : il sert à créer le compte du professeur et à lui envoyer ses identifiants."));
+      return;
+    }
     setFormSubmitting(true); setFormError('');
     if (editingId) {
       await update(editingId, form,
@@ -95,7 +100,7 @@ export function ProfesseursList() {
       );
     } else {
       await create(form,
-        () => { setShowForm(false); setLocalItems(null); },
+        (created) => { setShowForm(false); setLocalItems(null); if (created?.account) setAccountResult(created.account); },
         (err) => setFormError(err),
       );
     }
@@ -149,7 +154,7 @@ export function ProfesseursList() {
               <Input label={t('professeurs.form.prenom')} value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} placeholder={t('professeurs.form.prenomPlaceholder')} />
             </FormGrid>
             <FormGrid columns={2}>
-              <Input label={t('professeurs.form.email')} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder={t('professeurs.form.emailPlaceholder')} />
+              <Input label={`${t('professeurs.form.email')}${!editingId ? ' *' : ''}`} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder={t('professeurs.form.emailPlaceholder')} />
               <Input label={t('professeurs.form.telephone')} value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} placeholder={t('professeurs.form.telephonePlaceholder')} />
             </FormGrid>
             <FormGrid columns={2}>
@@ -157,6 +162,29 @@ export function ProfesseursList() {
               <Select label={t('professeurs.form.statut')} value={form.statut} onChange={e => setForm(f => ({ ...f, statut: e.target.value }))} options={STATUT_OPTIONS} />
             </FormGrid>
           </form>
+        </Modal>
+      )}
+
+      {accountResult && (
+        <Modal
+          title={t('professeurs.compte.titre', 'Compte enseignant créé')}
+          onClose={() => setAccountResult(null)}
+          maxWidth={460}
+          footer={<Button variant="primary" onClick={() => setAccountResult(null)}>{t('common.fermer', 'Fermer')}</Button>}
+        >
+          <p style={{ marginBottom: '0.75rem' }}>
+            {t('professeurs.compte.identifiant', 'Identifiant')} : <strong>{accountResult.username}</strong>
+          </p>
+          {accountResult.emailSent ? (
+            <Alert variant="success">
+              {t('professeurs.compte.emailEnvoye', 'Les identifiants de connexion ont été envoyés par email au professeur.')}
+            </Alert>
+          ) : (
+            <Alert variant="warning">
+              {t('professeurs.compte.emailNonEnvoye', "L'email n'a pas pu être envoyé. Communiquez ce mot de passe provisoire au professeur (il devra le changer à la première connexion) :")}
+              <div style={{ marginTop: 8, fontFamily: 'monospace', fontWeight: 600, fontSize: '1.05rem' }}>{accountResult.password}</div>
+            </Alert>
+          )}
         </Modal>
       )}
 

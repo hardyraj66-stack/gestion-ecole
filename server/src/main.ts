@@ -1,12 +1,24 @@
 import 'reflect-metadata';
+import 'dotenv/config'; // charge server/.env (SMTP, JWT_SECRET, ADMIN_*) avant tout process.env
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // Sécurité prod : refuser de démarrer avec le secret JWT par défaut.
+  if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+    throw new Error(
+      'JWT_SECRET doit être défini en production (refus de démarrer avec le secret par défaut).',
+    );
+  }
+
   const app = await NestFactory.create(AppModule);
 
+  // CORS : restreint via CORS_ORIGIN (liste séparée par des virgules), sinon ouvert (dev).
+  const corsOrigin = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : '*';
   app.enableCors({
-    origin: '*',
+    origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

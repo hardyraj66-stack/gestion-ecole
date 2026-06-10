@@ -2,8 +2,11 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, Query, NotFoundExcep
 import { TeacherAssignmentsService } from './teacher-assignments.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Gestion des affectations : réservé admin + secrétariat.
 @Controller('teacher-assignments')
+@Roles('admin', 'secretaire')
 export class TeacherAssignmentsController {
   constructor(
     private readonly service: TeacherAssignmentsService,

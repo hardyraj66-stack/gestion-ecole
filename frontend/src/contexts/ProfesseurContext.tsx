@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../config/api';
 import { onEvent, notifyDataChange } from '../services/socketService';
 
 interface ProfesseurContextType {
-  create: (data: any, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
+  create: (data: any, onSuccess?: (created?: any) => void, onError?: (error: string) => void) => Promise<void>;
   update: (id: string, data: any, onSuccess?: () => void, onError?: (error: string) => void) => Promise<void>;
   desactiver: (id: string) => Promise<void>;
   activer: (id: string) => Promise<void>;
@@ -12,10 +12,10 @@ interface ProfesseurContextType {
 const ProfesseurContext = createContext<ProfesseurContextType | undefined>(undefined);
 
 export function ProfesseurProvider({ children }: { children: ReactNode }) {
-  const create = useCallback(async (data: any, onSuccess?: () => void, onError?: (error: string) => void) => {
+  const create = useCallback(async (data: any, onSuccess?: (created?: any) => void, onError?: (error: string) => void) => {
     try {
       const res = await fetch(`${API_BASE_URL}/professeurs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-      if (res.ok) { onSuccess?.(); } else { const e = await res.json(); onError?.(e.message || 'Erreur'); }
+      if (res.ok) { const created = await res.json().catch(() => undefined); onSuccess?.(created); } else { const e = await res.json(); onError?.(e.message || 'Erreur'); }
     } catch { onError?.('Erreur de connexion'); }
   }, []);
 

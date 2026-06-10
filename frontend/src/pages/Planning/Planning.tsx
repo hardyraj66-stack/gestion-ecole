@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { usePlanningClasses, usePlanningClasse } from '../../hooks/usePageData';
 import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
 import { useViewing } from '../../contexts/ViewingContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useActivePeriodeData } from '../../hooks/usePeriodesData';
 import { readApi } from '../../services/readApi';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -48,8 +49,10 @@ export function Planning() {
 
   const { isViewingArchive } = useViewing();
   const { isTerminee } = useAnneeScolaireStatus();
+  const { hasRole } = useAuth();
   const { data: classesData, loading: classesLoading, readOnly: readOnlyArchive } = usePlanningClasses();
-  const readOnly = readOnlyArchive || isTerminee;
+  // Le professeur consulte le planning en lecture seule (l'écriture est réservée admin/secrétariat).
+  const readOnly = readOnlyArchive || isTerminee || hasRole('professeur');
   const { data: classeData, loading: classeLoading, refreshing: classeRefreshing } = usePlanningClasse(selectedClasseId);
   const { data: activePeriode } = useActivePeriodeData();
 

@@ -1,21 +1,151 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Professeur } from './professeur.schema';
 import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
+import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
+import { generatePassword } from '../auth/password.util';
+import { assertValidEmail } from '../auth/validation.util';
+
+export interface AccountResult {
+  username: string;
+  emailSent: boolean;
+  /** Renvoyé uniquement si l'email n'a pas pu être envoyé (fallback admin). */
+  password?: string;
+}
 
 @Injectable()
 export class ProfesseursService {
   constructor(
     @InjectModel(Professeur.name) private model: Model<Professeur>,
     @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
+    private readonly usersService: UsersService,
+    private readonly mailService: MailService,
   ) {}
 
   findAll() { return this.model.find().exec(); }
   findById(id: string) { return this.model.findById(id).exec(); }
   findActifs() { return this.model.find({ statut: 'actif' }).exec(); }
 
-  create(data: any) { return new this.model(data).save(); }
+  /**
+   * Crée la fiche professeur ET son compte de connexion lié.
+   * Le mot de passe est généré côté serveur ; les identifiants sont envoyés
+   * par email (non bloquant). En cas d'échec/absence de SMTP, le mot de passe
+   * est renvoyé dans `account.password` pour transmission manuelle par l'admin.
+   */
+  async create(data: any): Promise<{ professeur: Professeur; account: AccountResult }> {
+    const email = (data.email || '').trim();
+    if (!email) {
+      throw new BadRequestException("L'email est requis pour créer le compte du professeur.");
+    }
+    assertValidEmail(email);
+    // Refuser un email déjà utilisé (par une fiche professeur ou un compte) avant toute création.
+    const existingProf = await this.model
+      .findOne({ email })
+      .collation({ locale: 'en', strength: 2 })
+      .lean()
+      .exec();
+    if (existingProf) {
+      throw new ConflictException('Un professeur avec cet email existe déjà.');
+    }
+    const existingUser =
+      (await this.usersService.findByUsername(email.toLowerCase())) ||
+      (await this.usersService.findByEmail(email));
+    if (existingUser) {
+      throw new ConflictException('Un compte utilisant cet email existe déjà.');
+    }
+
+    const prof = await new this.model(data).save();
+
+    const password = generatePassword();
+    const username = await this.resolveUniqueUsername(data.email, data.prenom, data.nom);
+    await this.usersService.create({
+      username,
+      password,
+      nom: `${data.prenom ?? ''} ${data.nom ?? ''}`.trim(),
+      email: data.email,
+      role: 'professeur',
+      professeur_id: (prof as any).id ?? (prof as any)._id?.toString(),
+      mustChangePassword: true,
+    });
+
+    const mail = await this.mailService.sendCredentials(data.email, username, password, {
+      kind: 'creation',
+      role: 'professeur',
+    });
+    const account: AccountResult = { username, emailSent: mail.sent };
+    if (!mail.sent) account.password = password;
+
+    return { professeur: prof, account };
+  }
+
+  /**
+   * Crée le compte de connexion d'une fiche professeur existante (ou restaure
+   * un compte archivé). Renvoie les identifiants par email (fallback admin).
+   */
+  async createAccountForProfesseur(professeurId: string): Promise<AccountResult | null> {
+    const prof = await this.model.findById(professeurId).lean().exec() as any;
+    if (!prof) return null;
+    const password = generatePassword();
+    const existing = await this.usersService.findByProfesseurId(professeurId) as any;
+
+    if (existing) {
+      if (!existing.deleted) {
+        throw new ConflictException('Ce professeur a déjà un compte.');
+      }
+      // Compte archivé → restaurer + régénérer + email.
+      const uid = existing.id ?? existing._id.toString();
+      await this.usersService.restore(uid);
+      await this.usersService.setPassword(uid, password);
+      await this.usersService.setMustChangePassword(uid, true);
+      const mail = await this.mailService.sendCredentials(prof.email, existing.username, password, {
+        kind: 'reset',
+        role: 'professeur',
+      });
+      const account: AccountResult = { username: existing.username, emailSent: mail.sent };
+      if (!mail.sent) account.password = password;
+      return account;
+    }
+
+    // Aucun compte → en créer un neuf.
+    const username = await this.resolveUniqueUsername(prof.email, prof.prenom, prof.nom);
+    await this.usersService.create({
+      username,
+      password,
+      nom: `${prof.prenom ?? ''} ${prof.nom ?? ''}`.trim(),
+      email: prof.email,
+      role: 'professeur',
+      professeur_id: professeurId,
+      mustChangePassword: true,
+    });
+    const mail = await this.mailService.sendCredentials(prof.email, username, password, {
+      kind: 'creation',
+      role: 'professeur',
+    });
+    const account: AccountResult = { username, emailSent: mail.sent };
+    if (!mail.sent) account.password = password;
+    return account;
+  }
+
+  /** Régénère le mot de passe et renvoie les identifiants par email (ou en fallback). */
+  async resendCredentials(professeurId: string): Promise<AccountResult | null> {
+    const prof = await this.model.findById(professeurId).lean().exec();
+    if (!prof) return null;
+    const user = await this.usersService.findByProfesseurId(professeurId);
+    if (!user) return null;
+    const userId = (user as any).id ?? (user as any)._id.toString();
+    const password = generatePassword();
+    await this.usersService.setPassword(userId, password);
+    await this.usersService.setMustChangePassword(userId, true);
+    const mail = await this.mailService.sendCredentials((prof as any).email, (user as any).username, password, {
+      kind: 'reset',
+      role: 'professeur',
+    });
+    const account: AccountResult = { username: (user as any).username, emailSent: mail.sent };
+    if (!mail.sent) account.password = password;
+    return account;
+  }
 
   update(id: string, data: any) {
     return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
@@ -29,11 +159,42 @@ export class ProfesseursService {
     ).exec();
     if (!prof) return false;
     await this.assignmentModel.deleteMany({ professeur_id: id }).exec();
+    await this.usersService.setActifByProfesseur(id, false);
     return true;
   }
 
   async activer(id: string) {
     const prof = await this.model.findByIdAndUpdate(id, { statut: 'actif' }, { new: true }).exec();
-    return !!prof;
+    if (!prof) return false;
+    await this.usersService.setActifByProfesseur(id, true);
+    return true;
+  }
+
+  /** username = email ; fallback slug(prenom.nom) + suffixe numérique si collision. */
+  private async resolveUniqueUsername(email?: string, prenom?: string, nom?: string): Promise<string> {
+    const candidates: string[] = [];
+    if (email) candidates.push(email.toLowerCase().trim());
+    const slug = this.slug(`${prenom ?? ''}.${nom ?? ''}`);
+    if (slug) candidates.push(slug);
+    for (const base of candidates) {
+      if (!(await this.usersService.findByUsername(base))) return base;
+    }
+    // Tous pris → suffixer le slug (ou l'email) jusqu'à trouver libre.
+    const base = candidates[candidates.length - 1] || `prof`;
+    for (let i = 2; i < 1000; i++) {
+      const next = `${base}${i}`;
+      if (!(await this.usersService.findByUsername(next))) return next;
+    }
+    return `${base}.${Date.now()}`;
+  }
+
+  private slug(input: string): string {
+    return input
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9.]+/g, '.')
+      .replace(/^\.+|\.+$/g, '')
+      .replace(/\.{2,}/g, '.');
   }
 }

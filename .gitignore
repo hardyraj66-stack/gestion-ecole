@@ -3,6 +3,11 @@ dist/
 .DS_Store
 *.log
 
+# Variables d'environnement (SMTP, secrets) — ne jamais committer
+.env
+server/.env
+frontend/.env
+
 # Server
 server/node_modules/
 server/dist/

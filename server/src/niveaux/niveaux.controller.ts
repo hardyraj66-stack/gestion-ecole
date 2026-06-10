@@ -2,8 +2,11 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException } 
 import { NiveauxService } from './niveaux.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Configuration : réservé admin + secrétariat (le professeur lit via /read/niveaux).
 @Controller('niveaux')
+@Roles('admin', 'secretaire')
 export class NiveauxController {
   constructor(
     private readonly service: NiveauxService,
