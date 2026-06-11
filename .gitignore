@@ -11,6 +11,8 @@ frontend/.env
 # Server
 server/node_modules/
 server/dist/
+# Build incrémental TypeScript (ne JAMAIS committer : fausse les builds Docker/CID)
+*.tsbuildinfo
 
 # Prompts perso
 prompts/

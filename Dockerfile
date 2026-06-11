@@ -14,17 +14,18 @@ RUN npm run build
 FROM node:20-alpine AS server-build
 WORKDIR /srv
 COPY server/package*.json ./
-# npm install (et non ci) : le lock ne contient pas encore @nestjs/serve-static
-RUN npm install --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 COPY server/ ./
-RUN npm run build
+# Suppression défensive du cache incrémental : garantit un build complet (sinon tsc
+# saute l'émission des fichiers "inchangés" et produit un dist/ partiel).
+RUN rm -f tsconfig.tsbuildinfo && npm run build
 
 # ----- 3) Image runtime : dépendances de prod + dist + frontend -----
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 COPY server/package*.json ./
-RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY --from=server-build /srv/dist ./dist
 COPY --from=frontend /fe/dist ./public
 EXPOSE 3000
