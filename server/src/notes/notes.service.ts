@@ -5,8 +5,10 @@ import { Note } from './note.schema';
 import { Matiere } from '../matieres/matiere.schema';
 import { Eleve } from '../eleves/eleve.schema';
 import { Classe } from '../classes/classe.schema';
+import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
 import { MatieresService } from '../matieres/matieres.service';
 import { PeriodesService } from '../periodes/periodes.service';
+import { AuthCtx } from '../read/read.service';
 
 export interface BulletinMatiere {
   matiere_id: string;
@@ -25,6 +27,7 @@ export class NotesService {
     @InjectModel(Matiere.name) private matiereModel: Model<Matiere>,
     @InjectModel(Eleve.name) private eleveModel: Model<Eleve>,
     @InjectModel(Classe.name) private classeModel: Model<Classe>,
+    @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
     private readonly periodesService: PeriodesService,
   ) {}
 
@@ -32,9 +35,32 @@ export class NotesService {
   findById(id: string) { return this.noteModel.findById(id).exec(); }
   findByEleveId(eleveId: string) { return this.noteModel.find({ eleve_id: eleveId, annulee: { $ne: true } }).exec(); }
 
-  async create(data: any) {
+  /**
+   * Pour un professeur : vérifie que le couple (classe active de l'élève, matière)
+   * fait partie de ses affectations. Admin/secrétaire : aucune restriction.
+   */
+  private async assertNoteScope(user: AuthCtx | undefined, eleveId: string, matiereId: string) {
+    if (!user || user.role !== 'professeur') return;
+    if (!user.professeur_id) throw new ForbiddenException('Compte professeur non lié à une fiche.');
+    if (!eleveId || !matiereId || !/^[a-f0-9]{24}$/i.test(eleveId)) {
+      throw new BadRequestException('Élève ou matière invalide.');
+    }
+    const eleve = await this.eleveModel.findById(eleveId).lean().exec() as any;
+    const classeId = eleve?.inscriptions?.find((i: any) => i.status === 'active')?.classeId;
+    if (!classeId) throw new ForbiddenException('Élève hors de votre périmètre.');
+    const ok = await this.assignmentModel.exists({
+      professeur_id: user.professeur_id,
+      classe_id: classeId,
+      matiere_id: matiereId,
+    });
+    if (!ok) throw new ForbiddenException('Couple (classe, matière) hors de votre périmètre.');
+  }
+
+  async create(data: any, user?: AuthCtx) {
     if (data.valeur !== undefined && (data.valeur < 0 || data.valeur > 20))
       throw new BadRequestException('La note doit être comprise entre 0 et 20.');
+
+    await this.assertNoteScope(user, data.eleve_id, data.matiere_id);
 
     // Vérifier qu'une période est active et auto-tagger type + trimestre
     const periode = await this.periodesService.getActivePeriode();
@@ -52,13 +78,23 @@ export class NotesService {
     return new this.noteModel(noteData).save();
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: any, user?: AuthCtx) {
     if (data.valeur !== undefined && (data.valeur < 0 || data.valeur > 20))
       throw new BadRequestException('La note doit être comprise entre 0 et 20.');
+    if (user?.role === 'professeur') {
+      const note = await this.noteModel.findById(id).lean().exec() as any;
+      if (!note) return null;
+      await this.assertNoteScope(user, note.eleve_id, data.matiere_id ?? note.matiere_id);
+    }
     return this.noteModel.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
-  async annuler(id: string) {
+  async annuler(id: string, user?: AuthCtx) {
+    if (user?.role === 'professeur') {
+      const note = await this.noteModel.findById(id).lean().exec() as any;
+      if (!note) return false;
+      await this.assertNoteScope(user, note.eleve_id, note.matiere_id);
+    }
     const result = await this.noteModel.findByIdAndUpdate(id, { annulee: true }, { new: true }).exec();
     return !!result;
   }

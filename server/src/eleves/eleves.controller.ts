@@ -4,8 +4,11 @@ import { AnneesService } from '../annees/annees.service';
 import { ClassesService } from '../classes/classes.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Écriture des élèves réservée admin + secrétariat. Le professeur lit via /read/eleves.
 @Controller('eleves')
+@Roles('admin', 'secretaire')
 export class ElevesController {
   constructor(
     private readonly service: ElevesService,

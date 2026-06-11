@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAnnees } from '../../contexts/AnneeContext';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
+import { useAuth } from '../../contexts/AuthContext';
 import { useDashboardData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { StatCard } from '../../components/ui/StatCard';
@@ -20,7 +21,9 @@ import { ConvocationsWidget } from './ConvocationsWidget';
 export function Dashboard() {
   const { t } = useTranslation();
   const { active, preparation } = useAnnees();
-  const { viewing, isViewingArchive: readOnly } = useViewing();
+  const { viewing, isViewingArchive } = useViewing();
+  const { hasRole } = useAuth();
+  const readOnly = isViewingArchive || hasRole('professeur');
   const { peutCommencer } = useAnneeScolaireStatus();
   const navigate = useNavigate();
   const [classesPage, setClassesPage] = useState(1);

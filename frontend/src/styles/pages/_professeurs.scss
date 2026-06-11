@@ -10,6 +10,8 @@
   grid-template-columns: 260px 1fr;
   gap: 1.25rem;
   align-items: start;
+
+  @include mobile { grid-template-columns: 1fr; }
 }
 
 // --- Fiche identité ---

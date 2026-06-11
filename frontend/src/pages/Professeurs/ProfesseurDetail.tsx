@@ -23,6 +23,7 @@ import { Modal } from '../../components/shared/Modal';
 import { MatierePills } from '../../components/shared/MatierePills';
 import { DropdownMenu } from '../../components/shared/DropdownMenu';
 import { readApi } from '../../services/readApi';
+import { API_BASE_URL } from '../../config/api';
 
 export function ProfesseurDetail() {
   const { t } = useTranslation();
@@ -51,6 +52,9 @@ export function ProfesseurDetail() {
   const [classes, setClasses] = useState<any[]>([]);
   const [matieres, setMatieres] = useState<any[]>([]);
   const [niveaux, setNiveaux] = useState<any[]>([]);
+
+  const [accountResult, setAccountResult] = useState<{ username: string; emailSent: boolean; password?: string } | null>(null);
+  const [accountBusy, setAccountBusy] = useState(false);
 
   useEffect(() => {
     readApi.classesList(1, 100).then((res: any) => { if (res) setClasses(res.items || []); });
@@ -122,6 +126,9 @@ export function ProfesseurDetail() {
   if (error) return <Alert variant="error">{t('professeurs.erreur')}</Alert>;
 
   const { professeur: p, assignments } = data;
+  const account = (data as any).account as
+    | { exists: boolean; actif?: boolean; deleted?: boolean; username?: string; mustChangePassword?: boolean }
+    | undefined;
 
   const initials = `${p.prenom[0] || ''}${p.nom[0] || ''}`.toUpperCase();
 
@@ -166,6 +173,23 @@ export function ProfesseurDetail() {
     if (!ok) return;
     await activerProfesseur(id!);
     refresh();
+  };
+
+  // --- Accès / Compte de connexion ---
+  const postAccountAction = async (path: string) => {
+    setAccountBusy(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/professeurs/${id}/${path}`, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        await confirm({ message: body?.message || t('professeurs.erreur'), confirmText: 'OK', variant: 'warning' });
+        return;
+      }
+      if (body?.account) setAccountResult(body.account);
+      refresh();
+    } finally {
+      setAccountBusy(false);
+    }
   };
 
   const prefixe = p.genre === 'F' ? t('professeurs.genres.prefixMme') : t('professeurs.genres.prefixM');
@@ -218,6 +242,57 @@ export function ProfesseurDetail() {
           </div>
         </Card>
 
+        {/* Colonne principale : compte + affectations */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', minWidth: 0 }}>
+
+        {/* Accès / Compte de connexion */}
+        <Card>
+          <div className="prof-assignments-header" style={{ marginBottom: '0.75rem' }}>
+            <h3 className="prof-assignments-title">{t('professeurs.detail.compte', 'Accès / Compte')}</h3>
+          </div>
+          {!account?.exists ? (
+            <>
+              <p style={{ opacity: 0.75, marginBottom: '0.75rem' }}>
+                {t('professeurs.detail.compteAucun', 'Ce professeur n\'a pas de compte de connexion.')}
+              </p>
+              {!readOnly && (
+                <Button variant="primary" size="sm" onClick={() => postAccountAction('compte')} loading={accountBusy}>
+                  {t('professeurs.detail.compteCreer', 'Créer un compte')}
+                </Button>
+              )}
+            </>
+          ) : account.deleted ? (
+            <>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <Badge label={t('professeurs.detail.compteArchive', 'Compte archivé')} variant="default" />
+              </div>
+              {!readOnly && (
+                <Button variant="primary" size="sm" onClick={() => postAccountAction('compte')} loading={accountBusy}>
+                  {t('professeurs.detail.compteRestaurer', 'Restaurer le compte')}
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="prof-fiche-row">
+                <span className="prof-fiche-label">{t('profil.identifiant', 'Identifiant')}</span>
+                <span className="prof-fiche-value">{account.username}</span>
+              </div>
+              <div className="prof-fiche-row" style={{ gap: 8 }}>
+                <Badge label={account.actif ? t('users.active', 'Actif') : t('users.inactive', 'Désactivé')} variant={account.actif ? 'success' : 'default'} />
+                {account.mustChangePassword
+                  ? <Badge label={t('users.pending', 'En attente')} variant="warning" />
+                  : <Badge label={t('users.confirmed', 'Confirmé')} variant="success" />}
+              </div>
+              {!readOnly && (
+                <Button variant="outline" size="sm" style={{ marginTop: '0.5rem' }} onClick={() => postAccountAction('renvoyer-identifiants')} loading={accountBusy}>
+                  {t('professeurs.detail.compteRenvoyer', 'Renvoyer les identifiants')}
+                </Button>
+              )}
+            </>
+          )}
+        </Card>
+
         {/* Affectations */}
         <div>
           <div className="prof-assignments-header">
@@ -266,6 +341,7 @@ export function ProfesseurDetail() {
               </Table>
             </Card>
           )}
+        </div>
         </div>
       </div>
 
@@ -374,6 +450,30 @@ export function ProfesseurDetail() {
               </div>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Résultat création/restauration du compte */}
+      {accountResult && (
+        <Modal
+          title={t('professeurs.compte.titre', 'Compte enseignant')}
+          onClose={() => setAccountResult(null)}
+          maxWidth={460}
+          footer={<Button variant="primary" onClick={() => setAccountResult(null)}>{t('common.fermer', 'Fermer')}</Button>}
+        >
+          <p style={{ marginBottom: '0.75rem' }}>
+            {t('professeurs.compte.identifiant', 'Identifiant')} : <strong>{accountResult.username}</strong>
+          </p>
+          {accountResult.emailSent ? (
+            <Alert variant="success">
+              {t('professeurs.compte.emailEnvoye', 'Les identifiants de connexion ont été envoyés par email au professeur.')}
+            </Alert>
+          ) : (
+            <Alert variant="warning">
+              {t('professeurs.compte.emailNonEnvoye', "L'email n'a pas pu être envoyé. Communiquez ce mot de passe provisoire au professeur :")}
+              <div style={{ marginTop: 8, fontFamily: 'monospace', fontWeight: 600, fontSize: '1.05rem' }}>{accountResult.password}</div>
+            </Alert>
+          )}
         </Modal>
       )}
     </div>

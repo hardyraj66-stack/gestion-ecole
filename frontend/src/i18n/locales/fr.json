@@ -12,7 +12,8 @@
     "niveaux": "Niveaux",
     "cycle": "Cycle scolaire",
     "parametres": "Paramètres",
-    "utilisateurs": "Utilisateurs"
+    "utilisateurs": "Utilisateurs",
+    "journal": "Journal"
   },
   "sidebar": {
     "anneeScolaire": "Année scolaire",
@@ -901,7 +902,13 @@
       "ajouterBtn": "+ Ajouter",
       "modifierBtn": "Modifier",
       "enregistrerBtn": "Enregistrer",
-      "annulerBtn": "Annuler"
+      "annulerBtn": "Annuler",
+      "compte": "Accès / Compte",
+      "compteAucun": "Ce professeur n'a pas de compte de connexion.",
+      "compteCreer": "Créer un compte",
+      "compteArchive": "Compte archivé",
+      "compteRestaurer": "Restaurer le compte",
+      "compteRenvoyer": "Renvoyer les identifiants"
     },
     "affectations": {
       "titre": "Affectations professeurs",
@@ -919,7 +926,13 @@
     },
     "erreur": "Problème de chargement des professeurs.",
     "retour": "← Retour",
-    "erreurNomPrenom": "Nom et prénom sont requis."
+    "erreurNomPrenom": "Nom et prénom sont requis.",
+    "compte": {
+      "titre": "Compte enseignant",
+      "identifiant": "Identifiant",
+      "emailEnvoye": "Les identifiants de connexion ont été envoyés par email au professeur.",
+      "emailNonEnvoye": "L'email n'a pas pu être envoyé. Communiquez ce mot de passe provisoire au professeur :"
+    }
   },
   "periodes": {
     "titre": "Périodes d'évaluation",
@@ -1027,7 +1040,8 @@
         "red": "Rouge",
         "orange": "Orange",
         "indigo": "Indigo"
-      }
+      },
+      "sombreTitre": "Mode sombre"
     },
     "langue": {
       "titre": "Langue",
@@ -1155,7 +1169,14 @@
     "usernamePlaceholder": "admin",
     "password": "Mot de passe",
     "submit": "Se connecter",
-    "error": "Identifiants invalides"
+    "error": "Identifiants invalides",
+    "forgotSubtitle": "Réinitialisation du mot de passe",
+    "email": "Email du compte",
+    "forgotLink": "Mot de passe oublié ?",
+    "forgotSubmit": "Envoyer le lien",
+    "backToLogin": "Retour à la connexion",
+    "forgotSent": "Si un compte existe pour cette adresse, un email de réinitialisation vient d'être envoyé.",
+    "serverError": "Serveur injoignable"
   },
   "users": {
     "title": "Utilisateurs",
@@ -1186,6 +1207,81 @@
     "errorCreate": "Création impossible.",
     "errorUpdate": "Modification impossible.",
     "errorDelete": "Suppression impossible.",
-    "formInvalid": "Identifiant requis et mot de passe d'au moins 4 caractères."
+    "formInvalid": "Identifiant requis et mot de passe d'au moins 4 caractères.",
+    "confirmation": "Confirmation",
+    "pending": "En attente",
+    "confirmed": "Confirmé",
+    "email": "Email",
+    "lastLogin": "Dernière connexion",
+    "showArchived": "Voir les archives",
+    "hideArchived": "Masquer les archives",
+    "editTitle": "Modifier le compte",
+    "archivedTitle": "Comptes archivés",
+    "noArchived": "Aucun compte archivé.",
+    "restore": "Restaurer",
+    "resetTitle": "Réinitialiser le mot de passe",
+    "passwordOptional": "Nouveau mot de passe (laisser vide = généré automatiquement)",
+    "resetHint": "Le mot de passe sera envoyé par email si l'utilisateur a une adresse, sinon il s'affichera ici. L'utilisateur devra le changer à sa prochaine connexion.",
+    "accountTitle": "Compte créé",
+    "accountEmailSent": "Les identifiants ont été envoyés par email.",
+    "accountNoEmail": "Communiquez ce mot de passe provisoire (à changer à la première connexion) :",
+    "emailRequired": "Email *",
+    "emailRequiredMsg": "L'email est requis.",
+    "profNameRequired": "Nom et prénom sont requis pour un professeur.",
+    "usernameRequired": "L'identifiant est requis.",
+    "passwordEmailedHint": "L'identifiant et un mot de passe généré seront envoyés par email à l'utilisateur, qui devra le changer à sa première connexion.",
+    "profCreatedHint": "Le professeur sera ajouté à la liste des professeurs. Son identifiant (= email) et un mot de passe généré lui seront envoyés par email.",
+    "voirFicheProf": "Voir la fiche du professeur →"
+  },
+  "profil": {
+    "titre": "Mon profil",
+    "sousTitre": "Vos informations et votre sécurité",
+    "informations": "Informations",
+    "nom": "Nom",
+    "email": "Email",
+    "identifiant": "Identifiant",
+    "role": "Rôle",
+    "statut": "Statut du compte",
+    "derniereConnexion": "Dernière connexion",
+    "erreur": "Échec de la mise à jour.",
+    "activite": "Activité du compte",
+    "membreDepuis": "Membre depuis",
+    "jamais": "Jamais",
+    "preferences": "Préférences",
+    "langue": "Langue",
+    "sessions": "Sessions",
+    "sessionsListDesc": "Appareils actuellement connectés à votre compte.",
+    "cetAppareil": "Cet appareil",
+    "revoquer": "Révoquer",
+    "aucuneSession": "Aucune session active.",
+    "logoutAll": "Déconnecter toutes les sessions"
+  },
+  "password": {
+    "sectionTitle": "Mot de passe",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "confirm": "Confirmer le nouveau mot de passe",
+    "submit": "Modifier le mot de passe",
+    "tooShort": "Le mot de passe doit contenir au moins 8 caractères (dont une lettre et un chiffre).",
+    "mismatch": "Les deux mots de passe ne correspondent pas.",
+    "success": "Mot de passe modifié.",
+    "error": "Échec du changement de mot de passe."
+  },
+  "reset": {
+    "subtitle": "Définir un nouveau mot de passe",
+    "noToken": "Lien invalide.",
+    "success": "Mot de passe modifié. Vous pouvez vous connecter.",
+    "toLogin": "Aller à la connexion",
+    "submit": "Réinitialiser"
+  },
+  "audit": {
+    "titre": "Journal d'activité",
+    "sousTitre": "Historique des actions sur les comptes",
+    "date": "Date",
+    "action": "Action",
+    "par": "Par",
+    "cible": "Compte concerné",
+    "details": "Détails",
+    "vide": "Aucune activité enregistrée."
   }
 }

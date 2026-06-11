@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
 import { useAnneeScolaireStatus } from '../../hooks/useAnneeScolaireStatus';
+import { useAuth } from '../../contexts/AuthContext';
 import { useClasseElevesData } from '../../hooks/usePageData';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { PageLoader } from '../../components/ui/PageLoader';
@@ -21,7 +22,8 @@ export function ClasseEleves() {
   const { id } = useParams<{ id: string }>();
   const { isViewingArchive, viewingId } = useViewing();
   const { isTerminee } = useAnneeScolaireStatus();
-  const readOnly = isViewingArchive || isTerminee;
+  const { hasRole } = useAuth();
+  const readOnly = isViewingArchive || isTerminee || hasRole('professeur');
   const [page, setPage] = useState(1);
   const [inputValue, setInputValue] = useState('');
   const [search, setSearch] = useState('');

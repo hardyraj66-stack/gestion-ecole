@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
-import { ReadService } from './read.service';
+import { ReadService, AuthCtx } from './read.service';
+import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('read')
 export class ReadController {
@@ -7,31 +8,34 @@ export class ReadController {
 
   @Get('dashboard')
   getDashboard(
+    @CurrentUser() user: AuthCtx,
     @Query('classesPage') cp?: string,
     @Query('classesLimit') cl?: string,
     /** ID de l'AnneeScolaire (remplace anneeLabel) */
     @Query('anneeId') anneeId?: string,
   ) {
-    return this.service.getDashboard(parseInt(cp!) || 1, parseInt(cl!) || 5, anneeId || undefined);
+    return this.service.getDashboard(parseInt(cp!) || 1, parseInt(cl!) || 5, anneeId || undefined, user);
   }
 
   @Get('classes')
   getClassesList(
+    @CurrentUser() user: AuthCtx,
     @Query('page') p?: string, @Query('limit') l?: string,
     @Query('search') s?: string, @Query('niveau') n?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    return this.service.getClassesList(parseInt(p!) || 1, parseInt(l!) || 8, s || '', n || '', anneeId || undefined);
+    return this.service.getClassesList(parseInt(p!) || 1, parseInt(l!) || 8, s || '', n || '', anneeId || undefined, user);
   }
 
   @Get('classes/:id/eleves')
   async getClasseEleves(
+    @CurrentUser() user: AuthCtx,
     @Param('id') id: string,
     @Query('page') p?: string, @Query('limit') l?: string,
     @Query('search') s?: string, @Query('eleveId') eleveId?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '', eleveId || '', anneeId || undefined);
+    const data = await this.service.getClasseEleves(id, parseInt(p!) || 1, parseInt(l!) || 10, s || '', eleveId || '', anneeId || undefined, user);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -59,11 +63,12 @@ export class ReadController {
 
   @Get('eleves')
   getElevesList(
+    @CurrentUser() user: AuthCtx,
     @Query('page') p?: string, @Query('limit') l?: string,
     @Query('search') s?: string, @Query('classeId') cid?: string,
     @Query('eleveId') eid?: string, @Query('anneeId') anneeId?: string,
   ) {
-    return this.service.getElevesList(parseInt(p!) || 1, parseInt(l!) || 12, s || '', cid || '', eid || '', anneeId || undefined);
+    return this.service.getElevesList(parseInt(p!) || 1, parseInt(l!) || 12, s || '', cid || '', eid || '', anneeId || undefined, user);
   }
 
   @Get('matieres')
@@ -88,30 +93,31 @@ export class ReadController {
   }
 
   @Get('planning/classes')
-  getPlanningClasses(@Query('anneeId') anneeId?: string) {
-    return this.service.getPlanningClasses(anneeId || undefined);
+  getPlanningClasses(@CurrentUser() user: AuthCtx, @Query('anneeId') anneeId?: string) {
+    return this.service.getPlanningClasses(anneeId || undefined, user);
   }
 
   @Get('planning/classe/:id')
-  async getPlanningClasse(@Param('id') id: string) {
-    const data = await this.service.getPlanningClasse(id);
+  async getPlanningClasse(@CurrentUser() user: AuthCtx, @Param('id') id: string) {
+    const data = await this.service.getPlanningClasse(id, user);
     if (!data) throw new NotFoundException();
     return data;
   }
 
   @Get('notes/filters')
-  getNotesFilters(@Query('anneeId') anneeId?: string) {
-    return this.service.getNotesFilters(anneeId || undefined);
+  getNotesFilters(@CurrentUser() user: AuthCtx, @Query('anneeId') anneeId?: string) {
+    return this.service.getNotesFilters(anneeId || undefined, user);
   }
 
   @Get('notes/eleves')
   getNotesEleves(
+    @CurrentUser() user: AuthCtx,
     @Query('classeId') classeId: string,
     @Query('matiereId') matiereId: string,
     @Query('trimestre') trimestre: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    return this.service.getNotesEleves(classeId, matiereId, parseInt(trimestre) || 1, anneeId || undefined);
+    return this.service.getNotesEleves(classeId, matiereId, parseInt(trimestre) || 1, anneeId || undefined, user);
   }
 
   @Get('notes')
@@ -119,17 +125,19 @@ export class ReadController {
 
   @Get('bulletin/:eleveId')
   async getBulletin(
+    @CurrentUser() user: AuthCtx,
     @Param('eleveId') id: string,
     @Query('trimestre') t: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const data = await this.service.getBulletin(id, parseInt(t) || 1, anneeId || undefined);
+    const data = await this.service.getBulletin(id, parseInt(t) || 1, anneeId || undefined, user);
     if (!data) throw new NotFoundException();
     return data;
   }
 
   @Get('evaluations')
   getEvaluationsList(
+    @CurrentUser() user: AuthCtx,
     @Query('classeId') classeId?: string,
     @Query('matiereId') matiereId?: string,
     @Query('trimestre') trimestre?: string,
@@ -145,12 +153,13 @@ export class ReadController {
       parseInt(p!) || 1,
       parseInt(l!) || 10,
       anneeId || undefined,
+      user,
     );
   }
 
   @Get('evaluations/:id')
-  async getEvaluationDetail(@Param('id') id: string) {
-    const data = await this.service.getEvaluationDetail(id);
+  async getEvaluationDetail(@CurrentUser() user: AuthCtx, @Param('id') id: string) {
+    const data = await this.service.getEvaluationDetail(id, user);
     if (!data) throw new NotFoundException();
     return data;
   }
@@ -177,8 +186,8 @@ export class ReadController {
   getCreateEleveData() { return this.service.getCreateEleveData(); }
 
   @Get('eleves/:id/fiche')
-  async getEleveFiche(@Param('id') id: string, @Query('anneeId') anneeId?: string) {
-    const data = await this.service.getEleveFiche(id, anneeId || undefined);
+  async getEleveFiche(@CurrentUser() user: AuthCtx, @Param('id') id: string, @Query('anneeId') anneeId?: string) {
+    const data = await this.service.getEleveFiche(id, anneeId || undefined, user);
     if (!data) throw new NotFoundException();
     return data;
   }

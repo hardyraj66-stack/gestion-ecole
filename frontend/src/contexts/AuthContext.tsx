@@ -10,8 +10,13 @@ export interface AuthUser {
   id: string;
   username: string;
   nom: string;
+  email?: string;
   role: Role;
   actif?: boolean;
+  /** Forcer le changement de mot de passe à la première connexion. */
+  mustChangePassword?: boolean;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -22,7 +27,9 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
+  logoutAll: () => Promise<void>;
   changePassword: (current: string, next: string) => Promise<{ ok: boolean; error?: string }>;
+  updateProfile: (data: { nom?: string; email?: string }) => Promise<{ ok: boolean; error?: string }>;
   hasRole: (...roles: Role[]) => boolean;
 }
 
@@ -33,6 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
 
   const logout = useCallback(() => {
+    // Best-effort : retire la session courante côté serveur (avant d'effacer le token).
+    const token = getToken();
+    if (token) {
+      fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
     clearToken();
     setUser(null);
     setStatus('unauthenticated');
@@ -104,15 +119,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ current, next }),
       });
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
         return { ok: false, error: body?.message || 'Échec du changement' };
       }
+      // Le serveur a invalidé les autres sessions (tokenVersion++) et renvoie un
+      // nouveau jeton pour garder la session courante valide.
+      if (body?.access_token) setToken(body.access_token);
+      // Le flag mustChangePassword est levé côté serveur → débloquer l'app.
+      setUser((prev) => (prev ? { ...prev, mustChangePassword: false } : prev));
       return { ok: true };
     } catch {
       return { ok: false, error: 'Serveur injoignable' };
     }
   }, []);
+
+  const updateProfile = useCallback(async (data: { nom?: string; email?: string }) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { ok: false, error: body?.message || 'Échec de la mise à jour' };
+      }
+      setUser((prev) => (prev ? { ...prev, ...(body as AuthUser) } : prev));
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Serveur injoignable' };
+    }
+  }, []);
+
+  const logoutAll = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout-all`, { method: 'POST' });
+    } catch {
+      /* ignoré */
+    }
+    logout();
+  }, [logout]);
 
   const hasRole = useCallback(
     (...roles: Role[]) => !!user && roles.includes(user.role),
@@ -127,7 +174,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: status === 'authenticated' && !!user,
         login,
         logout,
+        logoutAll,
         changePassword,
+        updateProfile,
         hasRole,
       }}
     >

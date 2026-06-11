@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProviders } from './contexts/AppProviders';
 import { Layout } from './components/layout/Layout';
@@ -26,10 +27,17 @@ import { EvaluationsList } from './pages/evaluations/EvaluationsList';
 import { EvaluationDetail } from './pages/evaluations/EvaluationDetail';
 import { CreateEvaluation } from './pages/evaluations/CreateEvaluation';
 import { Parametres } from './pages/Parametres/Parametres';
+import { Profil } from './pages/Profil/Profil';
 import { Login } from './pages/Login/Login';
+import { ResetPassword } from './pages/Login/ResetPassword';
 import { UsersList } from './pages/Users/UsersList';
+import { Audit } from './pages/Audit/Audit';
 import { AuthProvider } from './contexts/AuthContext';
 import { RequireAuth } from './components/auth/RequireAuth';
+import { PasswordGate } from './components/auth/PasswordGate';
+
+// Restreint une route aux rôles admin + secrétariat (le professeur est redirigé).
+const adminSec = (el: ReactNode) => <RequireAuth roles={['admin', 'secretaire']}>{el}</RequireAuth>;
 
 function App() {
   return (
@@ -37,13 +45,16 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/reinitialiser-mot-de-passe" element={<ResetPassword />} />
           <Route
             path="/"
             element={
               <RequireAuth>
-                <AppProviders>
-                  <Layout />
-                </AppProviders>
+                <PasswordGate>
+                  <AppProviders>
+                    <Layout />
+                  </AppProviders>
+                </PasswordGate>
               </RequireAuth>
             }
           >
@@ -51,31 +62,31 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
 
             <Route path="classes" element={<ClassesList />} />
-            <Route path="classes/nouvelle" element={<CreateClasse />} />
+            <Route path="classes/nouvelle" element={adminSec(<CreateClasse />)} />
             <Route path="classes/:id/eleves" element={<ClasseEleves />} />
             <Route path="classes/:id/planning" element={<Planning />} />
 
             <Route path="eleves" element={<ElevesList />} />
-            <Route path="eleves/nouveau" element={<CreateEleve />} />
+            <Route path="eleves/nouveau" element={adminSec(<CreateEleve />)} />
             <Route path="eleves/:id" element={<EleveFiche />} />
             <Route path="eleves/:id/bulletin" element={<Bulletin />} />
 
-            <Route path="matieres" element={<MatieresList />} />
-            <Route path="matieres/nouvelle" element={<CreateMatiere />} />
+            <Route path="matieres" element={adminSec(<MatieresList />)} />
+            <Route path="matieres/nouvelle" element={adminSec(<CreateMatiere />)} />
 
             <Route path="notes" element={<AjouterNotes />} />
             <Route path="planning" element={<Planning />} />
-            <Route path="salles" element={<SallesList />} />
-            <Route path="salles/nouvelle" element={<CreateSalle />} />
+            <Route path="salles" element={adminSec(<SallesList />)} />
+            <Route path="salles/nouvelle" element={adminSec(<CreateSalle />)} />
 
-            <Route path="niveaux" element={<NiveauxList />} />
-            <Route path="niveaux/nouveau" element={<CreateNiveau />} />
+            <Route path="niveaux" element={adminSec(<NiveauxList />)} />
+            <Route path="niveaux/nouveau" element={adminSec(<CreateNiveau />)} />
 
-            <Route path="professeurs" element={<ProfesseursList />} />
-            <Route path="professeurs/affectations" element={<ProfesseurAssignments />} />
-            <Route path="professeurs/:id" element={<ProfesseurDetail />} />
+            <Route path="professeurs" element={adminSec(<ProfesseursList />)} />
+            <Route path="professeurs/affectations" element={adminSec(<ProfesseurAssignments />)} />
+            <Route path="professeurs/:id" element={adminSec(<ProfesseurDetail />)} />
 
-            <Route path="annee-scolaire" element={<AnneeScolairePage />} />
+            <Route path="annee-scolaire" element={adminSec(<AnneeScolairePage />)} />
 
             <Route path="evaluations" element={<PeriodesList />} />
             <Route path="evaluations/liste" element={<EvaluationsList />} />
@@ -83,12 +94,21 @@ function App() {
             <Route path="evaluations/:id" element={<EvaluationDetail />} />
 
             <Route path="parametres" element={<Parametres />} />
+            <Route path="profil" element={<Profil />} />
 
             <Route
               path="utilisateurs"
               element={
                 <RequireAuth roles={['admin']}>
                   <UsersList />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="journal"
+              element={
+                <RequireAuth roles={['admin']}>
+                  <Audit />
                 </RequireAuth>
               }
             />

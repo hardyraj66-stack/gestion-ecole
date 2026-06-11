@@ -2,8 +2,12 @@ import { Controller, Get, Post, Patch, Param, Body, NotFoundException, HttpCode 
 import { ProfesseursService } from './professeurs.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Module de configuration : réservé à l'administration et au secrétariat.
+// Le professeur est bloqué (403) ; il consulte ses données via /read/*.
 @Controller('professeurs')
+@Roles('admin', 'secretaire')
 export class ProfesseursController {
   constructor(
     private readonly service: ProfesseursService,
@@ -23,10 +27,26 @@ export class ProfesseursController {
 
   @Post()
   async create(@Body() body: any) {
-    const item = await this.service.create(body);
-    this.events.emit('professeur:event', item);
+    const { professeur, account } = await this.service.create(body);
+    this.events.emit('professeur:event', professeur);
     this.viewBuilder.onProfesseurWrite();
-    return item;
+    return { ...professeur.toJSON(), account };
+  }
+
+  @Post(':id/compte')
+  async createAccount(@Param('id') id: string) {
+    const account = await this.service.createAccountForProfesseur(id);
+    if (!account) throw new NotFoundException();
+    this.viewBuilder.onProfesseurWrite();
+    return { account };
+  }
+
+  @Post(':id/renvoyer-identifiants')
+  @HttpCode(200)
+  async resendCredentials(@Param('id') id: string) {
+    const account = await this.service.resendCredentials(id);
+    if (!account) throw new NotFoundException();
+    return { account };
   }
 
   @Patch(':id')

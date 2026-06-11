@@ -2,8 +2,11 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, Query, NotFoundExcep
 import { SallesService } from './salles.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Configuration : réservé admin + secrétariat (le professeur lit via /read/salles).
 @Controller('salles')
+@Roles('admin', 'secretaire')
 export class SallesController {
   constructor(
     private readonly service: SallesService,

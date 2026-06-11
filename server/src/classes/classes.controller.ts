@@ -3,8 +3,11 @@ import { ClassesService } from './classes.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
 import { AnneesService } from '../annees/annees.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Écriture des classes réservée admin + secrétariat. Le professeur lit via /read/classes.
 @Controller('classes')
+@Roles('admin', 'secretaire')
 export class ClassesController {
   constructor(
     private readonly service: ClassesService,

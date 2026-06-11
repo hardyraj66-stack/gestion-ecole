@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Evaluation, EvaluationSchema } from './evaluation.schema';
 import { Eleve, EleveSchema } from '../eleves/eleve.schema';
 import { Classe, ClasseSchema } from '../classes/classe.schema';
+import { TeacherAssignment, TeacherAssignmentSchema } from '../teacher-assignments/teacher-assignment.schema';
 import { EvaluationsController } from './evaluations.controller';
 import { EvaluationsService } from './evaluations.service';
 
@@ -12,6 +13,7 @@ import { EvaluationsService } from './evaluations.service';
       { name: Evaluation.name, schema: EvaluationSchema },
       { name: Eleve.name, schema: EleveSchema },
       { name: Classe.name, schema: ClasseSchema },
+      { name: TeacherAssignment.name, schema: TeacherAssignmentSchema },
     ]),
   ],
   controllers: [EvaluationsController],

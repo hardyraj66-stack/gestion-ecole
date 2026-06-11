@@ -219,9 +219,9 @@
   .main-content {
     margin-left: 0;
     padding: $spacing-lg;
+    padding-top: 3.5rem; // place pour le bouton menu mobile (fixe)
+    overflow-x: hidden;  // jamais de scroll horizontal de page : tout suit la largeur du téléphone
   }
-
-  .sidebar { display: none; }
 
   .page-header {
     flex-direction: column;
@@ -234,4 +234,13 @@
   .form-grid,
   .form-grid.cols-3,
   .form-grid.cols-4 { grid-template-columns: 1fr; }
+
+  // Autoriser les conteneurs (cellules de grille / flex) à rétrécir à la largeur de
+  // l'écran : le contenu large (tableaux) scrolle alors À L'INTÉRIEUR de sa carte.
+  .dashboard-grid > *,
+  .bulletin-layout > *,
+  .prof-detail-layout > *,
+  .fiche-layout > *,
+  .page > *,
+  .page-content > * { min-width: 0; }
 }

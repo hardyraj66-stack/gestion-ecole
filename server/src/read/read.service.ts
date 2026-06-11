@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ReadClasse } from './schemas/read-classe.schema';
@@ -14,6 +14,7 @@ import { Convocation } from '../suivi/convocation.schema';
 import { Niveau } from '../niveaux/niveau.schema';
 import { Professeur } from '../professeurs/professeur.schema';
 import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
+import { User } from '../users/user.schema';
 import { Eleve } from '../eleves/eleve.schema';
 
 export interface PaginatedResult<T> {
@@ -22,6 +23,19 @@ export interface PaginatedResult<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+/** Contexte d'authentification minimal transmis aux lectures pour le cloisonnement. */
+export interface AuthCtx {
+  id?: string;
+  role?: string;
+  professeur_id?: string | null;
+}
+
+/** Périmètre d'un professeur : classes (lecture) + couples classe|matiere (écriture). */
+export interface Scope {
+  classeIds: string[];
+  couples: Set<string>;
 }
 
 @Injectable()
@@ -41,9 +55,27 @@ export class ReadService {
     @InjectModel(ReadEvaluation.name) private readEvaluationModel: Model<ReadEvaluation>,
     @InjectModel(PeriodeEvaluation.name) private periodeModel: Model<PeriodeEvaluation>,
     @InjectModel(Eleve.name) private eleveModel: Model<Eleve>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   // ============ HELPERS ============
+
+  /**
+   * Calcule le périmètre d'un professeur (null = accès complet pour admin/secrétaire).
+   * Un professeur sans fiche ou sans affectation obtient un périmètre vide.
+   */
+  private async scopeForUser(user?: AuthCtx): Promise<Scope | null> {
+    if (!user || user.role !== 'professeur') return null;
+    if (!user.professeur_id) return { classeIds: [], couples: new Set<string>() };
+    const assignments = await this.assignmentModel
+      .find({ professeur_id: user.professeur_id })
+      .lean()
+      .exec();
+    return {
+      classeIds: [...new Set(assignments.map((a: any) => a.classe_id))],
+      couples: new Set(assignments.map((a: any) => `${a.classe_id}|${a.matiere_id}`)),
+    };
+  }
 
   /**
    * Résout l'ID de l'année scolaire (nouvelle API normalisée).
@@ -85,10 +117,14 @@ export class ReadService {
   }
 
   // ============ DASHBOARD ============
-  async getDashboard(classesPage = 1, classesLimit = 5, anneeId?: string): Promise<any> {
+  async getDashboard(classesPage = 1, classesLimit = 5, anneeId?: string, user?: AuthCtx): Promise<any> {
     const today = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const resolvedId = await this.resolveAnneeId(anneeId);
+
+    // Professeur : tableau de bord réduit à ses classes / élèves.
+    const scope = await this.scopeForUser(user);
+    const eleveScope: any = scope ? { classe_id: { $in: scope.classeIds } } : {};
 
     const [anneeActive, convocations] = await Promise.all([
       this.anneeModel.findOne({ statut: 'active' }).exec(),
@@ -101,7 +137,8 @@ export class ReadService {
       }).sort({ date: 1 }).exec(),
     ]);
 
-    const classeFilter = resolvedId ? { anneeScolaireId: resolvedId } : {};
+    const classeFilter: any = resolvedId ? { anneeScolaireId: resolvedId } : {};
+    if (scope) classeFilter.source_id = { $in: scope.classeIds };
 
     // En mode archive, les stats (élèves, notes) sont filtrés sur l'année archivée
     let elevesCount: number;
@@ -110,7 +147,7 @@ export class ReadService {
       const classeIds = (await this.readClasseModel.find(classeFilter, { source_id: 1 }).lean().exec())
         .map((c: any) => c.source_id);
 
-      const eleveFilter = { anneeScolaireId: resolvedId };
+      const eleveFilter = { anneeScolaireId: resolvedId, ...eleveScope };
       const [eleveSourceIds, elevesCnt] = await Promise.all([
         this.readEleveModel.find(eleveFilter, { source_id: 1 }).lean().exec(),
         this.readEleveModel.countDocuments(eleveFilter).exec(),
@@ -123,7 +160,7 @@ export class ReadService {
       notesCount = notesCnt;
     } else {
       const activeAnneeId = anneeActive?.id?.toString() ?? anneeActive?._id?.toString() ?? null;
-      const liveEleveFilter = activeAnneeId ? { anneeScolaireId: activeAnneeId } : {};
+      const liveEleveFilter: any = activeAnneeId ? { anneeScolaireId: activeAnneeId, ...eleveScope } : { ...eleveScope };
       const liveEleveIds = activeAnneeId
         ? (await this.readEleveModel.find(liveEleveFilter, { source_id: 1 }).lean().exec()).map((e: any) => e.source_id)
         : null;
@@ -135,19 +172,26 @@ export class ReadService {
       ]);
     }
 
-    const eleveFilter = resolvedId ? { anneeScolaireId: resolvedId } : (anneeActive ? { anneeScolaireId: anneeActive.id?.toString() ?? anneeActive._id?.toString() } : {});
+    const eleveFilter: any = { ...eleveScope };
+    if (resolvedId) eleveFilter.anneeScolaireId = resolvedId;
+    else if (anneeActive) eleveFilter.anneeScolaireId = anneeActive.id?.toString() ?? anneeActive._id?.toString();
     const [classesTotal, matieresCount, recentEleves, elevesTotal, elevesInscrits] = await Promise.all([
       this.readClasseModel.countDocuments(classeFilter).exec(),
       this.readMatiereModel.countDocuments(resolvedId ? { anneeScolaireId: resolvedId } : {}).exec(),
       this.readEleveModel.find(eleveFilter).sort({ _id: -1 }).limit(5).exec(),
       // En mode archive : compter les read_eleves de l'année archivée
       // En mode live : compter tous les élèves non partis
-      anneeId
-        ? this.readEleveModel.countDocuments({ anneeScolaireId: resolvedId }).exec()
-        : this.eleveModel.countDocuments({ statut: { $ne: 'parti' } }).exec(),
-      anneeId
-        ? this.readEleveModel.countDocuments({ anneeScolaireId: resolvedId }).exec()
-        : this.eleveModel.countDocuments({ inscriptions: { $elemMatch: { status: 'active' } } }).exec(),
+      // Professeur : compter ses élèves (read_eleves scopés à ses classes)
+      scope
+        ? this.readEleveModel.countDocuments(eleveFilter).exec()
+        : anneeId
+          ? this.readEleveModel.countDocuments({ anneeScolaireId: resolvedId }).exec()
+          : this.eleveModel.countDocuments({ statut: { $ne: 'parti' } }).exec(),
+      scope
+        ? this.readEleveModel.countDocuments(eleveFilter).exec()
+        : anneeId
+          ? this.readEleveModel.countDocuments({ anneeScolaireId: resolvedId }).exec()
+          : this.eleveModel.countDocuments({ inscriptions: { $elemMatch: { status: 'active' } } }).exec(),
     ]);
 
     // Convocations enrichies (mode live seulement)
@@ -178,11 +222,15 @@ export class ReadService {
   }
 
   // ============ CLASSES LIST ============
-  async getClassesList(page = 1, limit = 8, search = '', niveau = '', anneeId?: string) {
+  async getClassesList(page = 1, limit = 8, search = '', niveau = '', anneeId?: string, user?: AuthCtx) {
     const resolvedId = await this.resolveAnneeId(anneeId);
     const filter: any = resolvedId ? { anneeScolaireId: resolvedId } : {};
     if (search) filter.nom = { $regex: search, $options: 'i' };
     if (niveau) filter.niveau = niveau;
+
+    // Professeur : restreindre à ses classes affectées.
+    const scope = await this.scopeForUser(user);
+    if (scope) filter.source_id = { $in: scope.classeIds };
 
     const sallesFilter: any = resolvedId
       ? { salle_type: 'fixe', salle: { $ne: '' }, anneeScolaireId: resolvedId }
@@ -211,7 +259,12 @@ export class ReadService {
   }
 
   // ============ CLASSE ELEVES ============
-  async getClasseEleves(classeId: string, page = 1, limit = 10, search = '', eleveId = '', anneeId?: string) {
+  async getClasseEleves(classeId: string, page = 1, limit = 10, search = '', eleveId = '', anneeId?: string, user?: AuthCtx) {
+    // Professeur : interdire l'accès à une classe hors de son périmètre.
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.classeIds.includes(classeId)) {
+      throw new ForbiddenException('Classe hors de votre périmètre.');
+    }
     // Chercher la classe en tenant compte de l'année si fournie
     const classeFilter: any = { source_id: classeId };
     if (anneeId) classeFilter.anneeScolaireId = anneeId;
@@ -255,8 +308,9 @@ export class ReadService {
   }
 
   // ============ ELEVES LIST ============
-  async getElevesList(page = 1, limit = 12, search = '', classeId = '', eleveId = '', anneeId?: string) {
+  async getElevesList(page = 1, limit = 12, search = '', classeId = '', eleveId = '', anneeId?: string, user?: AuthCtx) {
     const resolvedId = await this.resolveAnneeId(anneeId);
+    const scope = await this.scopeForUser(user);
 
     // Quand pas d'année active et pas d'anneeId explicite (transition entre années),
     // on lit depuis eleveModel directement pour voir tous les élèves sans doublons
@@ -285,6 +339,8 @@ export class ReadService {
           }
         }
       }
+      // Professeur : restreindre aux élèves inscrits dans une de ses classes.
+      if (scope) conditions.push({ inscriptions: { $elemMatch: { classeId: { $in: scope.classeIds } } } });
       const filter = { $and: conditions };
       const skip = (page - 1) * limit;
       const [rawEleves, total] = await Promise.all([
@@ -340,6 +396,12 @@ export class ReadService {
           filter.$or = [{ nom: { $regex: search, $options: 'i' } }, { prenom: { $regex: search, $options: 'i' } }];
         }
       }
+    }
+
+    // Professeur : restreindre aux élèves de ses classes affectées.
+    if (scope) {
+      if (classeId && !scope.classeIds.includes(classeId)) filter.classe_id = '__none__';
+      else if (!classeId) filter.classe_id = { $in: scope.classeIds };
     }
 
     const [items, total, totalAll] = await Promise.all([
@@ -398,9 +460,11 @@ export class ReadService {
   }
 
   // ============ PLANNING — liste des niveaux/classes (léger) ============
-  async getPlanningClasses(anneeId?: string) {
+  async getPlanningClasses(anneeId?: string, user?: AuthCtx) {
     const resolvedId = await this.resolveAnneeId(anneeId);
-    const classeFilter = resolvedId ? { anneeScolaireId: resolvedId } : {};
+    const classeFilter: any = resolvedId ? { anneeScolaireId: resolvedId } : {};
+    const scope = await this.scopeForUser(user);
+    if (scope) classeFilter.source_id = { $in: scope.classeIds };
     const [classes, creneaux] = await Promise.all([
       this.readClasseModel.find(classeFilter).exec(),
       this.readCreneauModel.find({}, { classe_id: 1 }).lean().exec(),
@@ -422,7 +486,11 @@ export class ReadService {
   }
 
   // ============ PLANNING — créneaux d'UNE classe ============
-  async getPlanningClasse(classeId: string) {
+  async getPlanningClasse(classeId: string, user?: AuthCtx) {
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.classeIds.includes(classeId)) {
+      throw new ForbiddenException('Classe hors de votre périmètre.');
+    }
     const classe = await this.readClasseModel.findOne({ source_id: classeId }).exec();
     if (!classe) return null;
 
@@ -476,11 +544,20 @@ export class ReadService {
   }
 
   // ============ NOTES PAGE — filtres uniquement (pas d'élèves ni de notes) ============
-  async getNotesFilters(anneeId?: string) {
+  async getNotesFilters(anneeId?: string, user?: AuthCtx) {
     const resolvedId = await this.resolveAnneeId(anneeId);
-    const classeFilter = resolvedId ? { anneeScolaireId: resolvedId } : {};
-    const matiereFilter = resolvedId ? { anneeScolaireId: resolvedId } : {};
+    const classeFilter: any = resolvedId ? { anneeScolaireId: resolvedId } : {};
+    const matiereFilter: any = resolvedId ? { anneeScolaireId: resolvedId } : {};
     const niveauFilter = resolvedId ? { anneeScolaireId: resolvedId } : {};
+
+    // Professeur : ne proposer que ses classes et matières affectées.
+    const scope = await this.scopeForUser(user);
+    if (scope) {
+      classeFilter.source_id = { $in: scope.classeIds };
+      const matiereIds = [...new Set([...scope.couples].map(c => c.split('|')[1]))];
+      matiereFilter.source_id = { $in: matiereIds };
+    }
+
     const [classes, matieres, niveaux] = await Promise.all([
       this.readClasseModel.find(classeFilter).exec(),
       this.readMatiereModel.find(matiereFilter).exec(),
@@ -518,7 +595,12 @@ export class ReadService {
   }
 
   // ============ NOTES PAGE — élèves + notes pour une classe/matière/trimestre ============
-  async getNotesEleves(classeId: string, matiereId: string, trimestre: number, anneeId?: string) {
+  async getNotesEleves(classeId: string, matiereId: string, trimestre: number, anneeId?: string, user?: AuthCtx) {
+    // Professeur : saisie/lecture limitée à ses couples (classe, matière).
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.couples.has(`${classeId}|${matiereId}`)) {
+      throw new ForbiddenException('Couple (classe, matière) hors de votre périmètre.');
+    }
     const eleveFilter: any = { classe_id: classeId };
     const noteFilter: any = { matiere_id: matiereId, trimestre };
     if (anneeId) {
@@ -536,13 +618,19 @@ export class ReadService {
   }
 
   // ============ BULLETIN ============
-  async getBulletin(eleveId: string, trimestre: number, anneeId?: string) {
+  async getBulletin(eleveId: string, trimestre: number, anneeId?: string, user?: AuthCtx) {
     const resolvedId = await this.resolveAnneeId(anneeId);
     const eleveFilter: any = { source_id: eleveId };
     if (resolvedId) eleveFilter.anneeScolaireId = resolvedId;
 
     const eleve = await this.readEleveModel.findOne(eleveFilter).exec();
     if (!eleve) return null;
+
+    // Professeur : bulletin réservé aux élèves de ses classes (lecture seule, complet).
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.classeIds.includes((eleve as any).classe_id)) {
+      throw new ForbiddenException('Élève hors de votre périmètre.');
+    }
 
     const noteFilter: any = { eleve_id: eleveId, trimestre };
     if (resolvedId) noteFilter.anneeScolaireId = resolvedId;
@@ -612,7 +700,7 @@ export class ReadService {
 
   // ============ EVALUATIONS ============
   async getEvaluationsList(
-    classeId?: string, matiereId?: string, trimestre?: number, statut?: string, page = 1, limit = 10, anneeId?: string
+    classeId?: string, matiereId?: string, trimestre?: number, statut?: string, page = 1, limit = 10, anneeId?: string, user?: AuthCtx
   ) {
     const resolvedId = await this.resolveAnneeId(anneeId);
     const filter: any = {};
@@ -621,6 +709,23 @@ export class ReadService {
     if (matiereId) filter.matiere_id = matiereId;
     if (trimestre) filter.trimestre = trimestre;
     if (statut) filter.statut = statut;
+
+    // Professeur : limiter strictement à ses couples (classe, matière).
+    const scope = await this.scopeForUser(user);
+    if (scope) {
+      if (classeId && matiereId) {
+        if (!scope.couples.has(`${classeId}|${matiereId}`)) {
+          throw new ForbiddenException('Couple (classe, matière) hors de votre périmètre.');
+        }
+      } else {
+        const couples = [...scope.couples].map(c => {
+          const [cl, ma] = c.split('|');
+          return { classe_id: cl, matiere_id: ma };
+        });
+        // Aucune affectation → aucun résultat
+        filter.$or = couples.length > 0 ? couples : [{ _id: null }];
+      }
+    }
 
     const skip = (page - 1) * limit;
     const [items, total] = await Promise.all([
@@ -637,9 +742,14 @@ export class ReadService {
     };
   }
 
-  async getEvaluationDetail(id: string) {
+  async getEvaluationDetail(id: string, user?: AuthCtx) {
     const evaluation = await this.readEvaluationModel.findOne({ source_id: id }).exec();
-    return evaluation ? evaluation.toJSON() : null;
+    if (!evaluation) return null;
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.couples.has(`${(evaluation as any).classe_id}|${(evaluation as any).matiere_id}`)) {
+      throw new ForbiddenException('Évaluation hors de votre périmètre.');
+    }
+    return evaluation.toJSON();
   }
 
   // ============ SNAPSHOT ARCHIVE ============
@@ -737,7 +847,20 @@ export class ReadService {
       matiere_couleur: matiereMap.get(a.matiere_id)?.couleur || '#64748b',
     }));
 
-    return { professeur: (prof as any).toJSON(), assignments: assignmentsEnriched };
+    // État du compte de connexion lié (pour la section Accès/Compte de la fiche).
+    const userDoc = await this.userModel.findOne({ professeur_id: id }).lean().exec() as any;
+    const account = userDoc
+      ? {
+          exists: true,
+          username: userDoc.username,
+          actif: !!userDoc.actif,
+          deleted: !!userDoc.deleted,
+          mustChangePassword: !!userDoc.mustChangePassword,
+          lastLoginAt: userDoc.lastLoginAt ?? null,
+        }
+      : { exists: false };
+
+    return { professeur: (prof as any).toJSON(), assignments: assignmentsEnriched, account };
   }
 
   private readonly NIVEAUX_ORDRE = ['CP','CE1','CE2','CM1','CM2','6ème','5ème','4ème','3ème','2nde','1ère','Terminale'];
@@ -986,7 +1109,7 @@ export class ReadService {
   }
 
   // ============ FICHE ÉLÈVE ============
-  async getEleveFiche(eleveId: string, anneeId?: string) {
+  async getEleveFiche(eleveId: string, anneeId?: string, user?: AuthCtx) {
     const resolvedId = await this.resolveAnneeId(anneeId);
     // Chercher d'abord avec filtre année, puis fallback sans filtre (élève sans inscription)
     let eleve = resolvedId
@@ -996,6 +1119,12 @@ export class ReadService {
       eleve = await this.readEleveModel.findOne({ source_id: eleveId }).exec();
     }
     if (!eleve) return null;
+
+    // Professeur : l'élève doit appartenir à une de ses classes.
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.classeIds.includes((eleve as any).classe_id)) {
+      throw new ForbiddenException('Élève hors de votre périmètre.');
+    }
 
     const [classe, creneauxClasse] = await Promise.all([
       this.readClasseModel.findOne({ source_id: eleve.classe_id }).exec(),

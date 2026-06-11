@@ -2,7 +2,11 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException } 
 import { AnneesService } from './annees.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { Roles } from '../auth/roles.decorator';
 
+// Les GET restent ouverts (l'AnneeProvider charge /annees au démarrage pour
+// la logique d'archive/lecture seule de TOUS les rôles). Seules les mutations
+// (cycle de vie de l'année scolaire) sont réservées admin + secrétariat.
 @Controller('annees')
 export class AnneesController {
   constructor(
@@ -34,6 +38,7 @@ export class AnneesController {
   }
 
   @Post()
+  @Roles('admin', 'secretaire')
   async create(@Body() body: any) {
     const item = await this.service.create(body);
     this.events.emit('annee:created', item);
@@ -41,6 +46,7 @@ export class AnneesController {
   }
 
   @Patch(':id')
+  @Roles('admin', 'secretaire')
   async update(@Param('id') id: string, @Body() body: any) {
     const item = await this.service.update(id, body);
     if (!item) throw new NotFoundException();
@@ -49,6 +55,7 @@ export class AnneesController {
   }
 
   @Delete(':id')
+  @Roles('admin', 'secretaire')
   async delete(@Param('id') id: string) {
     const ok = await this.service.delete(id);
     if (!ok) throw new NotFoundException();
@@ -57,6 +64,7 @@ export class AnneesController {
   }
 
   @Post(':id/demarrer')
+  @Roles('admin', 'secretaire')
   async demarrer(@Param('id') id: string) {
     const annee = await this.service.demarrer(id);
     await this.viewBuilder.rebuildAll();
@@ -65,6 +73,7 @@ export class AnneesController {
   }
 
   @Post(':id/terminer')
+  @Roles('admin', 'secretaire')
   async terminer(@Param('id') id: string) {
     const terminee = await this.service.terminer(id);
     this.events.emit('annee:updated', terminee);
@@ -72,6 +81,7 @@ export class AnneesController {
   }
 
   @Post(':id/migrer-eleves')
+  @Roles('admin', 'secretaire')
   async migrerEleves(@Param('id') id: string) {
     const result = await this.service.migrerEleves(id);
     this.events.emit('annee:migration', { id, ...result });

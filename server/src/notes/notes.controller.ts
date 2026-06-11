@@ -2,6 +2,8 @@ import { Controller, Post, Patch, Param, Body, NotFoundException, HttpCode } fro
 import { NotesService } from './notes.service';
 import { EventsGateway } from '../events/events.gateway';
 import { ViewBuilderService } from '../read/view-builder.service';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { AuthCtx } from '../read/read.service';
 
 @Controller('notes')
 export class NotesController {
@@ -12,16 +14,16 @@ export class NotesController {
   ) {}
 
   @Post()
-  async create(@Body() body: any) {
-    const item = await this.service.create(body);
+  async create(@CurrentUser() user: AuthCtx, @Body() body: any) {
+    const item = await this.service.create(body, user);
     this.events.emit('note:created', item);
     this.viewBuilder.onNoteWrite(item.id);
     return item;
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() body: any) {
-    const item = await this.service.update(id, body);
+  async update(@CurrentUser() user: AuthCtx, @Param('id') id: string, @Body() body: any) {
+    const item = await this.service.update(id, body, user);
     if (!item) throw new NotFoundException();
     this.events.emit('note:updated', item);
     this.viewBuilder.onNoteWrite(id);
@@ -30,8 +32,8 @@ export class NotesController {
 
   @Patch(':id/annuler')
   @HttpCode(200)
-  async annuler(@Param('id') id: string) {
-    const ok = await this.service.annuler(id);
+  async annuler(@CurrentUser() user: AuthCtx, @Param('id') id: string) {
+    const ok = await this.service.annuler(id, user);
     if (!ok) throw new NotFoundException();
     this.events.emit('note:updated', { id });
     this.viewBuilder.onNoteWrite(id);
