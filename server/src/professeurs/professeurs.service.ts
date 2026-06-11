@@ -40,19 +40,42 @@ export class ProfesseursService {
       throw new BadRequestException("L'email est requis pour créer le compte du professeur.");
     }
     assertValidEmail(email);
-    // Refuser un email déjà utilisé (par une fiche professeur ou un compte) avant toute création.
+
+    // Une fiche professeur existe déjà avec cet email ?
     const existingProf = await this.model
       .findOne({ email })
       .collation({ locale: 'en', strength: 2 })
-      .lean()
       .exec();
     if (existingProf) {
-      throw new ConflictException('Un professeur avec cet email existe déjà.');
+      const profId = (existingProf as any).id;
+      const linked = await this.usersService.findByProfesseurId(profId) as any;
+      const hasActiveAccount = linked && !linked.deleted && linked.actif;
+      // Prof actif AVEC un compte actif → vrai doublon, on refuse (avec lien vers la fiche).
+      if ((existingProf as any).statut === 'actif' && hasActiveAccount) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          message: 'Un professeur actif avec cet email possède déjà un compte.',
+          professeurId: profId,
+        });
+      }
+      // Sinon on réutilise la fiche (ses affectations sont préservées) :
+      // réactivation si inactive + mise à jour des infos saisies, puis on rétablit le compte.
+      (existingProf as any).nom = data.nom ?? (existingProf as any).nom;
+      (existingProf as any).prenom = data.prenom ?? (existingProf as any).prenom;
+      (existingProf as any).genre = data.genre ?? (existingProf as any).genre;
+      if (data.telephone !== undefined) (existingProf as any).telephone = data.telephone;
+      (existingProf as any).statut = 'actif';
+      await existingProf.save();
+      const account = await this.createAccountForProfesseur(profId);
+      return { professeur: existingProf, account: account as AccountResult };
     }
+
+    // Pas de fiche : refuser si un compte ACTIF (non archivé) utilise déjà cet email.
     const existingUser =
       (await this.usersService.findByUsername(email.toLowerCase())) ||
       (await this.usersService.findByEmail(email));
-    if (existingUser) {
+    if (existingUser && !(existingUser as any).deleted) {
       throw new ConflictException('Un compte utilisant cet email existe déjà.');
     }
 
@@ -91,12 +114,13 @@ export class ProfesseursService {
     const existing = await this.usersService.findByProfesseurId(professeurId) as any;
 
     if (existing) {
-      if (!existing.deleted) {
-        throw new ConflictException('Ce professeur a déjà un compte.');
+      if (!existing.deleted && existing.actif) {
+        throw new ConflictException('Ce professeur a déjà un compte actif.');
       }
-      // Compte archivé → restaurer + régénérer + email.
+      // Compte archivé → restaurer ; compte désactivé → réactiver. Puis régénérer + email.
       const uid = existing.id ?? existing._id.toString();
-      await this.usersService.restore(uid);
+      if (existing.deleted) await this.usersService.restore(uid);
+      await this.usersService.setActifByProfesseur(professeurId, true);
       await this.usersService.setPassword(uid, password);
       await this.usersService.setMustChangePassword(uid, true);
       const mail = await this.mailService.sendCredentials(prof.email, existing.username, password, {

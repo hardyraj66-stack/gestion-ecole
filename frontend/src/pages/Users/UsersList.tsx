@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '../../config/api';
 import { useAuth, Role } from '../../contexts/AuthContext';
@@ -33,6 +34,7 @@ const ROLE_VARIANT: Record<Role, 'success' | 'info' | 'warning'> = {
 
 export function UsersList() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const confirm = useConfirm();
   const { user: me } = useAuth();
 
@@ -67,6 +69,8 @@ export function UsersList() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ username: '', nom: '', prenom: '', email: '', genre: 'M', role: 'secretaire' as Role });
   const [formError, setFormError] = useState('');
+  // Id du professeur existant en cas de doublon d'email → lien vers sa fiche.
+  const [dupProfId, setDupProfId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [accountResult, setAccountResult] = useState<{ username: string; emailSent: boolean; password?: string } | null>(null);
 
@@ -74,6 +78,7 @@ export function UsersList() {
 
   const submitCreate = async () => {
     setFormError('');
+    setDupProfId(null);
     const isProf = form.role === 'professeur';
     if (!form.email.trim()) {
       setFormError(t('users.emailRequiredMsg', "L'email est requis."));
@@ -105,6 +110,7 @@ export function UsersList() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setFormError(body?.message || t('users.errorCreate'));
+        setDupProfId(body?.professeurId || null);
         return;
       }
       setShowCreate(false);
@@ -240,7 +246,7 @@ export function UsersList() {
         <Button variant="outline" onClick={toggleArchived} style={{ marginRight: 8 }}>
           {showArchived ? t('users.hideArchived', 'Masquer les archives') : t('users.showArchived', 'Voir les archives')}
         </Button>
-        <Button onClick={() => { setShowCreate(true); setFormError(''); }}>
+        <Button onClick={() => { setShowCreate(true); setFormError(''); setDupProfId(null); }}>
           {t('users.add')}
         </Button>
       </PageHeader>
@@ -333,7 +339,22 @@ export function UsersList() {
             </>
           }
         >
-          {formError && <div className="login-error" style={{ marginBottom: '1rem' }}>{formError}</div>}
+          {formError && (
+            <div className="login-error" style={{ marginBottom: '1rem' }}>
+              {formError}
+              {dupProfId && (
+                <div style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCreate(false); navigate(`/professeurs/${dupProfId}`); }}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}
+                  >
+                    {t('users.voirFicheProf', 'Voir la fiche du professeur →')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <Select
             label={t('users.role')}
             options={roleOptions}

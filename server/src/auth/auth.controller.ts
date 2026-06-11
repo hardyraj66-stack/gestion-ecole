@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import { CurrentUser } from './current-user.decorator';
@@ -9,8 +9,11 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  login(@Body() body: { username: string; password: string }) {
-    return this.authService.login(body?.username, body?.password);
+  login(@Req() req: any, @Body() body: { username: string; password: string }) {
+    const userAgent = req.headers?.['user-agent'] || '';
+    const ip = (req.headers?.['x-forwarded-for'] || req.ip || req.socket?.remoteAddress || '')
+      .toString().split(',')[0].trim();
+    return this.authService.login(body?.username, body?.password, { userAgent, ip });
   }
 
   @Get('me')
@@ -29,14 +32,30 @@ export class AuthController {
   @Post('change-password')
   changePassword(
     @CurrentUser('id') userId: string,
+    @CurrentUser('jti') jti: string,
     @Body() body: { current: string; next: string },
   ) {
-    return this.authService.changePassword(userId, body?.current, body?.next);
+    return this.authService.changePassword(userId, body?.current, body?.next, jti);
+  }
+
+  @Post('logout')
+  logout(@CurrentUser('id') userId: string, @CurrentUser('jti') jti: string) {
+    return this.authService.logout(userId, jti);
   }
 
   @Post('logout-all')
   logoutAll(@CurrentUser('id') userId: string) {
     return this.authService.logoutAll(userId);
+  }
+
+  @Get('sessions')
+  sessions(@CurrentUser('id') userId: string, @CurrentUser('jti') jti: string) {
+    return this.authService.listSessions(userId, jti);
+  }
+
+  @Delete('sessions/:jti')
+  revokeSession(@CurrentUser('id') userId: string, @Param('jti') jti: string) {
+    return this.authService.revokeSession(userId, jti);
   }
 
   @Public()

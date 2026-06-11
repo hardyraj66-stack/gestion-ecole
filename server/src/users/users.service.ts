@@ -183,6 +183,27 @@ export class UsersService implements OnModuleInit {
     await this.userModel.findByIdAndUpdate(id, { lastLoginAt: new Date() });
   }
 
+  // --- Sessions par appareil ---
+  async addSession(id: string, session: { jti: string; userAgent: string; ip: string; createdAt: Date }) {
+    // Conserve au plus 10 sessions (les plus récentes).
+    await this.userModel.findByIdAndUpdate(id, {
+      $push: { sessions: { $each: [session], $slice: -10 } },
+    });
+  }
+
+  async removeSession(id: string, jti: string) {
+    await this.userModel.findByIdAndUpdate(id, { $pull: { sessions: { jti } } });
+  }
+
+  async clearSessions(id: string) {
+    await this.userModel.findByIdAndUpdate(id, { $set: { sessions: [] } });
+  }
+
+  /** Conserve uniquement la session courante (révoque les autres). */
+  async keepOnlySession(id: string, jti: string) {
+    await this.userModel.findByIdAndUpdate(id, { $pull: { sessions: { jti: { $ne: jti } } } });
+  }
+
   /** Soft-delete : archive le compte (récupérable), invalide ses sessions. */
   async remove(id: string) {
     const target = await this.userModel.findById(id);
@@ -191,6 +212,7 @@ export class UsersService implements OnModuleInit {
     await this.userModel.findByIdAndUpdate(id, {
       deleted: true,
       actif: false,
+      sessions: [],
       $inc: { tokenVersion: 1 },
     });
     return { ok: true };

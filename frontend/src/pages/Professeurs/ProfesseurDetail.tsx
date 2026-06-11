@@ -242,6 +242,9 @@ export function ProfesseurDetail() {
           </div>
         </Card>
 
+        {/* Colonne principale : compte + affectations */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', minWidth: 0 }}>
+
         {/* Accès / Compte de connexion */}
         <Card>
           <div className="prof-assignments-header" style={{ marginBottom: '0.75rem' }}>
@@ -338,6 +341,7 @@ export function ProfesseurDetail() {
               </Table>
             </Card>
           )}
+        </div>
         </div>
       </div>
 

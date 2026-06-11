@@ -12,7 +12,8 @@
     "niveaux": "Levels",
     "cycle": "Academic year",
     "parametres": "Settings",
-    "utilisateurs": "Users"
+    "utilisateurs": "Users",
+    "journal": "Activity log"
   },
   "sidebar": {
     "anneeScolaire": "Academic year",
@@ -900,7 +901,13 @@
       "ajouterBtn": "+ Add",
       "modifierBtn": "Edit",
       "enregistrerBtn": "Save",
-      "annulerBtn": "Cancel"
+      "annulerBtn": "Cancel",
+      "compte": "Access / Account",
+      "compteAucun": "This teacher has no login account.",
+      "compteCreer": "Create account",
+      "compteArchive": "Archived account",
+      "compteRestaurer": "Restore account",
+      "compteRenvoyer": "Resend credentials"
     },
     "affectations": {
       "titre": "Teacher assignments",
@@ -918,7 +925,13 @@
     },
     "erreur": "Problem loading teachers.",
     "retour": "← Back",
-    "erreurNomPrenom": "First and last name are required."
+    "erreurNomPrenom": "First and last name are required.",
+    "compte": {
+      "titre": "Teacher account",
+      "identifiant": "Username",
+      "emailEnvoye": "Login credentials have been emailed to the teacher.",
+      "emailNonEnvoye": "The email could not be sent. Share this temporary password with the teacher:"
+    }
   },
   "periodes": {
     "titre": "Evaluation periods",
@@ -1026,7 +1039,8 @@
         "red": "Red",
         "orange": "Orange",
         "indigo": "Indigo"
-      }
+      },
+      "sombreTitre": "Dark mode"
     },
     "langue": {
       "titre": "Language",
@@ -1154,7 +1168,14 @@
     "usernamePlaceholder": "admin",
     "password": "Password",
     "submit": "Sign in",
-    "error": "Invalid credentials"
+    "error": "Invalid credentials",
+    "forgotSubtitle": "Password reset",
+    "email": "Account email",
+    "forgotLink": "Forgot password?",
+    "forgotSubmit": "Send link",
+    "backToLogin": "Back to login",
+    "forgotSent": "If an account exists for this address, a reset email has been sent.",
+    "serverError": "Server unreachable"
   },
   "users": {
     "title": "Users",
@@ -1185,6 +1206,81 @@
     "errorCreate": "Could not create.",
     "errorUpdate": "Could not update.",
     "errorDelete": "Could not delete.",
-    "formInvalid": "Username required and password of at least 4 characters."
+    "formInvalid": "Username required and password of at least 4 characters.",
+    "confirmation": "Confirmation",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "email": "Email",
+    "lastLogin": "Last login",
+    "showArchived": "View archives",
+    "hideArchived": "Hide archives",
+    "editTitle": "Edit account",
+    "archivedTitle": "Archived accounts",
+    "noArchived": "No archived accounts.",
+    "restore": "Restore",
+    "resetTitle": "Reset password",
+    "passwordOptional": "New password (leave empty = auto-generated)",
+    "resetHint": "The password will be emailed if the user has an address, otherwise it will be shown here. The user must change it at next login.",
+    "accountTitle": "Account created",
+    "accountEmailSent": "Credentials have been emailed.",
+    "accountNoEmail": "Share this temporary password (to be changed at first login):",
+    "emailRequired": "Email *",
+    "emailRequiredMsg": "Email is required.",
+    "profNameRequired": "First and last name are required for a teacher.",
+    "usernameRequired": "Username is required.",
+    "passwordEmailedHint": "The username and a generated password will be emailed to the user, who must change it at first login.",
+    "profCreatedHint": "The teacher will be added to the teachers list. Their username (= email) and a generated password will be emailed.",
+    "voirFicheProf": "View teacher profile →"
+  },
+  "profil": {
+    "titre": "My profile",
+    "sousTitre": "Your information and security",
+    "informations": "Information",
+    "nom": "Name",
+    "email": "Email",
+    "identifiant": "Username",
+    "role": "Role",
+    "statut": "Account status",
+    "derniereConnexion": "Last login",
+    "erreur": "Update failed.",
+    "activite": "Account activity",
+    "membreDepuis": "Member since",
+    "jamais": "Never",
+    "preferences": "Preferences",
+    "langue": "Language",
+    "sessions": "Sessions",
+    "sessionsListDesc": "Devices currently connected to your account.",
+    "cetAppareil": "This device",
+    "revoquer": "Revoke",
+    "aucuneSession": "No active sessions.",
+    "logoutAll": "Sign out of all sessions"
+  },
+  "password": {
+    "sectionTitle": "Password",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "submit": "Change password",
+    "tooShort": "Password must be at least 8 characters (with a letter and a digit).",
+    "mismatch": "The two passwords do not match.",
+    "success": "Password changed.",
+    "error": "Failed to change password."
+  },
+  "reset": {
+    "subtitle": "Set a new password",
+    "noToken": "Invalid link.",
+    "success": "Password changed. You can log in now.",
+    "toLogin": "Go to login",
+    "submit": "Reset"
+  },
+  "audit": {
+    "titre": "Activity log",
+    "sousTitre": "History of account actions",
+    "date": "Date",
+    "action": "Action",
+    "par": "By",
+    "cible": "Account",
+    "details": "Details",
+    "vide": "No activity recorded."
   }
 }

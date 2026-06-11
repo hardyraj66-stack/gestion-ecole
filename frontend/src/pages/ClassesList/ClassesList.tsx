@@ -137,7 +137,7 @@ export function ClassesList() {
 
       {deleteError && <Alert variant="error">{deleteError}</Alert>}
 
-      <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>{t('classes.filtrer')}</span>
         {niveauOptions.map(opt => (
           <button

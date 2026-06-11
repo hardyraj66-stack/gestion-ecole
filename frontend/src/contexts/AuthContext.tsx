@@ -16,6 +16,7 @@ export interface AuthUser {
   /** Forcer le changement de mot de passe à la première connexion. */
   mustChangePassword?: boolean;
   lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -39,6 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
 
   const logout = useCallback(() => {
+    // Best-effort : retire la session courante côté serveur (avant d'effacer le token).
+    const token = getToken();
+    if (token) {
+      fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
     clearToken();
     setUser(null);
     setStatus('unauthenticated');

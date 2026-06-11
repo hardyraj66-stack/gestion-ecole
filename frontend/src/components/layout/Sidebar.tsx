@@ -61,6 +61,7 @@ export function Sidebar() {
     if (ok) logout();
   };
   const [expanded, setExpanded] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchedRef = useRef(false);
@@ -115,11 +116,22 @@ export function Sidebar() {
   };
 
   return (
-    <aside
-      className={`sidebar ${expanded ? 'sidebar-expanded' : ''} ${isViewingArchive ? 'sidebar-archive' : ''}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <>
+      {/* Bouton menu (mobile uniquement, masqué en CSS sur desktop) */}
+      <button className="sidebar-burger" onClick={() => setMobileOpen((o) => !o)} aria-label={t('nav.menu', 'Menu')}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      {mobileOpen && <div className="sidebar-backdrop" onClick={() => setMobileOpen(false)} />}
+      <aside
+        className={`sidebar ${expanded || mobileOpen ? 'sidebar-expanded' : ''} ${mobileOpen ? 'sidebar-mobile-open' : ''} ${isViewingArchive ? 'sidebar-archive' : ''}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onClick={(e) => { if ((e.target as HTMLElement).closest('a')) setMobileOpen(false); }}
+      >
       {/* Brand */}
       <div className="sidebar-brand">
         <div className="sidebar-brand-icon-wrap">
@@ -166,6 +178,14 @@ export function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-3.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-1-7.87" />
             </svg>
             <span className="nav-item-label">{t('nav.utilisateurs')}</span>
+          </NavLink>
+        )}
+        {hasRole('admin') && (
+          <NavLink to="/journal" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title={!expanded ? t('nav.journal', "Journal d'activité") : undefined}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="nav-item-icon">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <span className="nav-item-label">{t('nav.journal', "Journal")}</span>
           </NavLink>
         )}
       </nav>
@@ -216,5 +236,6 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

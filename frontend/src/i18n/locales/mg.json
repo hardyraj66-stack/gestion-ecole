@@ -12,7 +12,8 @@
     "niveaux": "Ambaratonga",
     "cycle": "Taom-pianarana",
     "parametres": "Fikirana",
-    "utilisateurs": "Mpampiasa"
+    "utilisateurs": "Mpampiasa",
+    "journal": "Tantara"
   },
   "sidebar": {
     "anneeScolaire": "Taom-pianarana",
@@ -900,7 +901,13 @@
       "ajouterBtn": "+ Manampy",
       "modifierBtn": "Hanova",
       "enregistrerBtn": "Tehirizina",
-      "annulerBtn": "Foana"
+      "annulerBtn": "Foana",
+      "compte": "Fidirana / Kaonty",
+      "compteAucun": "Tsy manana kaonty fidirana ity mpampianatra ity.",
+      "compteCreer": "Mamorona kaonty",
+      "compteArchive": "Kaonty voaarisiva",
+      "compteRestaurer": "Avereno ny kaonty",
+      "compteRenvoyer": "Alefaso indray ny mari-pidirana"
     },
     "affectations": {
       "titre": "Fanisana mpampianatra",
@@ -918,7 +925,13 @@
     },
     "erreur": "Olana amin ny fampidirana ny mpampianatra.",
     "retour": "← Hiverina",
-    "erreurNomPrenom": "Anarana sy fanampiny ilaina."
+    "erreurNomPrenom": "Anarana sy fanampiny ilaina.",
+    "compte": {
+      "titre": "Kaontin'ny mpampianatra",
+      "identifiant": "Anarana fidirana",
+      "emailEnvoye": "Nalefa tamin'ny mailaka tamin'ny mpampianatra ny mari-pidirana.",
+      "emailNonEnvoye": "Tsy afaka nalefa ny mailaka. Ampitao amin'ny mpampianatra ity teny miafina vonjimaika ity:"
+    }
   },
   "periodes": {
     "titre": "Vanim-potoana fanombanana",
@@ -1026,7 +1039,8 @@
         "red": "Mena",
         "orange": "Voasary",
         "indigo": "Indigo"
-      }
+      },
+      "sombreTitre": "Maizina"
     },
     "langue": {
       "titre": "Fiteny",
@@ -1154,7 +1168,14 @@
     "usernamePlaceholder": "admin",
     "password": "Tenimiafina",
     "submit": "Hiditra",
-    "error": "Diso ny anaran'ny mpampiasa na ny tenimiafina"
+    "error": "Diso ny anaran'ny mpampiasa na ny tenimiafina",
+    "forgotSubtitle": "Famerenana ny teny miafina",
+    "email": "Mailaky ny kaonty",
+    "forgotLink": "Adino ny teny miafina?",
+    "forgotSubmit": "Alefaso ny rohy",
+    "backToLogin": "Hiverina amin'ny fidirana",
+    "forgotSent": "Raha misy kaonty amin'ity adiresy ity dia nisy mailaka famerenana nalefa.",
+    "serverError": "Tsy azo idirana ny serivera"
   },
   "users": {
     "title": "Mpampiasa",
@@ -1185,6 +1206,81 @@
     "errorCreate": "Tsy afaka mamorona.",
     "errorUpdate": "Tsy afaka manova.",
     "errorDelete": "Tsy afaka mamafa.",
-    "formInvalid": "Ilaina ny anarana sy tenimiafina 4 litera farafahakeliny."
+    "formInvalid": "Ilaina ny anarana sy tenimiafina 4 litera farafahakeliny.",
+    "confirmation": "Fanamarinana",
+    "pending": "Miandry",
+    "confirmed": "Voamarina",
+    "email": "Mailaka",
+    "lastLogin": "Fidirana farany",
+    "showArchived": "Hijery ny arisiva",
+    "hideArchived": "Afeno ny arisiva",
+    "editTitle": "Hanova ny kaonty",
+    "archivedTitle": "Kaonty voaarisiva",
+    "noArchived": "Tsy misy kaonty voaarisiva.",
+    "restore": "Avereno",
+    "resetTitle": "Avereno ny teny miafina",
+    "passwordOptional": "Teny miafina vaovao (avela foana = foronina ho azy)",
+    "resetHint": "Halefa amin'ny mailaka ny teny miafina raha manana adiresy ilay olona, raha tsy izany dia haseho eto. Tsy maintsy ovany amin'ny fidirana manaraka.",
+    "accountTitle": "Kaonty noforonina",
+    "accountEmailSent": "Nalefa tamin'ny mailaka ny mari-pidirana.",
+    "accountNoEmail": "Ampitao ity teny miafina vonjimaika ity (ovaina amin'ny fidirana voalohany):",
+    "emailRequired": "Mailaka *",
+    "emailRequiredMsg": "Ilaina ny mailaka.",
+    "profNameRequired": "Ilaina ny anarana sy fanampin'anarana ho an'ny mpampianatra.",
+    "usernameRequired": "Ilaina ny anarana fidirana.",
+    "passwordEmailedHint": "Halefa amin'ny mailaka amin'ny mpampiasa ny anarana fidirana sy teny miafina noforonina, ka tsy maintsy ovany amin'ny fidirana voalohany.",
+    "profCreatedHint": "Hampidirina amin'ny lisitry ny mpampianatra ilay mpampianatra. Halefa aminy amin'ny mailaka ny anarana fidirany (= mailaka) sy teny miafina noforonina.",
+    "voirFicheProf": "Hijery ny mombamomba ny mpampianatra →"
+  },
+  "profil": {
+    "titre": "Ny mombamomba ahy",
+    "sousTitre": "Ny mombamomba sy ny fiarovana anao",
+    "informations": "Fampahalalana",
+    "nom": "Anarana",
+    "email": "Mailaka",
+    "identifiant": "Anarana fidirana",
+    "role": "Andraikitra",
+    "statut": "Toetry ny kaonty",
+    "derniereConnexion": "Fidirana farany",
+    "erreur": "Tsy nahomby ny fanavaozana.",
+    "activite": "Hetsiky ny kaonty",
+    "membreDepuis": "Mpikambana nanomboka tamin'ny",
+    "jamais": "Tsy mbola",
+    "preferences": "Safidy manokana",
+    "langue": "Fiteny",
+    "sessions": "Sesione",
+    "sessionsListDesc": "Fitaovana mifandray amin'ny kaontinao izao.",
+    "cetAppareil": "Ity fitaovana ity",
+    "revoquer": "Foanana",
+    "aucuneSession": "Tsy misy sesione mavitrika.",
+    "logoutAll": "Hivoaka amin'ny sesione rehetra"
+  },
+  "password": {
+    "sectionTitle": "Teny miafina",
+    "current": "Teny miafina ankehitriny",
+    "new": "Teny miafina vaovao",
+    "confirm": "Hamafiso ny teny miafina vaovao",
+    "submit": "Hanova teny miafina",
+    "tooShort": "Tsy maintsy misy litera 8 farafahakeliny (misy litera sy isa) ny teny miafina.",
+    "mismatch": "Tsy mitovy ireo teny miafina roa.",
+    "success": "Voaova ny teny miafina.",
+    "error": "Tsy nahomby ny fanovana teny miafina."
+  },
+  "reset": {
+    "subtitle": "Mametraka teny miafina vaovao",
+    "noToken": "Rohy tsy mety.",
+    "success": "Voaova ny teny miafina. Afaka miditra ianao izao.",
+    "toLogin": "Mankany amin'ny fidirana",
+    "submit": "Avereno"
+  },
+  "audit": {
+    "titre": "Tantaran'ny hetsika",
+    "sousTitre": "Tantaran'ny hetsika momba ny kaonty",
+    "date": "Daty",
+    "action": "Hetsika",
+    "par": "Nataon'i",
+    "cible": "Kaonty voakasika",
+    "details": "Antsipiriany",
+    "vide": "Tsy misy hetsika voarakitra."
   }
 }

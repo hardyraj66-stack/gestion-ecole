@@ -54,11 +54,20 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Session expirée ou révoquée');
     }
 
+    // Révocation par appareil : si le jeton porte un jti, la session doit exister.
+    if (payload.jti) {
+      const sessions = (user as any).sessions || [];
+      if (!sessions.some((s: any) => s.jti === payload.jti)) {
+        throw new UnauthorizedException('Session révoquée');
+      }
+    }
+
     req.user = {
       id: user.id,
       username: user.username,
       role: user.role,
       professeur_id: (user as any).professeur_id ?? null,
+      jti: payload.jti ?? null,
     };
     return true;
   }

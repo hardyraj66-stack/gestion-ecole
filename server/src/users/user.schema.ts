@@ -9,6 +9,7 @@ const toJsonTransform = (_: any, ret: Record<string, any>) => {
   delete ret.passwordHash; // ne jamais exposer le hash du mot de passe
   delete ret.resetTokenHash; // ni le jeton de réinitialisation
   delete ret.resetTokenExpires;
+  delete ret.sessions; // les sessions sont servies par un endpoint dédié
   return ret;
 };
 
@@ -60,6 +61,15 @@ export class User extends Document {
   /** Expiration (timestamp ms) du jeton de réinitialisation. */
   @Prop({ default: 0 })
   resetTokenExpires: number;
+
+  /** Sessions actives (une par appareil/connexion) pour la révocation individuelle. */
+  @Prop({
+    type: [
+      { jti: String, userAgent: String, ip: String, createdAt: Date, _id: false },
+    ],
+    default: [],
+  })
+  sessions: { jti: string; userAgent: string; ip: string; createdAt: Date }[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

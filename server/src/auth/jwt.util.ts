@@ -13,6 +13,8 @@ export interface JwtPayload {
   professeur_id?: string | null;
   /** Version de jeton — comparée à User.tokenVersion pour révoquer les sessions. */
   tv?: number;
+  /** Identifiant de session (par appareil) — pour la révocation individuelle. */
+  jti?: string;
   iat?: number;
   exp?: number;
 }

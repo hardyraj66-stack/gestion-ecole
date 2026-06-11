@@ -31,6 +31,7 @@ import { Profil } from './pages/Profil/Profil';
 import { Login } from './pages/Login/Login';
 import { ResetPassword } from './pages/Login/ResetPassword';
 import { UsersList } from './pages/Users/UsersList';
+import { Audit } from './pages/Audit/Audit';
 import { AuthProvider } from './contexts/AuthContext';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { PasswordGate } from './components/auth/PasswordGate';
@@ -100,6 +101,14 @@ function App() {
               element={
                 <RequireAuth roles={['admin']}>
                   <UsersList />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="journal"
+              element={
+                <RequireAuth roles={['admin']}>
+                  <Audit />
                 </RequireAuth>
               }
             />
