@@ -13,6 +13,13 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
+  // En production, le frontend (servi par ce même serveur via ServeStaticModule)
+  // appelle l'API sous le préfixe /api → même origine, pas de CORS, et pas de
+  // conflit entre les routes API et les routes SPA. En dev, pas de préfixe.
+  if (process.env.NODE_ENV === 'production') {
+    app.setGlobalPrefix('api');
+  }
+
   // CORS : restreint via CORS_ORIGIN (liste séparée par des virgules), sinon ouvert (dev).
   const corsOrigin = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())

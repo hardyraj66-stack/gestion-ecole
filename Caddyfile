@@ -1,0 +1,12 @@
+# Caddy : termine HTTPS (certificat Let's Encrypt automatique si SITE_ADDRESS est un
+# domaine) et relaie tout vers l'app Nest (API + frontend + WebSocket Socket.IO).
+# SITE_ADDRESS est fourni par docker-compose (.env racine).
+{
+	email hardyrakoto66@gmail.com
+}
+
+{$SITE_ADDRESS} {
+	encode gzip
+	# reverse_proxy gère nativement l'upgrade WebSocket (wss) pour Socket.IO.
+	reverse_proxy app:3000
+}
