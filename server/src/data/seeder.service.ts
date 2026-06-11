@@ -135,6 +135,14 @@ export class SeederService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    // En production, le jeu de démo (~350 élèves fictifs, etc.) n'est inséré que
+    // si SEED_DEMO=true est explicitement demandé. Évite de polluer une vraie base.
+    // En dev, le seeding auto reste actif. (Le compte admin, lui, est créé
+    // indépendamment par UsersService, quel que soit ce réglage.)
+    if (process.env.NODE_ENV === 'production' && process.env.SEED_DEMO !== 'true') {
+      this.logger.log('Production sans SEED_DEMO=true : seeding de démo ignoré');
+      return;
+    }
     const count = await this.salleModel.countDocuments();
     if (count > 0) {
       this.logger.log('Base déjà peuplée, seeding ignoré');

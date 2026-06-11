@@ -1,5 +1,7 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { ClassesModule } from './classes/classes.module';
 import { ElevesModule } from './eleves/eleves.module';
 import { MatieresModule } from './matieres/matieres.module';
@@ -28,8 +30,23 @@ import { ApiLoggerMiddleware } from './common/api-logger.middleware';
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ecole';
 
+// En production, le frontend (build mono-fichier) est servi par ce serveur.
+// Le préfixe /api (cf. main.ts) garantit qu'aucune route API n'est avalée par
+// le service statique ; les routes inconnues retombent sur index.html (SPA).
+const STATIC_ROOT = process.env.STATIC_ROOT || join(__dirname, '..', 'public');
+const serveStatic =
+  process.env.NODE_ENV === 'production'
+    ? [
+        ServeStaticModule.forRoot({
+          rootPath: STATIC_ROOT,
+          exclude: ['/api/(.*)'],
+        }),
+      ]
+    : [];
+
 @Module({
   imports: [
+    ...serveStatic,
     MongooseModule.forRoot(MONGO_URI),
     EventsModule,
     AuditModule,

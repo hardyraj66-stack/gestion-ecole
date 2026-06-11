@@ -1,0 +1,49 @@
+# Pile de production : MongoDB + API/Frontend (Nest) + Caddy (reverse-proxy HTTPS auto).
+# Variables lues depuis le fichier .env à la racine (SITE_ADDRESS) et server/.env (app).
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # Limite le cache WiredTiger : indispensable sur une VM à 1 Go de RAM.
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo-data:/data/db
+    # Pas de port exposé : accessible uniquement par les autres conteneurs.
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    # Variables applicatives (JWT_SECRET, SMTP_*, CORS_ORIGIN, APP_URL, SEED_DEMO…)
+    env_file:
+      - ./server/.env
+    # Ces valeurs priment sur server/.env (réseau interne Docker).
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/gestion-ecole
+    depends_on:
+      - mongo
+    # Pas de port exposé directement : Caddy fait le proxy.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Domaine (ex. 130-162-241-147.sslip.io) → HTTPS auto, ou ":80" → HTTP simple.
+      - SITE_ADDRESS=${SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  mongo-data:
+  caddy-data:
+  caddy-config:

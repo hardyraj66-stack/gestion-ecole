@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/.env
+.git
+.github
+docs
+specs
+prompts
+test-results
+**/test-results
+playwright-report
+**/playwright-report
+*.log
+.DS_Store
+frontend/e2e
