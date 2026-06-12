@@ -20,6 +20,7 @@ import { PlanningExecutionsModule } from './planning-executions/planning-executi
 import { EvaluationsModule } from './evaluations/evaluations.module';
 import { PeriodesModule } from './periodes/periodes.module';
 import { EventsModule } from './events/events.module';
+import { PresenceModule } from './presence/presence.module';
 import { SeederModule } from './data/seeder.module';
 import { ExportModule } from './export/export.module';
 import { MigrationModule } from './migration/migration.module';
@@ -49,6 +50,7 @@ const serveStatic =
     ...serveStatic,
     MongooseModule.forRoot(MONGO_URI),
     EventsModule,
+    PresenceModule,
     AuditModule,
     AuthModule,
     UsersModule,

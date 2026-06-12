@@ -7,6 +7,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { verifyJwt } from '../auth/jwt.util';
 import { JWT_SECRET } from '../auth/auth.constants';
+import { PresenceService } from '../presence/presence.service';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -16,22 +17,36 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
+  constructor(private readonly presence: PresenceService) {}
+
   handleConnection(client: Socket) {
     // Authentifie la connexion via le token passé dans le handshake.
     const token =
       client.handshake?.auth?.token || client.handshake?.query?.token;
     try {
       if (!token) throw new Error('Token manquant');
-      verifyJwt(String(token), JWT_SECRET);
-      console.log(`Client connected: ${client.id}`);
+      const payload = verifyJwt(String(token), JWT_SECRET);
+      const userId = payload.sub;
+      // Mémorise l'identité sur le socket pour la retrouver à la déconnexion.
+      client.data.userId = userId;
+      const { sessions } = this.presence.add(userId, client.id);
+      // Diffuse l'état courant. Idempotent côté client (online = sessions > 0) :
+      // l'ordre d'arrivée des événements n'a pas d'importance.
+      this.server.emit('presence:changed', { userId, online: true, sessions });
     } catch {
-      console.log(`Client rejeté (auth invalide): ${client.id}`);
       client.disconnect(true);
     }
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    const userId = client.data?.userId as string | undefined;
+    if (!userId) return; // connexion jamais authentifiée → rien à retirer
+    const { sessions } = this.presence.remove(userId, client.id);
+    this.server.emit('presence:changed', {
+      userId,
+      online: sessions > 0,
+      sessions,
+    });
   }
 
   emit(event: string, data: any) {
