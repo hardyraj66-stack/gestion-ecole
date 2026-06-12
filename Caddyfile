@@ -2,7 +2,8 @@
 # domaine) et relaie tout vers l'app Nest (API + frontend + WebSocket Socket.IO).
 # SITE_ADDRESS est fourni par docker-compose (.env racine).
 {
-	email hardyrakoto66@gmail.com
+	# Email de contact ACME/Let's Encrypt — fourni via le .env racine (non versionné).
+	email {$ACME_EMAIL}
 }
 
 {$SITE_ADDRESS} {

@@ -52,6 +52,8 @@ services:
     environment:
       # Domaine (ex. 130-162-241-147.sslip.io) → HTTPS auto, ou ":80" → HTTP simple.
       - SITE_ADDRESS=${SITE_ADDRESS}
+      # Email de contact ACME/Let's Encrypt (avis d'expiration de certificat).
+      - ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

@@ -42,6 +42,15 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       ) {
         throw new Error('Compte inactif ou session révoquée');
       }
+      // Parité avec la garde HTTP : si le jeton porte un jti, la session doit
+      // encore exister (une session révoquée individuellement ne peut pas ouvrir
+      // de socket).
+      if (payload.jti) {
+        const sessions = (user as any).sessions || [];
+        if (!sessions.some((s: any) => s.jti === payload.jti)) {
+          throw new Error('Session révoquée');
+        }
+      }
       const userId = payload.sub;
       // Mémorise l'identité sur le socket pour la retrouver à la déconnexion.
       client.data.userId = userId;
