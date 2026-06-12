@@ -9,6 +9,7 @@ import { ReadEvaluation, ReadEvaluationSchema } from '../read/schemas/read-evalu
 import { Professeur, ProfesseurSchema } from '../professeurs/professeur.schema';
 import { AnneeScolaire, AnneeScolaireSchema } from '../annees/annee.schema';
 import { Niveau, NiveauSchema } from '../niveaux/niveau.schema';
+import { TeacherAssignment, TeacherAssignmentSchema } from '../teacher-assignments/teacher-assignment.schema';
 import { ExportController } from './export.controller';
 import { ExportService } from './export.service';
 
@@ -24,6 +25,7 @@ import { ExportService } from './export.service';
       { name: Professeur.name, schema: ProfesseurSchema },
       { name: AnneeScolaire.name, schema: AnneeScolaireSchema },
       { name: Niveau.name, schema: NiveauSchema },
+      { name: TeacherAssignment.name, schema: TeacherAssignmentSchema },
     ]),
   ],
   controllers: [ExportController],

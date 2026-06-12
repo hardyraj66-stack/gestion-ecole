@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ReadClasse } from '../read/schemas/read-classe.schema';
@@ -10,6 +10,20 @@ import { ReadEvaluation } from '../read/schemas/read-evaluation.schema';
 import { Professeur } from '../professeurs/professeur.schema';
 import { AnneeScolaire } from '../annees/annee.schema';
 import { Niveau } from '../niveaux/niveau.schema';
+import { TeacherAssignment } from '../teacher-assignments/teacher-assignment.schema';
+
+/** Contexte d'authentification minimal transmis aux exports pour le cloisonnement. */
+export interface AuthCtx {
+  id?: string;
+  role?: string;
+  professeur_id?: string | null;
+}
+
+/** Périmètre d'un professeur : classes + matières dérivées de ses affectations. */
+interface ExportScope {
+  classeIds: string[];
+  matiereIds: string[];
+}
 
 // ─── Helpers CSV / XLSX ───────────────────────────────────────────────────────
 
@@ -76,7 +90,33 @@ export class ExportService {
     @InjectModel(Professeur.name) private professeurModel: Model<Professeur>,
     @InjectModel(AnneeScolaire.name) private anneeModel: Model<AnneeScolaire>,
     @InjectModel(Niveau.name) private niveauModel: Model<Niveau>,
+    @InjectModel(TeacherAssignment.name) private assignmentModel: Model<TeacherAssignment>,
   ) {}
+
+  /**
+   * Périmètre d'un professeur (null = accès complet pour admin/secrétaire).
+   * Un professeur sans fiche ou sans affectation obtient un périmètre vide
+   * (aucune classe, aucune matière) → ses exports ne renvoient rien.
+   * Miroir de ReadService.scopeForUser pour cloisonner aussi les exports.
+   */
+  private async scopeForUser(user?: AuthCtx): Promise<ExportScope | null> {
+    if (!user || user.role !== 'professeur') return null;
+    if (!user.professeur_id) return { classeIds: [], matiereIds: [] };
+    const assignments = await this.assignmentModel
+      .find({ professeur_id: user.professeur_id })
+      .lean()
+      .exec();
+    return {
+      classeIds: [...new Set(assignments.map((a: any) => a.classe_id))],
+      matiereIds: [...new Set(assignments.map((a: any) => a.matiere_id))],
+    };
+  }
+
+  /** Restreint un filtre `classe_id` au périmètre du professeur (intersection avec le classeId demandé). */
+  private scopedClasseIds(scope: ExportScope, classeId?: string): string[] {
+    if (!classeId) return scope.classeIds;
+    return scope.classeIds.includes(classeId) ? [classeId] : [];
+  }
 
   private async anneeLabel(): Promise<string | null> {
     const a = await this.anneeModel.findOne({ statut: 'active' }).exec();
@@ -98,11 +138,17 @@ export class ExportService {
 
   // ─── ÉLÈVES ───────────────────────────────────────────────────────────────
 
-  async elevesData(classeId?: string, search?: string, anneeId?: string) {
+  async elevesData(classeId?: string, search?: string, anneeId?: string, user?: AuthCtx) {
     const filter: any = {};
     const resolvedId = await this.resolveAnneeId(anneeId);
     if (resolvedId) filter.anneeScolaireId = resolvedId;
-    if (classeId) filter.classe_id = classeId;
+    const scope = await this.scopeForUser(user);
+    if (scope) {
+      // Professeur : restreint à ses classes (intersection avec le filtre demandé).
+      filter.classe_id = { $in: this.scopedClasseIds(scope, classeId) };
+    } else if (classeId) {
+      filter.classe_id = classeId;
+    }
     if (search) {
       const tokens = search.trim().split(/\s+/);
       if (tokens.length >= 2) {
@@ -133,15 +179,15 @@ export class ExportService {
     });
   }
 
-  async elevesCsv(classeId?: string, search?: string, anneeId?: string): Promise<string> {
-    const rows = await this.elevesData(classeId, search, anneeId);
+  async elevesCsv(classeId?: string, search?: string, anneeId?: string, user?: AuthCtx): Promise<string> {
+    const rows = await this.elevesData(classeId, search, anneeId, user);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async elevesXlsx(classeId?: string, search?: string, anneeId?: string): Promise<Buffer> {
-    const rows = await this.elevesData(classeId, search, anneeId);
+  async elevesXlsx(classeId?: string, search?: string, anneeId?: string, user?: AuthCtx): Promise<Buffer> {
+    const rows = await this.elevesData(classeId, search, anneeId, user);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Élèves');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Élèves');
@@ -149,10 +195,12 @@ export class ExportService {
 
   // ─── CLASSES ──────────────────────────────────────────────────────────────
 
-  async classesData(niveau?: string, anneeId?: string) {
+  async classesData(niveau?: string, anneeId?: string, user?: AuthCtx) {
     const resolvedId = await this.resolveAnneeId(anneeId);
     const filter: any = resolvedId ? { anneeScolaireId: resolvedId } : {};
     if (niveau) filter.niveau = niveau;
+    const scope = await this.scopeForUser(user);
+    if (scope) filter.source_id = { $in: scope.classeIds };
     const items = await this.classeModel.find(filter).sort({ nom: 1 }).exec();
     return items.map(c => {
       const j = c.toJSON() as any;
@@ -168,15 +216,15 @@ export class ExportService {
     });
   }
 
-  async classesCsv(niveau?: string, anneeId?: string): Promise<string> {
-    const rows = await this.classesData(niveau, anneeId);
+  async classesCsv(niveau?: string, anneeId?: string, user?: AuthCtx): Promise<string> {
+    const rows = await this.classesData(niveau, anneeId, user);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async classesXlsx(niveau?: string, anneeId?: string): Promise<Buffer> {
-    const rows = await this.classesData(niveau, anneeId);
+  async classesXlsx(niveau?: string, anneeId?: string, user?: AuthCtx): Promise<Buffer> {
+    const rows = await this.classesData(niveau, anneeId, user);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Classes');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Classes');
@@ -184,11 +232,13 @@ export class ExportService {
 
   // ─── MATIÈRES ─────────────────────────────────────────────────────────────
 
-  async matieresData(niveau?: string, anneeId?: string) {
+  async matieresData(niveau?: string, anneeId?: string, user?: AuthCtx) {
     const filter: any = {};
     const resolvedId = await this.resolveAnneeId(anneeId);
     if (resolvedId) filter.anneeScolaireId = resolvedId;
     if (niveau) filter['coefficients.niveau'] = niveau;
+    const scope = await this.scopeForUser(user);
+    if (scope) filter.source_id = { $in: scope.matiereIds };
     const items = await this.matiereModel.find(filter).sort({ nom: 1 }).exec();
     return items.map(m => {
       const j = m.toJSON() as any;
@@ -201,15 +251,15 @@ export class ExportService {
     });
   }
 
-  async matieresCsv(niveau?: string, anneeId?: string): Promise<string> {
-    const rows = await this.matieresData(niveau, anneeId);
+  async matieresCsv(niveau?: string, anneeId?: string, user?: AuthCtx): Promise<string> {
+    const rows = await this.matieresData(niveau, anneeId, user);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async matieresXlsx(niveau?: string, anneeId?: string): Promise<Buffer> {
-    const rows = await this.matieresData(niveau, anneeId);
+  async matieresXlsx(niveau?: string, anneeId?: string, user?: AuthCtx): Promise<Buffer> {
+    const rows = await this.matieresData(niveau, anneeId, user);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Matières');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Matières');
@@ -217,7 +267,11 @@ export class ExportService {
 
   // ─── SALLES ───────────────────────────────────────────────────────────────
 
-  async sallesData(type?: string, anneeId?: string) {
+  async sallesData(type?: string, anneeId?: string, user?: AuthCtx) {
+    // Les salles relèvent de la configuration (admin/secrétariat) — hors périmètre professeur.
+    if (user && user.role === 'professeur') {
+      throw new ForbiddenException('Export réservé à l\'administration.');
+    }
     const filter: any = {};
     const resolvedId = await this.resolveAnneeId(anneeId);
     if (resolvedId) filter.anneeScolaireId = resolvedId;
@@ -234,15 +288,15 @@ export class ExportService {
     });
   }
 
-  async sallesCsv(type?: string, anneeId?: string): Promise<string> {
-    const rows = await this.sallesData(type, anneeId);
+  async sallesCsv(type?: string, anneeId?: string, user?: AuthCtx): Promise<string> {
+    const rows = await this.sallesData(type, anneeId, user);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async sallesXlsx(type?: string, anneeId?: string): Promise<Buffer> {
-    const rows = await this.sallesData(type, anneeId);
+  async sallesXlsx(type?: string, anneeId?: string, user?: AuthCtx): Promise<Buffer> {
+    const rows = await this.sallesData(type, anneeId, user);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Salles');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Salles');
@@ -250,7 +304,11 @@ export class ExportService {
 
   // ─── PROFESSEURS ──────────────────────────────────────────────────────────
 
-  async professeursData(search?: string) {
+  async professeursData(search?: string, user?: AuthCtx) {
+    // L'annuaire du personnel (emails, téléphones) est réservé à l'administration.
+    if (user && user.role === 'professeur') {
+      throw new ForbiddenException('Export réservé à l\'administration.');
+    }
     const filter: any = { statut: { $ne: 'inactif' } };
     if (search) {
       filter.$or = [
@@ -273,15 +331,15 @@ export class ExportService {
     });
   }
 
-  async professeursCsv(search?: string): Promise<string> {
-    const rows = await this.professeursData(search);
+  async professeursCsv(search?: string, user?: AuthCtx): Promise<string> {
+    const rows = await this.professeursData(search, user);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async professeursXlsx(search?: string): Promise<Buffer> {
-    const rows = await this.professeursData(search);
+  async professeursXlsx(search?: string, user?: AuthCtx): Promise<Buffer> {
+    const rows = await this.professeursData(search, user);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Professeurs');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Professeurs');
@@ -289,11 +347,17 @@ export class ExportService {
 
   // ─── ÉVALUATIONS ──────────────────────────────────────────────────────────
 
-  async evaluationsData(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string) {
+  async evaluationsData(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string, user?: AuthCtx) {
     const filter: any = {};
     const resolvedId = await this.resolveAnneeId(anneeId);
     if (resolvedId) filter.anneeScolaireId = resolvedId;
-    if (classeId) filter.classe_id = classeId;
+    const scope = await this.scopeForUser(user);
+    if (scope) {
+      // Professeur : restreint aux évaluations de ses classes.
+      filter.classe_id = { $in: this.scopedClasseIds(scope, classeId) };
+    } else if (classeId) {
+      filter.classe_id = classeId;
+    }
     if (matiereId) filter.matiere_id = matiereId;
     if (trimestre) filter.trimestre = trimestre;
     const items = await this.evaluationModel.find(filter).sort({ date: -1 }).exec();
@@ -313,15 +377,15 @@ export class ExportService {
     });
   }
 
-  async evaluationsCsv(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string): Promise<string> {
-    const rows = await this.evaluationsData(classeId, matiereId, trimestre, anneeId);
+  async evaluationsCsv(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string, user?: AuthCtx): Promise<string> {
+    const rows = await this.evaluationsData(classeId, matiereId, trimestre, anneeId, user);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async evaluationsXlsx(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string): Promise<Buffer> {
-    const rows = await this.evaluationsData(classeId, matiereId, trimestre, anneeId);
+  async evaluationsXlsx(classeId?: string, matiereId?: string, trimestre?: number, anneeId?: string, user?: AuthCtx): Promise<Buffer> {
+    const rows = await this.evaluationsData(classeId, matiereId, trimestre, anneeId, user);
     if (!rows.length) return toXlsx([['Aucun résultat']], 'Évaluations');
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], 'Évaluations');
@@ -329,7 +393,11 @@ export class ExportService {
 
   // ─── ÉLÈVES D'UNE CLASSE ──────────────────────────────────────────────────
 
-  async classeElevesData(classeId: string, search?: string, anneeId?: string) {
+  async classeElevesData(classeId: string, search?: string, anneeId?: string, user?: AuthCtx) {
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.classeIds.includes(classeId)) {
+      throw new ForbiddenException('Classe hors de votre périmètre.');
+    }
     const filter: any = { classe_id: classeId };
     const resolvedId = await this.resolveAnneeId(anneeId);
     if (resolvedId) filter.anneeScolaireId = resolvedId;
@@ -363,15 +431,15 @@ export class ExportService {
     };
   }
 
-  async classeElevesCsv(classeId: string, search?: string, anneeId?: string): Promise<string> {
-    const { rows } = await this.classeElevesData(classeId, search, anneeId);
+  async classeElevesCsv(classeId: string, search?: string, anneeId?: string, user?: AuthCtx): Promise<string> {
+    const { rows } = await this.classeElevesData(classeId, search, anneeId, user);
     if (!rows.length) return toCsv([['Aucun résultat']]);
     const headers = Object.keys(rows[0]);
     return toCsv([headers, ...rows.map(r => headers.map(h => (r as any)[h]))]);
   }
 
-  async classeElevesXlsx(classeId: string, search?: string, anneeId?: string): Promise<Buffer> {
-    const { classeNom, rows } = await this.classeElevesData(classeId, search, anneeId);
+  async classeElevesXlsx(classeId: string, search?: string, anneeId?: string, user?: AuthCtx): Promise<Buffer> {
+    const { classeNom, rows } = await this.classeElevesData(classeId, search, anneeId, user);
     if (!rows.length) return toXlsx([['Aucun résultat']], classeNom);
     const headers = Object.keys(rows[0]);
     return toXlsx([headers, ...rows.map(r => headers.map(h => (r as any)[h]))], classeNom);
@@ -379,7 +447,7 @@ export class ExportService {
 
   // ─── BULLETIN PDF (HTML imprimable) ───────────────────────────────────────
 
-  async bulletinHtml(eleveId: string, trimestre: number, anneeId?: string): Promise<string | null> {
+  async bulletinHtml(eleveId: string, trimestre: number, anneeId?: string, user?: AuthCtx): Promise<string | null> {
     const resolvedId = await this.resolveAnneeId(anneeId);
     const eleveFilter: any = { source_id: eleveId };
     if (resolvedId) eleveFilter.anneeScolaireId = resolvedId;
@@ -387,6 +455,12 @@ export class ExportService {
     if (!eleve) eleve = await this.eleveModel.findOne({ source_id: eleveId }).exec();
     if (!eleve) return null;
     const ej = eleve.toJSON() as any;
+
+    // Professeur : bulletin réservé aux élèves de ses classes.
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.classeIds.includes(ej.classe_id)) {
+      throw new ForbiddenException('Élève hors de votre périmètre.');
+    }
 
     const classe = await this.classeModel.findOne({ source_id: ej.classe_id }).exec();
     const cj = classe?.toJSON() as any;
@@ -597,7 +671,7 @@ export class ExportService {
 
   // ─── CARTE D'IDENTITÉ SCOLAIRE (HTML imprimable) ──────────────────────────
 
-  async carteEleveHtml(eleveId: string, anneeId?: string): Promise<string | null> {
+  async carteEleveHtml(eleveId: string, anneeId?: string, user?: AuthCtx): Promise<string | null> {
     const resolvedId = await this.resolveAnneeId(anneeId);
     const eleveFilter: any = { source_id: eleveId };
     if (resolvedId) eleveFilter.anneeScolaireId = resolvedId;
@@ -605,6 +679,12 @@ export class ExportService {
     if (!eleve) eleve = await this.eleveModel.findOne({ source_id: eleveId }).exec();
     if (!eleve) return null;
     const ej = eleve.toJSON() as any;
+
+    // Professeur : carte réservée aux élèves de ses classes.
+    const scope = await this.scopeForUser(user);
+    if (scope && !scope.classeIds.includes(ej.classe_id)) {
+      throw new ForbiddenException('Élève hors de votre périmètre.');
+    }
 
     const classe = await this.classeModel.findOne({ source_id: ej.classe_id }).exec();
     const cj = classe?.toJSON() as any;
