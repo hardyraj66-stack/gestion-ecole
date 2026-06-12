@@ -4,14 +4,22 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  // Sécurité prod : refuser de démarrer avec le secret JWT par défaut.
-  if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-    throw new Error(
-      'JWT_SECRET doit être défini en production (refus de démarrer avec le secret par défaut).',
-    );
+  // Sécurité prod : refuser de démarrer avec un secret JWT absent ou trop faible.
+  if (process.env.NODE_ENV === 'production') {
+    const secret = process.env.JWT_SECRET || '';
+    if (secret.length < 32) {
+      throw new Error(
+        'JWT_SECRET doit être défini en production et faire au moins 32 caractères ' +
+          '(refus de démarrer avec un secret faible ou par défaut).',
+      );
+    }
   }
 
   const app = await NestFactory.create(AppModule);
+
+  // Derrière le reverse-proxy Caddy : faire confiance au premier hop pour que
+  // req.ip / x-forwarded-for reflètent l'IP réelle du client (logs, limiteur).
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
   // En production, le frontend (servi par ce même serveur via ServeStaticModule)
   // appelle l'API sous le préfixe /api → même origine, pas de CORS, et pas de
