@@ -9,7 +9,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './user.schema';
-import { hashPassword, validatePasswordStrength } from '../auth/password.util';
+import { hashPassword, validatePasswordStrength, generatePassword } from '../auth/password.util';
 import { assertValidEmail } from '../auth/validation.util';
 import { Role, ROLES } from '../auth/auth.constants';
 
@@ -25,16 +25,22 @@ export class UsersService implements OnModuleInit {
     if (count > 0) return;
 
     const username = (process.env.ADMIN_USERNAME || 'admin').toLowerCase();
-    const password = process.env.ADMIN_PASSWORD || 'admin123';
+    const isProd = process.env.NODE_ENV === 'production';
+    // En production, ne JAMAIS créer un identifiant par défaut connu : si
+    // ADMIN_PASSWORD n'est pas fourni, on génère un mot de passe aléatoire fort
+    // (loggué une seule fois). En dev, le défaut reste pratique.
+    const password =
+      process.env.ADMIN_PASSWORD || (isProd ? generatePassword(16) : 'admin123');
     await this.userModel.create({
       username,
       passwordHash: hashPassword(password),
       nom: 'Administrateur',
       role: 'admin',
       actif: true,
+      mustChangePassword: true, // rotation forcée dès la première connexion
     });
     this.logger.warn(
-      `⚠️  Compte admin par défaut créé → identifiant: "${username}" / mot de passe: "${password}" — À CHANGER après la première connexion.`,
+      `⚠️  Compte admin par défaut créé → identifiant: "${username}" / mot de passe: "${password}" — À CHANGER à la première connexion.`,
     );
   }
 
