@@ -907,7 +907,11 @@
       "compteCreer": "Create account",
       "compteArchive": "Archived account",
       "compteRestaurer": "Restore account",
-      "compteRenvoyer": "Resend credentials"
+      "compteRenvoyer": "Resend credentials",
+      "conflitTitre": "Class already assigned",
+      "conflitMessage": "{{count}} class(es) already have a teacher for this subject: {{liste}}. Continuing will replace the current teacher.",
+      "conflitContinuer": "Continue",
+      "conflitDeja": "Already: {{prof}}"
     },
     "affectations": {
       "titre": "Teacher assignments",
@@ -921,7 +925,10 @@
       "retirerProf": "— Remove teacher",
       "nonAssigne": "— Not assigned",
       "nonEnseignee": "— not taught at this level",
-      "selectionnerClasse": "Select a class to manage assignments"
+      "selectionnerClasse": "Select a class to manage assignments",
+      "conflitTitre": "Replace teacher?",
+      "conflitMessage": "{{classe}} already has {{prof}} for {{matiere}}. Replace with {{nouveau}}?",
+      "conflitContinuer": "Replace"
     },
     "erreur": "Problem loading teachers.",
     "retour": "← Back",

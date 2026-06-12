@@ -11,6 +11,7 @@ import { Card } from '../../components/shared/Card';
 import { Select } from '../../components/shared/Select';
 import { Alert } from '../../components/shared/Alert';
 import { Button } from '../../components/shared/Button';
+import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { readApi } from '../../services/readApi';
 import { API_BASE_URL } from '../../config/api';
 
@@ -19,6 +20,7 @@ export function ProfesseurAssignments() {
   const { isViewingArchive } = useViewing();
   const readOnly = useReadOnly();
   const { create: upsertAssignment } = useTeacherAssignments();
+  const confirm = useConfirm();
   if (readOnly) return <Navigate to="/professeurs" replace />;
 
   const [classes, setClasses] = useState<any[]>([]);
@@ -30,6 +32,7 @@ export function ProfesseurAssignments() {
   const [loading, setLoading] = useState(false);
   const [savingMatiereId, setSavingMatiereId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [revertTick, setRevertTick] = useState(0);
 
   useEffect(() => {
     readApi.classesList(1, 100).then((res: any) => { if (res) setClasses(res.items || []); });
@@ -60,6 +63,26 @@ export function ProfesseurAssignments() {
   }, [classeData, allMatieres, niveaux]);
 
   const handleChangeProf = async (matiereId: string, professeurId: string) => {
+    const existing = classeData?.assignments?.find((a: any) => a.matiere_id === matiereId);
+    // Avertissement non bloquant : la matière a déjà un AUTRE professeur sur cette classe.
+    if (professeurId && existing?.professeur_id && existing.professeur_id !== professeurId) {
+      const matiereNom = matieresAvecFlag.find((m: any) => m.id === matiereId)?.nom ?? '';
+      const np = professeurs.find((p: any) => p.id === professeurId);
+      const nouveauNom = np ? `${np.prenom} ${np.nom}` : '';
+      const ok = await confirm({
+        title: t('professeurs.affectations.conflitTitre'),
+        message: t('professeurs.affectations.conflitMessage', {
+          classe: classeData?.classe?.nom,
+          prof: existing.professeur_nom,
+          matiere: matiereNom,
+          nouveau: nouveauNom,
+        }),
+        confirmText: t('professeurs.affectations.conflitContinuer'),
+        cancelText: t('common.annuler'),
+        variant: 'warning',
+      });
+      if (!ok) { setRevertTick(n => n + 1); return; } // annulé : le menu reprend sa valeur d'origine
+    }
     setSavingMatiereId(matiereId);
     setError('');
     await upsertAssignment(
@@ -143,6 +166,7 @@ export function ProfesseurAssignments() {
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                           <Select
+                            key={`sel-${m.id}-${revertTick}`}
                             label=""
                             value={assignment?.professeur_id || ''}
                             onChange={e => handleChangeProf(m.id, e.target.value)}

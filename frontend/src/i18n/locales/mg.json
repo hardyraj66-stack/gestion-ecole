@@ -907,7 +907,11 @@
       "compteCreer": "Mamorona kaonty",
       "compteArchive": "Kaonty voaarisiva",
       "compteRestaurer": "Avereno ny kaonty",
-      "compteRenvoyer": "Alefaso indray ny mari-pidirana"
+      "compteRenvoyer": "Alefaso indray ny mari-pidirana",
+      "conflitTitre": "Kilasy efa voafidy",
+      "conflitMessage": "Kilasy {{count}} no efa manana mpampianatra amin'ity lohahevitra ity : {{liste}}. Raha manohy dia hosoloana ny mpampianatra ankehitriny.",
+      "conflitContinuer": "Manohy",
+      "conflitDeja": "Efa : {{prof}}"
     },
     "affectations": {
       "titre": "Fanisana mpampianatra",
@@ -921,7 +925,10 @@
       "retirerProf": "— Esorina ny mpampianatra",
       "nonAssigne": "— Tsy voafidy",
       "nonEnseignee": "— tsy ampianarina amin'ity ambaratonga ity",
-      "selectionnerClasse": "Safidio kilasy iray hifehy ny fanisana"
+      "selectionnerClasse": "Safidio kilasy iray hifehy ny fanisana",
+      "conflitTitre": "Hanolo ny mpampianatra?",
+      "conflitMessage": "{{classe}} dia efa manana an'i {{prof}} amin'ny {{matiere}}. Soloina amin'i {{nouveau}} ?",
+      "conflitContinuer": "Soloina"
     },
     "erreur": "Olana amin ny fampidirana ny mpampianatra.",
     "retour": "← Hiverina",
