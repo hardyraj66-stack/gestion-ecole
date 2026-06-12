@@ -6,6 +6,8 @@ import { useAuth, Role } from '../../contexts/AuthContext';
 import { useConfirm } from '../../components/shared/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Badge } from '../../components/ui/Badge';
+import { PresenceDot } from '../../components/ui/PresenceDot';
+import { usePresence } from '../../hooks/usePresence';
 import { Button } from '../../components/shared/Button';
 import { Input } from '../../components/shared/Input';
 import { Select } from '../../components/shared/Select';
@@ -37,6 +39,7 @@ export function UsersList() {
   const navigate = useNavigate();
   const confirm = useConfirm();
   const { user: me } = useAuth();
+  const { isOnline, sessions } = usePresence();
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -262,6 +265,7 @@ export function UsersList() {
               <th>{t('users.email', 'Email')}</th>
               <th>{t('users.role')}</th>
               <th>{t('users.status')}</th>
+              <th>{t('users.presence', 'Présence')}</th>
               <th>{t('users.confirmation', 'Confirmation')}</th>
               <th>{t('users.lastLogin', 'Dernière connexion')}</th>
               <th style={{ textAlign: 'right' }}>{t('users.actions')}</th>
@@ -269,9 +273,9 @@ export function UsersList() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '1.5rem' }}>…</td></tr>
+              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '1.5rem' }}>…</td></tr>
             ) : users.length === 0 ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '1.5rem' }}>{t('users.empty')}</td></tr>
+              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '1.5rem' }}>{t('users.empty')}</td></tr>
             ) : (
               users.map((u) => {
                 const isSelf = me?.id === u.id;
@@ -291,6 +295,14 @@ export function UsersList() {
                     </td>
                     <td>
                       <Badge label={u.actif ? t('users.active') : t('users.inactive')} variant={u.actif ? 'success' : 'default'} />
+                    </td>
+                    <td>
+                      <PresenceDot
+                        online={isOnline(u.id)}
+                        sessions={sessions(u.id)}
+                        label={isOnline(u.id) ? t('users.online', 'En ligne') : t('users.offline', 'Hors ligne')}
+                        title={!isOnline(u.id) && u.lastLoginAt ? `${t('users.lastLogin', 'Dernière connexion')} : ${fmtDateTime(u.lastLoginAt)}` : undefined}
+                      />
                     </td>
                     <td>
                       {u.mustChangePassword ? (
