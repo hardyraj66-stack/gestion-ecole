@@ -37,7 +37,13 @@ Client A (navigateur)                     Client B (navigateur)
 <tr><td>Salles</td><td><code>salle:created</code></td><td><code>salle:updated</code></td><td><code>salle:deleted</code></td></tr>
 <tr><td>Années</td><td><code>annee:created</code></td><td><code>annee:updated</code></td><td><code>annee:deleted</code></td></tr>
 <tr><td>Niveaux</td><td><code>niveau:created</code></td><td><code>niveau:updated</code></td><td><code>niveau:deleted</code></td></tr>
+<tr><td>Professeurs</td><td><code>professeur:created</code></td><td><code>professeur:updated</code></td><td><code>professeur:deleted</code></td></tr>
+<tr><td>Évaluations</td><td><code>evaluation:created</code></td><td><code>evaluation:updated</code></td><td><code>evaluation:deleted</code></td></tr>
+<tr><td>Périodes</td><td><code>periode:created</code></td><td><code>periode:updated</code></td><td><code>periode:deleted</code></td></tr>
+<tr><td>Présence</td><td colspan="3"><code>presence:changed</code> — diffusé à la connexion/déconnexion d'un compte (qui est en ligne, affiché sur la page Utilisateurs)</td></tr>
 </table>
+
+<div class="callout callout-warn"><p><strong>Connexion authentifiée.</strong> La gateway <code>EventsGateway.handleConnection</code> exige un jeton JWT valide dans le handshake, <strong>revérifie le compte en base</strong> (actif / non archivé) et déconnecte toute connexion non autorisée. Le temps réel n'est donc accessible qu'aux clients authentifiés. Voir <a href="28-auth.html">Authentification &amp; Comptes</a>.</p></div>
 
 <h2>Client — socketService.ts</h2>
 <pre><code>// Singleton socket.io-client
