@@ -7,6 +7,27 @@
 
 {$SITE_ADDRESS} {
 	encode gzip
+
+	# En-têtes de sécurité appliqués à toutes les réponses.
+	header {
+		# Force HTTPS pendant 1 an (Caddy redirige déjà 80→443).
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# Empêche le MIME-sniffing.
+		X-Content-Type-Options "nosniff"
+		# Interdit l'inclusion du site dans une iframe (anti clickjacking).
+		X-Frame-Options "DENY"
+		# Ne fuite pas l'URL complète vers les sites tiers.
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Désactive des API navigateur non utilisées.
+		Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+		# CSP : le frontend est un build mono-fichier (JS/CSS inline → 'unsafe-inline'
+		# requis). connect-src autorise l'API et le WebSocket même origine ;
+		# fonts.googleapis.com/gstatic.com pour la police Inter (@import dans le SCSS).
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss://{$SITE_ADDRESS} https://{$SITE_ADDRESS}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		# Ne pas divulguer le logiciel serveur.
+		-Server
+	}
+
 	# reverse_proxy gère nativement l'upgrade WebSocket (wss) pour Socket.IO.
 	reverse_proxy app:3000
 }

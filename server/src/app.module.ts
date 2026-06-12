@@ -28,6 +28,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AuditModule } from './audit/audit.module';
 import { ApiLoggerMiddleware } from './common/api-logger.middleware';
+import { MongoSanitizeMiddleware } from './common/mongo-sanitize.middleware';
+import { AuthRateLimitMiddleware } from './common/auth-rate-limit.middleware';
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gestion-ecole';
 
@@ -78,6 +80,9 @@ const serveStatic =
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ApiLoggerMiddleware).forRoutes('*');
+    // Ordre : assainissement anti-injection → limiteur d'auth → journalisation.
+    consumer
+      .apply(MongoSanitizeMiddleware, AuthRateLimitMiddleware, ApiLoggerMiddleware)
+      .forRoutes('*');
   }
 }
