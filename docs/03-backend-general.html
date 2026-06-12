@@ -11,7 +11,7 @@
 npm install
 npm run dev
 npm run build && npm start</code></pre>
-<div class="callout callout-info"><p>Port <strong>3000</strong> (via <code>PORT</code>). MongoDB : <code>mongodb://localhost:27017/ekolova</code> (via <code>MONGO_URI</code>).</p></div>
+<div class="callout callout-info"><p>Port <strong>3000</strong> (via <code>PORT</code>). MongoDB : <code>mongodb://localhost:27017/gestion-ecole</code> (via <code>MONGO_URI</code>). En production, MongoDB tourne avec <code>--auth</code> et l'URI inclut les identifiants (<code>mongodb://&lt;user&gt;:&lt;pass&gt;@mongo:27017/gestion-ecole?authSource=admin</code>).</p></div>
 
 <div class="callout callout-warn"><p><strong>Sécurité.</strong> Toutes les routes sont protégées par défaut via deux gardes globales (<code>JwtAuthGuard</code> puis <code>RolesGuard</code>). Un jeton <code>Authorization: Bearer &lt;token&gt;</code> est requis, sauf sur les routes <code>@Public()</code> (ex. <code>POST /auth/login</code>). Voir <a href="28-auth.html">Authentification &amp; Comptes</a>.</p></div>
 
@@ -19,9 +19,13 @@ npm run build && npm start</code></pre>
 <div class="schema">
 AppModule
 ├── auth/                        JWT, gardes globales (JwtAuthGuard + RolesGuard), décorateurs
-├── users/                       CRUD comptes (admin) + admin par défaut au 1er démarrage
+├── users/                       CRUD comptes (admin) + soft-delete + admin par défaut au 1er démarrage
+├── audit/                       Journal d'actions sur les comptes (audit_logs)
+├── mail/                        Envoi des identifiants + lien « mot de passe oublié »
 ├── migration/                   Migrations de données au démarrage
 ├── common/
+│   ├── MongoSanitizeMiddleware  Anti-injection NoSQL (strip clés $/.)
+│   ├── AuthRateLimitMiddleware  Limiteur par IP ciblé (login/forgot/reset)
 │   └── ApiLoggerMiddleware      Logs structurés de toutes les requêtes
 ├── events/
 │   └── EventsGateway            WebSocket Gateway global (Socket.IO, connexion authentifiée)
