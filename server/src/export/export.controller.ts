@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query, Res, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
-import { ExportService } from './export.service';
+import { ExportService, AuthCtx } from './export.service';
+import { CurrentUser } from '../auth/current-user.decorator';
 
 const slug = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
 
@@ -12,12 +13,13 @@ export class ExportController {
 
   @Get('eleves/csv')
   async elevesCsv(
+    @CurrentUser() user: AuthCtx,
     @Res() res: Response,
     @Query('classeId') classeId?: string,
     @Query('search') search?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const csv = await this.svc.elevesCsv(classeId, search, anneeId);
+    const csv = await this.svc.elevesCsv(classeId, search, anneeId, user);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="eleves.csv"');
     res.send('﻿' + csv); // BOM pour Excel
@@ -25,12 +27,13 @@ export class ExportController {
 
   @Get('eleves/xlsx')
   async elevesXlsx(
+    @CurrentUser() user: AuthCtx,
     @Res() res: Response,
     @Query('classeId') classeId?: string,
     @Query('search') search?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const buf = await this.svc.elevesXlsx(classeId, search, anneeId);
+    const buf = await this.svc.elevesXlsx(classeId, search, anneeId, user);
     res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="eleves.xls"');
     res.send(buf);
@@ -39,16 +42,16 @@ export class ExportController {
   // ─── CLASSES ──────────────────────────────────────────────────────────────
 
   @Get('classes/csv')
-  async classesCsv(@Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
-    const csv = await this.svc.classesCsv(niveau, anneeId);
+  async classesCsv(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
+    const csv = await this.svc.classesCsv(niveau, anneeId, user);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="classes.csv"');
     res.send('﻿' + csv);
   }
 
   @Get('classes/xlsx')
-  async classesXlsx(@Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
-    const buf = await this.svc.classesXlsx(niveau, anneeId);
+  async classesXlsx(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
+    const buf = await this.svc.classesXlsx(niveau, anneeId, user);
     res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="classes.xls"');
     res.send(buf);
@@ -58,12 +61,13 @@ export class ExportController {
 
   @Get('classes/:id/eleves/csv')
   async classeElevesCsv(
+    @CurrentUser() user: AuthCtx,
     @Param('id') id: string,
     @Res() res: Response,
     @Query('search') search?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const csv = await this.svc.classeElevesCsv(id, search, anneeId);
+    const csv = await this.svc.classeElevesCsv(id, search, anneeId, user);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="classe_${slug(id)}_eleves.csv"`);
     res.send('﻿' + csv);
@@ -71,12 +75,13 @@ export class ExportController {
 
   @Get('classes/:id/eleves/xlsx')
   async classeElevesXlsx(
+    @CurrentUser() user: AuthCtx,
     @Param('id') id: string,
     @Res() res: Response,
     @Query('search') search?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const buf = await this.svc.classeElevesXlsx(id, search, anneeId);
+    const buf = await this.svc.classeElevesXlsx(id, search, anneeId, user);
     res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="classe_${slug(id)}_eleves.xls"`);
     res.send(buf);
@@ -85,16 +90,16 @@ export class ExportController {
   // ─── MATIÈRES ─────────────────────────────────────────────────────────────
 
   @Get('matieres/csv')
-  async matieresCsv(@Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
-    const csv = await this.svc.matieresCsv(niveau, anneeId);
+  async matieresCsv(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
+    const csv = await this.svc.matieresCsv(niveau, anneeId, user);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="matieres.csv"');
     res.send('﻿' + csv);
   }
 
   @Get('matieres/xlsx')
-  async matieresXlsx(@Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
-    const buf = await this.svc.matieresXlsx(niveau, anneeId);
+  async matieresXlsx(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('niveau') niveau?: string, @Query('anneeId') anneeId?: string) {
+    const buf = await this.svc.matieresXlsx(niveau, anneeId, user);
     res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="matieres.xls"');
     res.send(buf);
@@ -103,16 +108,16 @@ export class ExportController {
   // ─── SALLES ───────────────────────────────────────────────────────────────
 
   @Get('salles/csv')
-  async sallesCsv(@Res() res: Response, @Query('type') type?: string, @Query('anneeId') anneeId?: string) {
-    const csv = await this.svc.sallesCsv(type, anneeId);
+  async sallesCsv(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('type') type?: string, @Query('anneeId') anneeId?: string) {
+    const csv = await this.svc.sallesCsv(type, anneeId, user);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="salles.csv"');
     res.send('﻿' + csv);
   }
 
   @Get('salles/xlsx')
-  async sallesXlsx(@Res() res: Response, @Query('type') type?: string, @Query('anneeId') anneeId?: string) {
-    const buf = await this.svc.sallesXlsx(type, anneeId);
+  async sallesXlsx(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('type') type?: string, @Query('anneeId') anneeId?: string) {
+    const buf = await this.svc.sallesXlsx(type, anneeId, user);
     res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="salles.xls"');
     res.send(buf);
@@ -121,16 +126,16 @@ export class ExportController {
   // ─── PROFESSEURS (globaux — non scopés par année) ─────────────────────────
 
   @Get('professeurs/csv')
-  async professeursCsv(@Res() res: Response, @Query('search') search?: string) {
-    const csv = await this.svc.professeursCsv(search);
+  async professeursCsv(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('search') search?: string) {
+    const csv = await this.svc.professeursCsv(search, user);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="professeurs.csv"');
     res.send('﻿' + csv);
   }
 
   @Get('professeurs/xlsx')
-  async professeursXlsx(@Res() res: Response, @Query('search') search?: string) {
-    const buf = await this.svc.professeursXlsx(search);
+  async professeursXlsx(@CurrentUser() user: AuthCtx, @Res() res: Response, @Query('search') search?: string) {
+    const buf = await this.svc.professeursXlsx(search, user);
     res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="professeurs.xls"');
     res.send(buf);
@@ -140,13 +145,14 @@ export class ExportController {
 
   @Get('evaluations/csv')
   async evaluationsCsv(
+    @CurrentUser() user: AuthCtx,
     @Res() res: Response,
     @Query('classeId') classeId?: string,
     @Query('matiereId') matiereId?: string,
     @Query('trimestre') trimestre?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const csv = await this.svc.evaluationsCsv(classeId, matiereId, trimestre ? parseInt(trimestre) : undefined, anneeId);
+    const csv = await this.svc.evaluationsCsv(classeId, matiereId, trimestre ? parseInt(trimestre) : undefined, anneeId, user);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="evaluations.csv"');
     res.send('﻿' + csv);
@@ -154,13 +160,14 @@ export class ExportController {
 
   @Get('evaluations/xlsx')
   async evaluationsXlsx(
+    @CurrentUser() user: AuthCtx,
     @Res() res: Response,
     @Query('classeId') classeId?: string,
     @Query('matiereId') matiereId?: string,
     @Query('trimestre') trimestre?: string,
     @Query('anneeId') anneeId?: string,
   ) {
-    const buf = await this.svc.evaluationsXlsx(classeId, matiereId, trimestre ? parseInt(trimestre) : undefined, anneeId);
+    const buf = await this.svc.evaluationsXlsx(classeId, matiereId, trimestre ? parseInt(trimestre) : undefined, anneeId, user);
     res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="evaluations.xls"');
     res.send(buf);
@@ -170,12 +177,13 @@ export class ExportController {
 
   @Get('bulletin/:eleveId')
   async bulletinPdf(
+    @CurrentUser() user: AuthCtx,
     @Param('eleveId') eleveId: string,
     @Query('trimestre') trimestre: string,
     @Res() res: Response,
     @Query('anneeId') anneeId?: string,
   ) {
-    const html = await this.svc.bulletinHtml(eleveId, parseInt(trimestre) || 1, anneeId);
+    const html = await this.svc.bulletinHtml(eleveId, parseInt(trimestre) || 1, anneeId, user);
     if (!html) throw new NotFoundException('Élève introuvable');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
@@ -185,11 +193,12 @@ export class ExportController {
 
   @Get('carte/:eleveId')
   async carteEleve(
+    @CurrentUser() user: AuthCtx,
     @Param('eleveId') eleveId: string,
     @Res() res: Response,
     @Query('anneeId') anneeId?: string,
   ) {
-    const html = await this.svc.carteEleveHtml(eleveId, anneeId);
+    const html = await this.svc.carteEleveHtml(eleveId, anneeId, user);
     if (!html) throw new NotFoundException('Élève introuvable');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
