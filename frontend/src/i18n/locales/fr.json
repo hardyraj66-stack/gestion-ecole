@@ -908,7 +908,11 @@
       "compteCreer": "Créer un compte",
       "compteArchive": "Compte archivé",
       "compteRestaurer": "Restaurer le compte",
-      "compteRenvoyer": "Renvoyer les identifiants"
+      "compteRenvoyer": "Renvoyer les identifiants",
+      "conflitTitre": "Classe déjà affectée",
+      "conflitMessage": "{{count}} classe(s) ont déjà un professeur pour cette matière : {{liste}}. Continuer remplacera le professeur en place.",
+      "conflitContinuer": "Continuer",
+      "conflitDeja": "Déjà : {{prof}}"
     },
     "affectations": {
       "titre": "Affectations professeurs",
@@ -922,7 +926,10 @@
       "retirerProf": "— Retirer le prof",
       "nonAssigne": "— Non assigné",
       "nonEnseignee": "— non enseignée dans ce niveau",
-      "selectionnerClasse": "Sélectionnez une classe pour gérer les affectations"
+      "selectionnerClasse": "Sélectionnez une classe pour gérer les affectations",
+      "conflitTitre": "Remplacer le professeur ?",
+      "conflitMessage": "{{classe}} a déjà {{prof}} en {{matiere}}. Le remplacer par {{nouveau}} ?",
+      "conflitContinuer": "Remplacer"
     },
     "erreur": "Problème de chargement des professeurs.",
     "retour": "← Retour",

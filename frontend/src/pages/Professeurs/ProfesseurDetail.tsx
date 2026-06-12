@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useViewing } from '../../contexts/ViewingContext';
@@ -52,15 +52,45 @@ export function ProfesseurDetail() {
   const [classes, setClasses] = useState<any[]>([]);
   const [matieres, setMatieres] = useState<any[]>([]);
   const [niveaux, setNiveaux] = useState<any[]>([]);
+  const [allAssignments, setAllAssignments] = useState<any[]>([]);
+  const [profNamesById, setProfNamesById] = useState<Record<string, string>>({});
 
   const [accountResult, setAccountResult] = useState<{ username: string; emailSent: boolean; password?: string } | null>(null);
   const [accountBusy, setAccountBusy] = useState(false);
+
+  // Toutes les affectations (tous profs) : sert à détecter qu'un couple classe+matière
+  // est déjà tenu par un AUTRE professeur, pour avertir avant de le remplacer.
+  const loadAllAssignments = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher-assignments`);
+      const rows = res.ok ? await res.json() : [];
+      setAllAssignments(Array.isArray(rows) ? rows : []);
+    } catch { /* non bloquant */ }
+  }, []);
 
   useEffect(() => {
     readApi.classesList(1, 100).then((res: any) => { if (res) setClasses(res.items || []); });
     readApi.matieresList(1, 100).then((res: any) => { if (res) setMatieres(res.items || []); });
     readApi.niveaux().then((res: any) => { if (Array.isArray(res)) setNiveaux(res); });
-  }, []);
+    readApi.professeurs(1, 500).then((res: any) => {
+      const map: Record<string, string> = {};
+      (res?.items || []).forEach((p: any) => { map[p.id] = `${p.prenom} ${p.nom}`; });
+      setProfNamesById(map);
+    });
+    loadAllAssignments();
+  }, [loadAllAssignments]);
+
+  // classe_id -> id du professeur qui tient déjà ce couple (≠ professeur courant)
+  const couplesParAutreProf = useMemo(() => {
+    const m = new Map<string, string>();
+    if (!assignMatiere) return m;
+    for (const a of allAssignments) {
+      if (a.matiere_id === assignMatiere && a.professeur_id && a.professeur_id !== id) {
+        m.set(a.classe_id, a.professeur_id);
+      }
+    }
+    return m;
+  }, [allAssignments, assignMatiere, id]);
 
   const isClasseDisabled = useCallback((classeId: string): boolean => {
     if (!assignMatiere) return false;
@@ -80,6 +110,28 @@ export function ProfesseurDetail() {
   const handleAddAssignment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (assignClasses.size === 0 || !assignMatiere) { setAssignError(t('professeurs.detail.erreurAffectation')); return; }
+
+    // Avertissement (non bloquant) : certaines classes sélectionnées ont déjà un AUTRE
+    // professeur sur cette matière. Continuer le remplacera ; l'utilisateur peut annuler.
+    const conflits = [...assignClasses].filter((cid) => couplesParAutreProf.has(cid));
+    if (conflits.length > 0) {
+      const liste = conflits
+        .map((cid) => {
+          const cname = classes.find((c: any) => c.id === cid)?.nom ?? cid;
+          const pname = profNamesById[couplesParAutreProf.get(cid) as string] ?? '—';
+          return `${cname} (${pname})`;
+        })
+        .join(', ');
+      const ok = await confirm({
+        title: t('professeurs.detail.conflitTitre'),
+        message: t('professeurs.detail.conflitMessage', { count: conflits.length, liste }),
+        confirmText: t('professeurs.detail.conflitContinuer'),
+        cancelText: t('common.annuler'),
+        variant: 'warning',
+      });
+      if (!ok) return;
+    }
+
     setAssignSubmitting(true); setAssignError('');
     for (const classeId of assignClasses) {
       await createAssignment(
@@ -88,9 +140,9 @@ export function ProfesseurDetail() {
         (err) => setAssignError(err),
       );
     }
-    setShowAssignForm(false); setAssignClasses(new Set()); setAssignMatiere(''); refresh();
+    setShowAssignForm(false); setAssignClasses(new Set()); setAssignMatiere(''); refresh(); loadAllAssignments();
     setAssignSubmitting(false);
-  }, [id, assignClasses, assignMatiere, createAssignment, refresh, t]);
+  }, [id, assignClasses, assignMatiere, createAssignment, refresh, t, couplesParAutreProf, classes, profNamesById, confirm, loadAllAssignments]);
 
   const handleDeleteAssignment = async (a: any) => {
     const ok = await confirm({
@@ -435,14 +487,19 @@ export function ProfesseurDetail() {
                       </span>
                     );
                   }
+                  const conflitProfId = couplesParAutreProf.get(c.id);
+                  const conflitProf = conflitProfId ? (profNamesById[conflitProfId] ?? '') : '';
                   return (
                     <button
                       key={c.id}
                       type="button"
+                      title={conflitProf ? t('professeurs.detail.conflitDeja', { prof: conflitProf }) : undefined}
                       onClick={() => setAssignClasses(prev => { const next = new Set(prev); selected ? next.delete(c.id) : next.add(c.id); return next; })}
                       className={`prof-assign-class-btn${selected ? ' selected' : ''}`}
+                      style={conflitProf ? { borderColor: 'var(--warning)' } : undefined}
                     >
                       {selected && <span className="prof-assign-class-check">✓</span>}
+                      {conflitProf && <span aria-hidden style={{ color: 'var(--warning)', marginRight: 4 }}>⚠</span>}
                       {c.nom}
                     </button>
                   );
