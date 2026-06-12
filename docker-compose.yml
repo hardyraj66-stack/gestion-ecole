@@ -4,10 +4,24 @@ services:
   mongo:
     image: mongo:7
     restart: unless-stopped
-    # Limite le cache WiredTiger : indispensable sur une VM à 1 Go de RAM.
-    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    # --auth : exige une authentification (défense en profondeur — même si Mongo
+    # n'est pas exposé hors du réseau Docker, une faille ailleurs ne donne plus un
+    # accès libre à la base). --wiredTigerCacheSizeGB : indispensable sur 1 Go de RAM.
+    command: ["--auth", "--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      # Créés UNIQUEMENT à l'initialisation d'un volume vierge (ignorés si le volume
+      # contient déjà des données). Sur le volume existant, les users ont été créés
+      # à la main. Valeurs lues depuis le .env racine.
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      # Transmis au script d'init pour créer le user applicatif à privilèges limités.
+      - MONGO_APP_USER=${MONGO_USER}
+      - MONGO_APP_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_APP_DB=${MONGO_DB}
     volumes:
       - mongo-data:/data/db
+      # Script d'init (volume vierge seulement) : crée le user applicatif limité.
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     # Pas de port exposé : accessible uniquement par les autres conteneurs.
 
   app:
@@ -22,7 +36,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - MONGO_URI=mongodb://mongo:27017/gestion-ecole
+      # URI à identifiants, construit depuis les variables du .env racine.
+      # authSource=admin car les users sont définis dans la base admin.
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=${MONGO_AUTH_SOURCE}
     depends_on:
       - mongo
     # Pas de port exposé directement : Caddy fait le proxy.
